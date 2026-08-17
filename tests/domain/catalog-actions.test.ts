@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { saveProduct, setInventory } from '@/features/admin/catalog-actions';
+import type { AdminRole } from '@/features/admin/authorization';
 import type { SaveProductInput } from '@/features/admin/catalog-validation';
 
 type Call = { table: string; op: string; payload?: unknown; id?: string };
@@ -143,7 +144,7 @@ describe('setInventory', () => {
   });
 
   it('forbids a customer role', async () => {
-    const customer = { userId: 'c1', role: 'customer' as const };
+    const customer = { userId: 'c1', role: 'customer' as AdminRole };
     const { client, calls } = fakeClient({});
     const result = await setInventory(client, customer, { variantId: 'v1', quantity: 5 });
     expect(result).toBe('forbidden');

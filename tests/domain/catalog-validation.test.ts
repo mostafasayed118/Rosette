@@ -41,8 +41,8 @@ describe('validateProductInput', () => {
   });
   it('rejects missing variants and bad variant fields', () => {
     expect(validateProductInput({ ...base, variants: [] })).toBe('variants_required');
-    expect(validateProductInput({ ...base, variants: [{ ...base.variants[0], nameEn: '' }] })).toBe('variant_name_required');
-    expect(validateProductInput({ ...base, variants: [{ ...base.variants[0], quantity: -2 }] })).toBe('invalid_quantity');
+    expect(validateProductInput({ ...base, variants: [{ nameEn: '', nameAr: 'كلاسيكي', priceDeltaMinor: 0, active: true, quantity: 5 }] })).toBe('variant_name_required');
+    expect(validateProductInput({ ...base, variants: [{ nameEn: 'Classic', nameAr: 'كلاسيكي', priceDeltaMinor: 0, active: true, quantity: -2 }] })).toBe('invalid_quantity');
   });
   it('rejects bad add-ons', () => {
     expect(validateProductInput({ ...base, addOns: [{ id: '', nameEn: 'Note', nameAr: '', priceMinor: 500 }] })).toBe('addon_required');
