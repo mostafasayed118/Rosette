@@ -32,7 +32,7 @@ export async function updateFulfillmentStatus(
   await client.from('admin_audit_logs').insert({ actor_id: input.admin.userId, action: 'update_order_status', target_type: 'order', target_id: input.orderId, metadata: { status: input.status } });
 
   if (MILESTONE_STATUSES.has(input.status) && order.customer_email) {
-    await enqueueMilestoneEmail(client, order, input.status, input.orderUrlBase, sendNotification);
+    await enqueueMilestoneEmail(client, order, input.status as 'out_for_delivery' | 'delivered', input.orderUrlBase, sendNotification);
   }
   return 'updated';
 }
