@@ -17,3 +17,10 @@ export function getConfiguredWhatsAppHref(input: { locale: 'ar' | 'en'; orderId?
   const number = getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER');
   return number ? createWhatsAppHref({ ...input, number }) : null;
 }
+
+export function createAdminWhatsAppHref(input: { number: string; orderId: string }): string | null {
+  const digits = normalizeNumber(input.number);
+  if (!digits) return null;
+  const text = `Hello! This is Rosette regarding your order ${input.orderId}.`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
