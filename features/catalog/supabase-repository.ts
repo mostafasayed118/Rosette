@@ -1,4 +1,5 @@
 import { getCity } from '@/features/destination/data';
+import { applyDeliveryRule, fetchDeliveryRule } from '@/features/order/delivery-rules';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { filterProducts, sortProducts } from './catalog-utils';
 import { mapSupabaseProduct } from './row-mappers';
@@ -32,6 +33,9 @@ export const supabaseCatalogRepository: CatalogRepository = {
     const selectedDate = new Date(`${date}T12:00:00`);
     if (Number.isNaN(selectedDate.getTime())) return { eligible: false, reason: 'Choose a valid delivery date.', fee: 0 };
     if (selectedDate.getDay() === 5) return { eligible: false, reason: 'Our studio rests on Fridays. Choose another day.', fee: 0 };
-    return { eligible: true, reason: city.sameDay ? 'Same-day delivery may be available before 2pm.' : 'Next-day delivery in this city.', fee: city.sameDay ? 1500 : 2500 };
+    const supabase = await getServerSupabase();
+    const rule = supabase ? await fetchDeliveryRule(supabase, destination.cityCode) : null;
+    const { feeMinor } = applyDeliveryRule(rule, 0, city.sameDay ? 1500 : 2500);
+    return { eligible: true, reason: city.sameDay ? 'Same-day delivery may be available before 2pm.' : 'Next-day delivery in this city.', fee: feeMinor };
   },
 };

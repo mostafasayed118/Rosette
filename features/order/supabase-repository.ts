@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { calculateCartTotals } from '@/features/cart/pricing';
+import { applyDeliveryRule, fetchDeliveryRule } from './delivery-rules';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import type { CartLine } from '@/features/cart/types';
 import type { OrderRepository, CreatePendingOrderInput, Order, PendingOrder, Result, OrderCreateError } from './types';
@@ -38,7 +39,11 @@ export const supabaseOrderRepository: OrderRepository = {
       if (!lines || lines.some((line) => line === null)) return { ok: false, error: 'invalid' };
       const safeLines = lines as CartLine[];
       if (safeLines.some((line) => !line.variantId)) return { ok: false, error: 'invalid' };
-      const totals = calculateCartTotals(safeLines, 1500);
+      const subtotal = calculateCartTotals(safeLines, 0).subtotal;
+      const rule = await fetchDeliveryRule(supabase, input.destination.cityCode);
+      const { feeMinor, belowMinimum } = applyDeliveryRule(rule, subtotal);
+      if (belowMinimum) return { ok: false, error: 'invalid' };
+      const totals = calculateCartTotals(safeLines, feeMinor);
       const number = displayNumber();
       const publicToken = randomUUID();
       const { data: order, error } = await supabase.from('orders').insert({
