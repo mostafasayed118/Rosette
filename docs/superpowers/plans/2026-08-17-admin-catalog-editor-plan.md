@@ -892,7 +892,7 @@ git commit -m "feat: add product editor pages and inventory stock control"
 - [ ] **Step 1: Run the full gate**
 
 Run: `npm test && npm run lint && npm run build && git diff --check`
-Expected: all tests pass (69 existing + 15 new = 84), tsc clean, build succeeds, no whitespace errors.
+Expected: all tests pass (69 existing + 21 new = 90), tsc clean, build succeeds, no whitespace errors.
 
 - [ ] **Step 2: Secret scan**
 
