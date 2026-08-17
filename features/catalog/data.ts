@@ -11,5 +11,5 @@ export const products: Product[] = [
   { slug: 'citrus-cloud', name: 'Citrus Cloud', nameAr: 'سحابة حمضيات', description: 'A light, fragrant arrangement', descriptionAr: 'تنسيق خفيف وعطِر بلمسة منعشة.', category: 'vase-arrangement', occasions: ['birthday'], price: 16000, tone: '#e4c57b', inventory: 5, delivery: 'Next-day delivery', createdAt: '2026-02-28', variants: [], addOns: [] },
 ];
 
-export const categories = ['all', 'hand-bouquet', 'vase-arrangement', 'plants'];
-export const occasions = ['all', 'birthday', 'love', 'thank-you', 'new-home', 'congratulations'];
+export const categories = ['all', 'hand-bouquet', 'vase-arrangement', 'plants', 'gift-boxes', 'sympathy'];
+export const occasions = ['all', 'birthday', 'love', 'thank-you', 'new-home', 'congratulations', 'sympathy'];
