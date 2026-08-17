@@ -109,9 +109,12 @@ select id, role from public.profiles where role = 'admin';
 
 → Admin pages (`/admin`, `/admin/products`, `/admin/inventory`,
 `/admin/orders`, `/admin/delivery`) accept only signed-in users whose profile
-role is `admin`. The app does not yet ship a sign-in route — add a small
-`/login` page using the Supabase Auth session, or use Supabase's hosted auth,
-before relying on the admin area.
+role is `admin`. The app ships a `/login` page (email + password via Supabase
+Auth); after creating the user above, sign in there to reach the admin area.
+
+> Note: `profiles` uses row-level security. Migration `002` adds a
+> `users can read own profile` SELECT policy so the login flow can read the
+> role — do not remove it, or admin pages will redirect back to `/login`.
 
 ---
 
@@ -191,8 +194,8 @@ never payment authority.
 ## 5. Groq and WhatsApp
 
 - **Groq:** `https://console.groq.com` → **API keys** → create → `GROQ_API_KEY`.
-  Model can stay `GROQ_MODEL=llama-3.1-8b-instant` (free tier). The key is
-  server-only along with `/api/chat`.
+  Model defaults to `GROQ_MODEL=groq/compound-mini` (supports JSON output,
+  which `/api/chat` requires). The key is server-only along with `/api/chat`.
 - **WhatsApp:** `WHATSAPP_BUSINESS_NUMBER` = digits with country code,
   e.g. `201000000000` (Egypt). The first release only generates free
   `wa.me` handoff links — no Meta approval, no per-message cost.
@@ -219,7 +222,7 @@ cp .env.example .env.local
 | `GMAIL_APP_PASSWORD` | the new app password (16 chars, with spaces removed) |
 | `GMAIL_FROM` | same as `GMAIL_USER` for now |
 | `GROQ_API_KEY` | Groq console |
-| `GROQ_MODEL` | `llama-3.1-8b-instant` (default) |
+| `GROQ_MODEL` | `groq/compound-mini` (default) |
 | `WHATSAPP_BUSINESS_NUMBER` | e.g. `201000000000` |
 
 `.env.local` is git-ignored. Keep a second copy for the deployment host and
@@ -306,7 +309,7 @@ commercial store.
 | Order double-credited | Idempotency: `payments.idempotency_key` unique treats duplicates as no-ops by design |
 | Gmail emails not arriving | Wrong app password (regenerate), Gmail quota, or spam folder |
 | Chat refuses everything | Topic guard is strict; ask only store questions (products, delivery, order status) |
-| Admin pages deny access | `profiles.role` not `admin` or no Supabase session (no login page yet) |
+| Admin pages deny access | `profiles.role` not `admin` or no Supabase session — sign in at `/login`; if the profiles RLS policy from migration `002` is missing, re-push it |
 
 ---
 

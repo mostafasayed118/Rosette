@@ -8,7 +8,7 @@ import type { Product } from './types';
 
 type ProductRow = Parameters<typeof mapSupabaseProduct>[0];
 
-const productSelect = 'slug,name_en,name_ar,description_en,description_ar,category,occasions,price_minor,tone,delivery,created_at,inventory(quantity,reserved_quantity),product_variants(id,name_en,name_ar,price_delta_minor),add_ons(id,name_en,name_ar,price_minor)';
+const productSelect = 'slug,name_en,name_ar,description_en,description_ar,category,occasions,price_minor,tone,delivery,created_at,add_ons,product_variants(id,name_en,name_ar,price_delta_minor,inventory(quantity,reserved_quantity))';
 
 async function readProducts(): Promise<Product[]> {
   const supabase = await getServerSupabase();

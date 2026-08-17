@@ -24,7 +24,7 @@ export async function answerStoreQuestion(input: { message: string; language: 'e
     const groq = new Groq({ apiKey });
     const context = await getStoreContext(input.message);
     const completion = await groq.chat.completions.create({
-      model: getOptionalServerEnv('GROQ_MODEL') ?? 'llama-3.1-8b-instant',
+      model: getOptionalServerEnv('GROQ_MODEL') ?? 'groq/compound-mini',
       temperature: 0.1,
       response_format: { type: 'json_object' },
       messages: [
@@ -38,7 +38,8 @@ export async function answerStoreQuestion(input: { message: string; language: 'e
     if (!parsed) return fallback(input.language);
     const validSlugs = new Set(context.map((product) => product.slug));
     return { ...parsed, productSlugs: parsed.productSlugs?.filter((slug) => validSlugs.has(slug)) };
-  } catch {
+  } catch (error) {
+    console.error('[chat] assistant error:', error);
     return fallback(input.language);
   }
 }

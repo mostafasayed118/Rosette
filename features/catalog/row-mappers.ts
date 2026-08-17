@@ -12,13 +12,23 @@ type SupabaseProductRow = {
   tone: string;
   delivery: string;
   created_at: string;
-  inventory?: Array<{ quantity: number; reserved_quantity: number }>;
-  product_variants?: Array<{ id: string; name_en: string; name_ar: string; price_delta_minor: number }>;
   add_ons?: Array<{ id: string; name_en: string; name_ar?: string; price_minor: number }>;
+  product_variants?: Array<{
+    id: string;
+    name_en: string;
+    name_ar: string;
+    price_delta_minor: number;
+    inventory?: Array<{ quantity: number; reserved_quantity: number }>;
+  }>;
 };
 
 export function mapSupabaseProduct(row: SupabaseProductRow): Product {
-  const stock = row.inventory?.[0];
+  // Inventory lives per-variant; the storefront model is product-level, so sum
+  // the available stock (quantity - reserved) across all variants.
+  const available = (row.product_variants ?? []).reduce((sum, variant) => {
+    const stock = variant.inventory?.[0];
+    return sum + Math.max(0, (stock?.quantity ?? 0) - (stock?.reserved_quantity ?? 0));
+  }, 0);
   return {
     slug: row.slug,
     name: row.name_en,
@@ -29,7 +39,7 @@ export function mapSupabaseProduct(row: SupabaseProductRow): Product {
     occasions: row.occasions,
     price: row.price_minor,
     tone: row.tone,
-    inventory: Math.max(0, (stock?.quantity ?? 0) - (stock?.reserved_quantity ?? 0)),
+    inventory: available,
     delivery: row.delivery,
     createdAt: row.created_at,
     variants: (row.product_variants ?? []).map((variant) => ({ id: variant.id, name: variant.name_en, priceDelta: variant.price_delta_minor })),
