@@ -85,9 +85,11 @@ testable service layer, and thin authorized API routes.
   with the reserved-floor guard. Missing product → `'not_found'`.
 - Input shape: `{ nameEn, nameAr, descriptionEn?, descriptionAr?, category,
   occasions, priceMinor, tone, delivery, active, variants: [{ id?, nameEn,
-  nameAr?, priceDeltaMinor, active }], addOns: [{ id, nameEn, nameAr?,
-  priceMinor }], stock: Record<variantId, quantity> }`. Existing variants
-  carry their `id`; new ones omit it. `stock` keys are the variant ids.
+  nameAr?, priceDeltaMinor, active, quantity }], addOns: [{ id, nameEn,
+  nameAr?, priceMinor }] }`. Each variant carries its stock `quantity`
+  inline, so create and update resolve stock against the same entries —
+  no separate id→stock map, no temp keys. Existing variants carry their
+  `id`; new ones omit it.
 - Validation (shared): EN/AR names required, category in the 5-value set,
   occasions ⊆ 6-value set, price ≥ 0, tone `/^#[0-9a-f]{6}$/i`, variant
   names non-empty, add-on ids non-empty, `quantity ≥ reserved_quantity`.
