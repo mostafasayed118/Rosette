@@ -1,0 +1,25 @@
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { getOptionalServerEnv } from '@/lib/server-env';
+
+export async function getServerSupabase() {
+  const url = getOptionalServerEnv('NEXT_PUBLIC_SUPABASE_URL');
+  const key = getOptionalServerEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  if (!url || !key) return null;
+
+  const cookieStore = await cookies();
+  return createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(values) {
+        try {
+          values.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        } catch {
+          // Server Components cannot always write cookies; middleware handles refreshes.
+        }
+      },
+    },
+  });
+}

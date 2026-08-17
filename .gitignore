@@ -4,5 +4,6 @@ out/
 coverage/
 *.tsbuildinfo
 .env*
+!.env.example
 .worktrees/
 .claude/
