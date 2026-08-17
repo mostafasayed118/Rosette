@@ -1,0 +1,10 @@
+import { createClient } from '@supabase/supabase-js';
+import { getRequiredServerEnv } from '@/lib/server-env';
+
+export function getAdminSupabase() {
+  return createClient(
+    getRequiredServerEnv('NEXT_PUBLIC_SUPABASE_URL'),
+    getRequiredServerEnv('SUPABASE_SERVICE_ROLE_KEY'),
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+}

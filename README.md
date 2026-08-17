@@ -36,12 +36,17 @@ The header language toggle switches between English and Arabic. The choice is st
 
 All customer-facing route chrome, destination selection, catalog controls, product customization, cart, checkout, and order status copy use the dictionary. Product data carries `nameAr` and `descriptionAr` fields for localized catalog content.
 
-## Mock boundary
+## Provider-backed MVP boundary
 
-The MVP uses deterministic local data and versioned browser storage:
+The project keeps the local mock fallback when provider environment variables are absent. With provider configuration, it adds:
 
-- `rosette.destination.v1` stores the chosen country/city.
-- `rosette.cart.v1` stores cart lines.
-- `rosette.orders.v1` stores successful demo orders.
+- Supabase PostgreSQL/Auth/Storage schema in `supabase/migrations/001_commerce.sql`.
+- Supabase-backed catalog and pending-order repositories with server-side totals.
+- Paymob Intention API checkout and HMAC-verified webhook at `/api/webhooks/paymob`.
+- Gmail SMTP bilingual order notifications through the server-only notification adapter.
+- Groq bilingual chatbot at `/api/chat`, restricted to store topics and verified context.
+- WhatsApp `wa.me` human handoff and protected admin operations.
 
-No payment is captured, no inventory is reserved, and no delivery request is sent. The adapter seams in `features/catalog/repository.ts` and `features/order/repository.ts` are the replacement points for a real database, payment gateway, inventory service, courier service, and notifications in later work.
+Copy `.env.example` to `.env.local` for local setup. Never commit or paste real credentials. Operations and test-mode setup are documented in `docs/operations/payments-email-chat.md`.
+
+Payment status is controlled by verified Paymob callbacks, not browser redirects. Gmail, Groq, Paymob, and WhatsApp adapters are tested with fakes and remain replaceable through feature boundaries.
