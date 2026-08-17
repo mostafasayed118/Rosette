@@ -664,8 +664,8 @@ Expected: all tests pass (56 existing + 13 new), tsc clean, build succeeds, no w
 
 - [ ] **Step 2: Secret scan**
 
-Run: `grep -rnE "(dphd xjcl pgbg ynxn|SUPABASE_SERVICE_ROLE_KEY=.|PAYMOB_API_KEY=.|GMAIL_APP_PASSWORD=.|GROQ_API_KEY=.)" --include=*.ts --include=*.tsx --include=*.md . || true`
-Expected: only env-var *names* in `.env.example`-style docs; no real values.
+Run: `npm test -- tests/security/no-secrets.test.ts`
+Expected: PASS — the repository secret scan flags any provider credential values (API keys, service-role secrets, Gmail app passwords) in tracked files. The scan walks all `ts/tsx/js/mjs/json/md/env/sql/css` files, so the docs added by this plan are covered too.
 
 - [ ] **Step 3: Commit any stragglers**
 
