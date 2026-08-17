@@ -71,7 +71,7 @@ create table if not exists public.inventory (
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   display_number text not null unique,
-  public_token text not null unique default encode(gen_random_bytes(24), 'hex'),
+  public_token text not null unique default encode(extensions.gen_random_bytes(24), 'hex'),
   customer_id uuid references public.profiles(id),
   customer_email text not null,
   customer_phone text not null,
