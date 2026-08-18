@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import './globals.css';
 import { CartProvider } from '@/features/cart/CartProvider';
 import { I18nProvider } from '@/features/i18n/I18nProvider';
+import { ThemeProvider } from '@/features/theme/ThemeProvider';
 import { ChatWidget } from '@/features/chat/ChatWidget';
 import { getOptionalServerEnv } from '@/lib/server-env';
 
@@ -17,5 +18,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  return <html lang="en" className={`${fraunces.variable} ${inter.variable} ${cairo.variable}`}><body><I18nProvider><CartProvider>{children}</CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></body></html>;
+  return <html lang="en" suppressHydrationWarning className={`${fraunces.variable} ${inter.variable} ${cairo.variable}`}><body><ThemeProvider><I18nProvider><CartProvider>{children}</CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></body></html>;
 }
