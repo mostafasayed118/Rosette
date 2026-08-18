@@ -295,11 +295,17 @@ describe('applyChanges', () => {
   });
 
   it('reduces the total when a quantity goes down', () => {
-    const result = applyChanges(order, items, { items: [{ id: 'i2', quantity: 1, gift_message: '' }] });
+    // i2 starts at quantity 2, so dropping it to 1 yields delta = -4000.
+    const downOrder = { subtotal_minor: 14000, delivery_fee_minor: 1500, discount_minor: 0, total_minor: 15500 };
+    const downItems = [
+      { id: 'i1', unit_price_minor: 6000, quantity: 1, gift_message: '' },
+      { id: 'i2', unit_price_minor: 4000, quantity: 2, gift_message: 'hi' },
+    ];
+    const result = applyChanges(downOrder, downItems, { items: [{ id: 'i2', quantity: 1, gift_message: '' }] });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.subtotalMinor).toBe(6000);
-    expect(result.totalMinor).toBe(7500);
+    expect(result.subtotalMinor).toBe(10000);
+    expect(result.totalMinor).toBe(11500);
     expect(result.deltaMinor).toBe(-4000);
   });
 
