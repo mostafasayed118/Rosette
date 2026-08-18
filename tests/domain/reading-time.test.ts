@@ -19,4 +19,13 @@ describe('estimateReadingTime', () => {
     expect(estimateReadingTime('')).toBe(1);
     expect(estimateReadingTime('<p></p><ul></ul>')).toBe(1);
   });
+
+  it('counts Arabic words at 200 wpm, rounded up', () => {
+    const html = '<p>' + Array.from({ length: 400 }, () => 'كلمة').join(' ') + '</p>';
+    expect(estimateReadingTime(html)).toBe(2);
+  });
+
+  it('strips tags from Arabic content', () => {
+    expect(estimateReadingTime('<p>مرحباً <strong>بالعالم</strong></p>', 200)).toBe(1);
+  });
 });
