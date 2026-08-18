@@ -103,6 +103,9 @@ describe('parseChangeRequestDiff', () => {
   it('rejects an item entry with nothing to change', () => {
     expect(parseChangeRequestDiff({ items: [{ id: 'i1' }] })).toEqual({ ok: false, error: 'invalid' });
   });
+  it('allows an empty gift message to clear it', () => {
+    expect(parseChangeRequestDiff({ items: [{ id: 'i1', gift_message: '' }] })).toEqual({ ok: true, diff: { items: [{ id: 'i1', gift_message: '' }] } });
+  });
   it('rejects unknown keys (city is not changeable)', () => {
     expect(parseChangeRequestDiff({ delivery_city_code: 'cai' })).toEqual({ ok: false, error: 'invalid' });
   });
@@ -223,9 +226,9 @@ export function parseChangeRequestDiff(value: unknown): { ok: true; diff: Change
         entry.quantity = raw.quantity;
       }
       if (raw.gift_message !== undefined) {
-        const message = cleanString(raw.gift_message);
-        if (message === null) return { ok: false, error: 'invalid' };
-        entry.gift_message = message;
+        // An empty string is a valid value: it clears the message.
+        if (typeof raw.gift_message !== 'string') return { ok: false, error: 'invalid' };
+        entry.gift_message = raw.gift_message.trim();
       }
       if (entry.quantity === undefined && entry.gift_message === undefined) return { ok: false, error: 'invalid' };
       items.push(entry);
@@ -240,7 +243,7 @@ export function parseChangeRequestDiff(value: unknown): { ok: true; diff: Change
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/domain/change-request.test.ts`
-Expected: PASS (17/17).
+Expected: PASS (18/18).
 
 - [ ] **Step 6: Commit**
 
@@ -382,7 +385,7 @@ export function applyChanges(
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/domain/change-request.test.ts tests/domain/apply-changes.test.ts`
-Expected: PASS (25/25).
+Expected: PASS (26/26).
 
 - [ ] **Step 5: Commit**
 
@@ -506,11 +509,12 @@ function requestWithOrder(overrides: Record<string, unknown> = {}) {
   };
 }
 
-// i2 starts at quantity 2, so dropping it to 1 yields delta = -4000.
+// i2 starts at quantity 2 (subtotal 14000, total 15500), so dropping it to 1
+// yields subtotal 10000, total 11500, delta = -4000.
 function downRequest(overrides: Record<string, unknown> = {}) {
   return requestWithOrder({
     changes: { items: [{ id: 'i2', quantity: 1, gift_message: '' }] },
-    orders: { ...requestWithOrder().orders, order_items: [{ id: 'i1', unit_price_minor: 6000, quantity: 1, gift_message: '' }, { id: 'i2', unit_price_minor: 4000, quantity: 2, gift_message: 'hi' }] },
+    orders: { ...requestWithOrder().orders, subtotal_minor: 14000, total_minor: 15500, order_items: [{ id: 'i1', unit_price_minor: 6000, quantity: 1, gift_message: '' }, { id: 'i2', unit_price_minor: 4000, quantity: 2, gift_message: 'hi' }] },
     ...overrides,
   });
 }
@@ -521,7 +525,9 @@ function reviewClient(request: unknown) {
     from: (table: string) => ({
       select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: request, error: null }) }) }),
       update: (payload: unknown) => { calls.push({ table, op: 'update', payload }); return { eq: () => ({ error: null }) }; },
-      insert: (payload: unknown) => { calls.push({ table, op: 'insert', payload }); return { error: null }; },
+      // Supports both the bare insert (order_events/admin_audit_logs) and the
+      // payments insert chain `.select('id').maybeSingle()`.
+      insert: (payload: unknown) => { calls.push({ table, op: 'insert', payload }); return { select: () => ({ maybeSingle: async () => ({ data: { id: 'p1' }, error: null }) }) }; },
     }),
   };
   return { client, calls };
@@ -556,7 +562,7 @@ describe('reviewChangeRequest', () => {
     expect(result).toEqual({ status: 'applied', deltaMinor: -4000 });
     expect(refund).toHaveBeenCalledWith({ transactionId: 'txn-1', amountMinor: 4000 });
     expect(calls).toContainEqual(expect.objectContaining({ table: 'payments', op: 'insert', payload: expect.objectContaining({ status: 'refunded', amount_minor: 4000, idempotency_key: 'change-refund:req-1' }) }));
-    expect(calls).toContainEqual(expect.objectContaining({ table: 'orders', op: 'update', payload: expect.objectContaining({ total_minor: 7500 }) }));
+    expect(calls).toContainEqual(expect.objectContaining({ table: 'orders', op: 'update', payload: expect.objectContaining({ subtotal_minor: 10000, total_minor: 11500 }) }));
     expect(calls).toContainEqual(expect.objectContaining({ table: 'order_change_requests', op: 'update', payload: expect.objectContaining({ status: 'applied', delta_minor: -4000 }) }));
     expect(deliver).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ type: 'change_approved' }), expect.anything());
   });
@@ -572,7 +578,7 @@ describe('reviewChangeRequest', () => {
   });
 
   it('blocks approval when the order is paid but has no refundable payment row', async () => {
-    const { client } = reviewClient(requestWithOrder({ orders: { ...requestWithOrder().orders, payments: [] } }));
+    const { client } = reviewClient(downRequest({ orders: { ...downRequest().orders, payments: [] } }));
     const result = await reviewChangeRequest(client, reviewInput, { deliver, refund });
     expect(result).toEqual({ status: 'refund_failed' });
     expect(refund).not.toHaveBeenCalled();
@@ -623,7 +629,7 @@ describe('handleChangePaymentCallback', () => {
   });
 
   it('records the delta payment, applies the change, and emails change_approved', async () => {
-    const { client, calls } = reviewClient(requestWithOrder());
+    const { client, calls } = reviewClient(requestWithOrder({ status: 'approved' }));
     const result = await handleChangePaymentCallback(client, successTransaction, { deliver, orderUrlBase: 'https://example.com' });
     expect(result).toEqual({ handled: true });
     expect(calls).toContainEqual(expect.objectContaining({ table: 'payments', op: 'insert', payload: expect.objectContaining({ status: 'paid', amount_minor: 6000, idempotency_key: 'change-pay:pay-txn-1:success' }) }));
@@ -633,14 +639,14 @@ describe('handleChangePaymentCallback', () => {
   });
 
   it('does not apply when the amount does not match the stored delta', async () => {
-    const { client, calls } = reviewClient(requestWithOrder());
+    const { client, calls } = reviewClient(requestWithOrder({ status: 'approved' }));
     await handleChangePaymentCallback(client, { ...successTransaction, amount_cents: 100 }, { deliver });
     expect(calls.filter((call) => call.table === 'payments' && call.op === 'insert')).toEqual([]);
     expect(calls.filter((call) => call.table === 'orders' && call.op === 'update')).toEqual([]);
   });
 
   it('does not apply when the payment failed', async () => {
-    const { client, calls } = reviewClient(requestWithOrder());
+    const { client, calls } = reviewClient(requestWithOrder({ status: 'approved' }));
     await handleChangePaymentCallback(client, { ...successTransaction, success: false }, { deliver });
     expect(calls.filter((call) => call.table === 'orders' && call.op === 'update')).toEqual([]);
   });
