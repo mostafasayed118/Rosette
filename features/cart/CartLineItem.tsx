@@ -1,6 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { ProductVisual } from '@/components/ui/ProductVisual';
-import { formatMoney } from './CartSummary';
+import { formatMoney } from '@/features/money';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { pickLocalized } from '@/features/i18n/pick';
 import { addOnLabel } from '@/features/catalog/add-on-labels';

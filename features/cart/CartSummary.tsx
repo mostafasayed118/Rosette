@@ -4,7 +4,6 @@ import { useI18n } from '@/features/i18n/I18nProvider';
 import { formatMoney } from '@/features/money';
 import type { OrderTotals } from './types';
 
-export { formatMoney } from '@/features/money';
 export function CartSummary({ totals }: { totals: OrderTotals }) {
   const { locale, t } = useI18n();
   return <dl className="mb-6">
