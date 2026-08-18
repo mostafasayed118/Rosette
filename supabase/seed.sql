@@ -434,5 +434,22 @@ on conflict (id) do update
       author_id = excluded.author_id;
 
 -- ---------------------------------------------------------------------------
+-- Product reviews (demo content: order_id/customer_id stay null; approved so
+-- the storefront shows aggregates immediately)
+-- ---------------------------------------------------------------------------
+insert into public.product_reviews (id, product_id, rating, body, status, created_at, reviewed_at)
+values
+  ('aaaaaaaa-0000-0000-0000-000000000001', (select id from public.products where slug = 'rose-hour'), 5, 'Arrived fresher than expected — the garden roses were beautiful.', 'approved', now() - interval '12 days', now() - interval '11 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000002', (select id from public.products where slug = 'rose-hour'), 4, 'Lovely bouquet, generous size. Delivery was right on time.', 'approved', now() - interval '9 days', now() - interval '8 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000003', (select id from public.products where slug = 'green-morning'), 5, 'The vase arrangement lasted over a week. Stunning greens.', 'approved', now() - interval '15 days', now() - interval '14 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000004', (select id from public.products where slug = 'sunlit-stems'), 4, 'Cheerful and bright — exactly the mood I ordered for.', 'approved', now() - interval '7 days', now() - interval '6 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000005', (select id from public.products where slug = 'terracotta-love'), 5, 'The ranunculus were perfection. Wrapping felt so special.', 'approved', now() - interval '20 days', now() - interval '19 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000006', (select id from public.products where slug = 'little-thanks'), 5, 'Small but mighty — the perfect thank-you.', 'approved', now() - interval '5 days', now() - interval '4 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000007', (select id from public.products where slug = 'quiet-orchid'), 4, 'Elegant plant, well packed. A week later it is still perfect.', 'approved', now() - interval '10 days', now() - interval '9 days'),
+  ('aaaaaaaa-0000-0000-0000-000000000008', (select id from public.products where slug = 'citrus-cloud'), 3, 'Pretty, though the fragrance faded faster than I hoped.', 'approved', now() - interval '6 days', now() - interval '5 days')
+on conflict (id) do update
+  set product_id = excluded.product_id, rating = excluded.rating, body = excluded.body, status = excluded.status, created_at = excluded.created_at, reviewed_at = excluded.reviewed_at;
+
+-- ---------------------------------------------------------------------------
 -- Done. Run supabase/migrations/001_commerce.sql first.
 -- ---------------------------------------------------------------------------
