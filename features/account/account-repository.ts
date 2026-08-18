@@ -14,6 +14,20 @@ export type CustomerOrderDetail = {
   events: Array<{ id: string; eventType: string; fromStatus: string | null; toStatus: string | null; createdAt: string }>;
 };
 
+export type CustomerCancelRequest = { status: string; reason: string | null; createdAt: string };
+
+export async function getCancelRequestForOrder(client: AccountClient, userId: string, orderId: string): Promise<CustomerCancelRequest | null> {
+  const { data } = await client.from('order_cancel_requests')
+    .select('status,reason,created_at')
+    .eq('order_id', orderId)
+    .eq('customer_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+  return { status: String(data.status), reason: data.reason ? String(data.reason) : null, createdAt: String(data.created_at) };
+}
+
 export async function listCustomerOrders(client: AccountClient, userId: string): Promise<CustomerOrderSummary[]> {
   const { data } = await client.from('orders')
     .select('id,display_number,created_at,total_minor,payment_status,fulfillment_status')

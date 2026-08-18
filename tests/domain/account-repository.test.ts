@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { listCustomerOrders, getCustomerOrder } from '@/features/account/account-repository';
+import { listCustomerOrders, getCustomerOrder, getCancelRequestForOrder } from '@/features/account/account-repository';
 
 function fakeListClient(rows: unknown[]) {
   return {
@@ -45,5 +45,24 @@ describe('getCustomerOrder', () => {
 
   it('returns null when the order is not found', async () => {
     expect(await getCustomerOrder(fakeDetailClient(null), 'u1', 'o1')).toBeNull();
+  });
+});
+
+describe('getCancelRequestForOrder', () => {
+  function fakeCancelClient(row: unknown | null) {
+    return {
+      from: () => ({
+        select: () => ({ eq: () => ({ eq: () => ({ order: () => ({ limit: () => ({ maybeSingle: async () => ({ data: row, error: null }) }) }) }) }) }),
+      }),
+    } as never;
+  }
+
+  it('returns the latest cancel request for an order', async () => {
+    const request = await getCancelRequestForOrder(fakeCancelClient({ status: 'pending', reason: 'changed my mind', created_at: '2026-08-18T10:00:00.000Z' }), 'c1', 'o1');
+    expect(request).toEqual({ status: 'pending', reason: 'changed my mind', createdAt: '2026-08-18T10:00:00.000Z' });
+  });
+
+  it('returns null when there is no cancel request', async () => {
+    expect(await getCancelRequestForOrder(fakeCancelClient(null), 'c1', 'o1')).toBeNull();
   });
 });
