@@ -10,15 +10,15 @@ import { computeDashboardStats, LOW_STOCK_THRESHOLD, type InventoryRow, type Ord
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
-
-const egp = (minor: number) => `${(minor / 100).toFixed(2)} EGP`;
+import { formatMoney } from '@/features/money';
+import { fulfillmentBadgeVariant, fulfillmentLabel } from '@/features/admin/status-labels';
 
 type InventoryRowWithVariant = { variant_id: string; quantity: number; reserved_quantity: number; product_variants?: { name_en: string } | null };
 
 export default async function AdminPage() {
   const admin = await getCurrentAdmin();
   if (!admin) redirect('/login');
-  const { t } = await getServerT();
+  const { t, locale } = await getServerT();
   const [ordersResult, inventoryResult] = await Promise.all([
     getAdminSupabase().from('orders').select('payment_status,fulfillment_status,total_minor,created_at'),
     getAdminSupabase().from('inventory').select('variant_id,quantity,reserved_quantity,product_variants(name_en)'),
@@ -41,17 +41,17 @@ export default async function AdminPage() {
     <p className="text-muted-foreground">{t('signedInAs', { role: admin.role })}</p>
     <div className="mb-8 mt-6 grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
       <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('awaitingFulfillment')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><ClipboardList className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{stats.awaitingFulfillment}</p><Link className="text-sm text-primary underline underline-offset-4" href="/admin/orders">{t('openOrders')}</Link></CardContent></Card>
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueToday')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><Wallet className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{egp(stats.revenueTodayMinor)}</p></CardContent></Card>
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueAllTime')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><TrendingUp className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{egp(stats.revenueAllTimeMinor)}</p></CardContent></Card>
+      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueToday')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><Wallet className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{formatMoney(stats.revenueTodayMinor, locale)}</p></CardContent></Card>
+      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueAllTime')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><TrendingUp className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{formatMoney(stats.revenueAllTimeMinor, locale)}</p></CardContent></Card>
     </div>
     <h2 className="font-display text-2xl">{t('fulfillmentPipeline')}</h2>
     <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
       {pipelineEntries.map(([status, count]) => (
-        <Card key={status}><CardHeader><CardTitle className="text-sm font-medium">{status}</CardTitle></CardHeader><CardContent><Progress value={(count / maxPipeline) * 100} className="h-2" /><p className="mt-2 text-sm text-muted-foreground">{count}</p></CardContent></Card>
+        <Card key={status}><CardHeader className="flex flex-row items-center justify-between gap-3"><CardTitle className="text-sm font-medium">{fulfillmentLabel(status, t)}</CardTitle><Badge variant={fulfillmentBadgeVariant(status)}>{count}</Badge></CardHeader><CardContent><Progress value={(count / maxPipeline) * 100} className="h-2" /></CardContent></Card>
       ))}
     </div>
     <h2 className="mt-8 font-display text-2xl">{t('lowStockTitle', { count: LOW_STOCK_THRESHOLD })}</h2>
-    {stats.lowStock.length === 0 ? <p className="mt-4 text-muted-foreground">{t('nothingLow')}</p> : <Card className="mt-4"><Table><TableHeader><TableRow><TableHead>{t('products')}</TableHead><TableHead>{t('available')}</TableHead></TableRow></TableHeader><TableBody>{stats.lowStock.map((row) => <TableRow key={row.variant_id}><TableCell><strong>{row.name}</strong></TableCell><TableCell><Badge variant="secondary">{row.available} {t('available')}</Badge></TableCell></TableRow>)}</TableBody></Table></Card>}
+    {stats.lowStock.length === 0 ? <p className="mt-4 text-muted-foreground">{t('nothingLow')}</p> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('products')}</TableHead><TableHead>{t('available')}</TableHead></TableRow></TableHeader><TableBody>{stats.lowStock.map((row) => <TableRow key={row.variant_id}><TableCell><strong>{row.name}</strong></TableCell><TableCell><Badge variant="secondary">{row.available} {t('available')}</Badge></TableCell></TableRow>)}</TableBody></Table></div></Card>}
     <p className="mt-6"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/inventory">{t('openInventory')}</Link></p>
   </AdminShell>;
 }
