@@ -26,6 +26,7 @@ export const localBlogRepository: BlogRepository = {
       .filter((post) => post.published)
       .filter((post) => (query?.type ? post.type === query.type : true))
       .filter((post) => (query?.cityCode ? post.cityCode === query.cityCode : true))
+      .filter((post) => (query?.authorId ? post.authorId === query.authorId : true))
       .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
       .map(toSummary);
   },
@@ -37,5 +38,8 @@ export const localBlogRepository: BlogRepository = {
   },
   async getAuthor(id: string) {
     return localAuthors.find((author) => author.id === id) ?? null;
+  },
+  async getAuthorBySlug(slug: string) {
+    return localAuthors.find((author) => author.slug === slug) ?? null;
   },
 };

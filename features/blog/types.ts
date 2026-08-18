@@ -86,11 +86,12 @@ export type BlogPostInput = {
   published: boolean;
 };
 
-export type BlogListQuery = { type?: BlogPostType; cityCode?: string };
+export type BlogListQuery = { type?: BlogPostType; cityCode?: string; authorId?: string };
 
 export interface BlogRepository {
   listPublished(query?: BlogListQuery): Promise<BlogPostSummary[]>;
   getBySlug(slug: string): Promise<BlogPost | null>;
   listAuthors(): Promise<Author[]>;
   getAuthor(id: string): Promise<Author | null>;
+  getAuthorBySlug(slug: string): Promise<Author | null>;
 }

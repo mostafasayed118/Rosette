@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAuthor, createBlogPost, deleteAuthor, deleteBlogPost, listAllBlogPosts, listAuthors, updateAuthor, updateBlogPost } from '@/features/admin/blog-admin';
+import { localAuthors, localPosts } from '@/features/blog/data';
 import { localBlogRepository } from '@/features/blog/local-repository';
 import { supabaseBlogRepository } from '@/features/blog/supabase-repository';
 
@@ -81,6 +82,34 @@ describe('blog storefront repository', () => {
     mockGetSupabase.mockResolvedValue({ from: () => ({ select: () => builder }) } as never);
     expect(await supabaseBlogRepository.getAuthor('missing')).toBeNull();
   });
+
+  it('returns an author by slug from supabase', async () => {
+    const builder = { eq: () => ({ maybeSingle: async () => ({ data: authorRow, error: null }) }) };
+    mockGetSupabase.mockResolvedValue({ from: () => ({ select: () => builder }) } as never);
+    const author = await supabaseBlogRepository.getAuthorBySlug('nour-hassan');
+    expect(author?.nameEn).toBe('Nour Hassan');
+  });
+
+  it('returns null when an author slug is missing', async () => {
+    const builder = { eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) };
+    mockGetSupabase.mockResolvedValue({ from: () => ({ select: () => builder }) } as never);
+    expect(await supabaseBlogRepository.getAuthorBySlug('nope')).toBeNull();
+  });
+
+  it('filters published posts by author on supabase', async () => {
+    const eqCalls: Array<[string, unknown]> = [];
+    const builder = {
+      select: () => builder,
+      eq: (col: string, val: unknown) => { eqCalls.push([col, val]); return builder; },
+      order: async () => ({ data: [row], error: null }),
+      maybeSingle: async () => ({ data: null, error: null }),
+    };
+    mockGetSupabase.mockResolvedValue({ from: () => builder } as never);
+
+    const posts = await supabaseBlogRepository.listPublished({ type: 'post', authorId: 'a1' });
+    expect(eqCalls).toContainEqual(['author_id', 'a1']);
+    expect(posts[0]).toMatchObject({ id: 'p1', authorId: 'a1' });
+  });
 });
 
 describe('blog local repository', () => {
@@ -97,6 +126,19 @@ describe('blog local repository', () => {
   it('summaries carry authorId', async () => {
     const posts = await localBlogRepository.listPublished({});
     expect(posts[0]?.authorId).toBeTruthy();
+  });
+
+  it('finds a local author by slug', async () => {
+    expect((await localBlogRepository.getAuthorBySlug('nour-hassan'))?.nameEn).toBe('Nour Hassan');
+    expect(await localBlogRepository.getAuthorBySlug('nope')).toBeNull();
+  });
+
+  it('filters local posts by author', async () => {
+    const nour = localAuthors[0]!;
+    const posts = await localBlogRepository.listPublished({ type: 'post', authorId: nour.id });
+    expect(posts.length).toBeGreaterThan(0);
+    expect(posts.every((post) => post.authorId === nour.id)).toBe(true);
+    expect(localPosts.some((post) => post.authorId !== nour.id && post.type === 'post')).toBe(true);
   });
 });
 

@@ -63,6 +63,7 @@ export const supabaseBlogRepository: BlogRepository = {
     let builder = supabase.from('blog_posts').select(summarySelect).eq('published', true);
     if (query?.type) builder = builder.eq('type', query.type);
     if (query?.cityCode) builder = builder.eq('city_code', query.cityCode);
+    if (query?.authorId) builder = builder.eq('author_id', query.authorId);
     const { data, error } = await builder.order('published_at', { ascending: false });
     if (error) throw new Error(`Blog list query failed: ${error.message}`);
     return ((data ?? []) as BlogRow[]).map(toSummary);
@@ -85,6 +86,13 @@ export const supabaseBlogRepository: BlogRepository = {
     const supabase = await getServerSupabase();
     if (!supabase) return null;
     const { data, error } = await supabase.from('authors').select(authorSelect).eq('id', id).maybeSingle();
+    if (error) throw new Error(`Author detail query failed: ${error.message}`);
+    return data ? toAuthor(data as AuthorRow) : null;
+  },
+  async getAuthorBySlug(slug: string) {
+    const supabase = await getServerSupabase();
+    if (!supabase) return null;
+    const { data, error } = await supabase.from('authors').select(authorSelect).eq('slug', slug).maybeSingle();
     if (error) throw new Error(`Author detail query failed: ${error.message}`);
     return data ? toAuthor(data as AuthorRow) : null;
   },

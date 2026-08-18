@@ -10,11 +10,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = (getOptionalServerEnv('SITE_URL') ?? 'https://rosette.fly.dev').replace(/\/$/, '');
   const { products } = await getCatalogRepository().list({});
   const posts = await getBlogRepository().listPublished();
+  const authors = await getBlogRepository().listAuthors();
   return buildSitemapEntries({
     base,
     locales: LOCALES,
     cities: cities.map((city) => city.slug),
     products: products.map((product) => ({ slug: product.slug })),
     blogPosts: posts.map((post) => ({ slug: post.slug })),
+    authors: authors.map((author) => ({ slug: author.slug })),
   });
 }
