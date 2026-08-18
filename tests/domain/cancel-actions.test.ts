@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { requestCancellation } from '@/features/orders/cancel-actions';
+import { requestCancellation, reviewCancellationRequest } from '@/features/orders/cancel-actions';
 
 type Call = { table: string; op: string; payload?: unknown; eq?: Array<[string, unknown]> };
 
@@ -76,5 +76,68 @@ describe('requestCancellation', () => {
     const { client } = fakeClient({ order: orderRow, pendingRequest: { id: 'req-0', status: 'pending' } });
     const result = await requestCancellation(client, { customerId: 'c1', orderId: 'o1' }, { deliver });
     expect(result).toEqual({ status: 'ineligible', reason: 'request_pending' });
+  });
+});
+
+const admin = { userId: 'a1', role: 'admin' as const };
+
+const requestWithOrder = (overrides: Record<string, unknown> = {}) => ({
+  id: 'req-1', status: 'pending', reason: 'changed my mind', customer_id: 'c1', reviewed_by: null, reviewed_at: null,
+  orders: { id: 'o1', display_number: 'RO-1', fulfillment_status: 'preparing', payment_status: 'paid', customer_email: 'buyer@example.com', locale: 'en', total_minor: 10000, subtotal_minor: 10000, delivery_fee_minor: 0, discount_minor: null, public_token: 'tok' },
+  ...overrides,
+});
+
+function reviewClient(request: unknown) {
+  const calls: Array<{ table: string; op: string; payload?: unknown }> = [];
+  // The service looks up the request with select(...).eq('id', requestId).maybeSingle().
+  const client = {
+    from: (table: string) => ({
+      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: request, error: null }) }) }),
+      update: (payload: unknown) => ({ eq: (_col: string, id: string) => { calls.push({ table, op: 'update', payload }); return { error: null }; } }),
+      insert: (payload: unknown) => { calls.push({ table, op: 'insert', payload }); return { error: null }; },
+    }),
+  };
+  return { client, calls };
+}
+
+describe('reviewCancellationRequest', () => {
+  it('returns not_found when the request is missing', async () => {
+    const { client } = reviewClient(null);
+    expect(await reviewCancellationRequest(client, { admin, requestId: 'req-x', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver })).toEqual({ status: 'not_found' });
+  });
+
+  it('approves and cancels a paid order, marking the payment refunded', async () => {
+    const { client, calls } = reviewClient(requestWithOrder());
+    const result = await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', reason: 'ok', orderUrlBase: 'https://example.com' }, { deliver });
+    expect(result).toEqual({ status: 'approved' });
+    expect(calls).toContainEqual(expect.objectContaining({ table: 'orders', op: 'update', payload: expect.objectContaining({ fulfillment_status: 'cancelled', payment_status: 'refunded' }) }));
+    expect(calls).toContainEqual(expect.objectContaining({ table: 'order_cancel_requests', op: 'update', payload: expect.objectContaining({ status: 'approved', reviewed_by: 'a1' }) }));
+    expect(calls).toContainEqual(expect.objectContaining({ table: 'admin_audit_logs', op: 'insert' }));
+    expect(deliver).toHaveBeenCalled();
+  });
+
+  it('cancels an unpaid order with payment_status cancelled', async () => {
+    const { client, calls } = reviewClient(requestWithOrder({ orders: { ...requestWithOrder().orders, payment_status: 'payment_failed' } }));
+    await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver });
+    expect(calls).toContainEqual(expect.objectContaining({ table: 'orders', op: 'update', payload: expect.objectContaining({ payment_status: 'cancelled' }) }));
+  });
+
+  it('returns not_cancellable when the order was already delivered', async () => {
+    const { client } = reviewClient(requestWithOrder({ orders: { ...requestWithOrder().orders, fulfillment_status: 'delivered' } }));
+    expect(await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver })).toEqual({ status: 'not_cancellable' });
+  });
+
+  it('rejects the request and sends the rejected email', async () => {
+    const { client, calls } = reviewClient(requestWithOrder());
+    const result = await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'reject', reason: 'too late', orderUrlBase: 'https://example.com' }, { deliver });
+    expect(result).toEqual({ status: 'rejected' });
+    expect(calls).toContainEqual(expect.objectContaining({ table: 'order_cancel_requests', op: 'update', payload: expect.objectContaining({ status: 'rejected', reason: 'too late', reviewed_by: 'a1' }) }));
+    expect(calls).toContainEqual(expect.objectContaining({ table: 'order_events', op: 'insert', payload: expect.objectContaining({ event_type: 'cancel_rejected' }) }));
+    expect(deliver).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ type: 'cancel_rejected' }), expect.anything());
+  });
+
+  it('returns not_cancellable for an already-reviewed request', async () => {
+    const { client } = reviewClient(requestWithOrder({ status: 'approved' }));
+    expect(await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver })).toEqual({ status: 'not_cancellable' });
   });
 });
