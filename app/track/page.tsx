@@ -6,6 +6,7 @@ import { getServerT } from '@/features/i18n/server';
 import { pickLocalized } from '@/features/i18n/pick';
 import { formatMoney } from '@/features/money';
 import { lookupOrder } from '@/features/tracking/lookup-order';
+import { FulfillmentProgress } from '@/components/tracking/FulfillmentProgress';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 
 const FULFILLMENT_KEYS: Record<string, string> = {
@@ -41,11 +42,14 @@ export default async function TrackPage({ searchParams }: { searchParams: Promis
     {searched && !order ? <StatusMessage title={t('trackLookupFailed')} tone="error">{t('checkConfirmationEmail')}</StatusMessage> : null}
     {searched && order ? <section className="grid gap-4 border-b py-6">
       <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('orderEyebrow', { number: order.number })}</p>
-      <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+      <div className="grid grid-cols-3 gap-4 max-md:grid-cols-1">
         <div className={infoCardClass}><strong className="block">{t('payment')}</strong><span className="text-sm text-muted-foreground">{t(PAYMENT_KEYS[order.paymentStatus] ?? 'statusPending')}</span></div>
-        <div className={infoCardClass}><strong className="block">{t('fulfillment')}</strong><span className="text-sm text-muted-foreground">{t(FULFILLMENT_KEYS[order.fulfillmentStatus] ?? 'statusPending')}</span></div>
         <div className={infoCardClass}><strong className="block">{t('recipient')}</strong><span className="text-sm text-muted-foreground">{order.recipientName}</span></div>
         <div className={infoCardClass}><strong className="block">{t('deliveryDetails')}</strong><span className="text-sm text-muted-foreground">{order.deliveryCityCode} · {order.deliveryDate} · {order.deliveryWindow}</span></div>
+      </div>
+      <div className="grid gap-3">
+        <h2 className="font-display text-2xl">{t('fulfillment')}</h2>
+        <FulfillmentProgress status={order.fulfillmentStatus} />
       </div>
       <h2 className="font-display text-2xl">{t('items')}</h2>
       <div className="grid gap-3">{order.items.map((item, index) => <div className={infoCardClass} key={index}><strong className="block">{pickLocalized(locale, { en: item.nameEn, ar: item.nameAr })}</strong><span className="text-sm text-muted-foreground">{t('quantity')} {item.quantity} · {formatMoney(item.unitPriceMinor, locale)}</span>{item.addOns.map((addOn) => <span key={addOn.nameEn} className="block text-sm text-muted-foreground">+ {pickLocalized(locale, { en: addOn.nameEn, ar: addOn.nameAr })} · {formatMoney(addOn.priceMinor, locale)}</span>)}</div>)}</div>
