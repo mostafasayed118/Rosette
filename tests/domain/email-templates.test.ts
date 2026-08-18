@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderOrderEmail } from '@/features/notifications/email-templates';
+import { NOTIFICATION_TYPES } from '@/features/notifications/notification-retry';
 
 describe('order email templates', () => {
   it('renders Arabic as RTL and escapes order values', () => {
@@ -57,5 +58,16 @@ describe('order email templates', () => {
     expect(text).toMatch(/Subtotal:\s*EGP\s*100/);
     expect(text).toMatch(/Delivery:\s*EGP\s*75/);
     expect(text).not.toContain('Discount');
+  });
+
+  it('renders cancellation subjects in all three locales', () => {
+    expect(renderOrderEmail({ locale: 'en', type: 'cancel_approved', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' }).subject).toBe('Your cancellation was confirmed');
+    expect(renderOrderEmail({ locale: 'ar', type: 'cancel_approved', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' }).subject).toBe('تم تأكيد إلغاء طلبك');
+    expect(renderOrderEmail({ locale: 'fr', type: 'cancel_rejected', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' }).subject).toBe('Demande d’annulation refusée');
+  });
+
+  it('includes cancellation types in the retryable notification set', () => {
+    expect(NOTIFICATION_TYPES.has('cancel_approved')).toBe(true);
+    expect(NOTIFICATION_TYPES.has('cancel_rejected')).toBe(true);
   });
 });

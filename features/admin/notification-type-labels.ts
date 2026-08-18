@@ -6,4 +6,6 @@ export const NOTIFICATION_TYPE_LABEL_KEYS: Record<string, string> = {
   ready_for_delivery: 'statusReadyForDelivery',
   out_for_delivery: 'statusOutForDelivery',
   delivered: 'statusDelivered',
+  cancel_approved: 'emailCancelApproved',
+  cancel_rejected: 'emailCancelRejected',
 };
