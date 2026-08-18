@@ -60,7 +60,7 @@ export async function requestCancellation(
           deliveryFeeMinor: order.delivery_fee_minor,
           discountMinor: order.discount_minor ?? undefined,
           orderUrl: `${(deps.orderUrlBase ?? '').replace(/\/$/, '')}/orders/${order.id}?token=${encodeURIComponent(order.public_token ?? '')}`,
-        }, deps.deliver);
+        }, deps.deliver as never);
       }
       return { status: 'auto_cancelled' };
     }
@@ -112,7 +112,7 @@ export async function reviewCancellationRequest(
       if (error) return { status: 'failure' };
       await client.from('order_events').insert({ order_id: order.id, actor_id: input.admin.userId, event_type: 'cancel_rejected', from_status: null, to_status: null });
       await client.from('admin_audit_logs').insert({ actor_id: input.admin.userId, action: 'reject_cancellation', target_type: 'order', target_id: order.id, metadata: { request_id: input.requestId, reason } });
-      if (order.customer_email) await deliver(client, { ...emailBase, type: 'cancel_rejected' }, deps.deliver);
+      if (order.customer_email) await deliver(client, { ...emailBase, type: 'cancel_rejected' }, deps.deliver as never);
       return { status: 'rejected' };
     }
 
@@ -122,7 +122,7 @@ export async function reviewCancellationRequest(
     if (requestError || orderError) return { status: 'failure' };
     await client.from('order_events').insert({ order_id: order.id, actor_id: input.admin.userId, event_type: 'cancelled', from_status: order.fulfillment_status, to_status: 'cancelled' });
     await client.from('admin_audit_logs').insert({ actor_id: input.admin.userId, action: 'approve_cancellation', target_type: 'order', target_id: order.id, metadata: { request_id: input.requestId } });
-    if (order.customer_email) await deliver(client, { ...emailBase, type: 'cancel_approved' }, deps.deliver);
+    if (order.customer_email) await deliver(client, { ...emailBase, type: 'cancel_approved' }, deps.deliver as never);
     return { status: 'approved' };
   } catch {
     return { status: 'failure' };

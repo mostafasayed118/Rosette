@@ -13,7 +13,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (body.action !== 'approve' && body.action !== 'reject') return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   const reason = typeof body.reason === 'string' ? body.reason.trim() || undefined : undefined;
   const result = await reviewCancellationRequest(getAdminSupabase(), { admin, requestId: id, action: body.action, reason, orderUrlBase: getPublicOrigin(request) });
-  return respond(result, {
+  return respond(result.status, {
     not_found: { status: 404, error: 'Request not found' },
     not_cancellable: { status: 409, error: 'Order is no longer cancellable' },
     failure: { status: 500, error: 'Could not review cancellation' },
