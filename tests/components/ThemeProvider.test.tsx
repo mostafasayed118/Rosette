@@ -32,6 +32,13 @@ describe('ThemeProvider', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
+  it('falls back to the theme cookie (SSR path) when localStorage is empty', () => {
+    document.cookie = 'rosette.theme=dark; path=/';
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    expect(screen.getByRole('button')).toHaveTextContent('dark');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
   it('persists the choice and mirrors it to a cookie', async () => {
     const user = userEvent.setup();
     render(<ThemeProvider><Probe /></ThemeProvider>);

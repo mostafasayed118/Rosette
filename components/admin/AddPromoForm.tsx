@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import type { PromoInput } from '@/features/admin/promo-actions';
 
