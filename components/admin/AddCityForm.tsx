@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { StatusMessage } from '@/components/ui/status-message';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
 function toMinor(egp: string): number {
@@ -21,7 +21,6 @@ export function AddCityForm() {
   const router = useRouter();
   const { t } = useI18n();
   const [form, setForm] = useState(empty);
-  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
   function patch(p: Partial<typeof empty>) { setForm((current) => ({ ...current, ...p })); }
@@ -29,23 +28,22 @@ export function AddCityForm() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    setError('');
     const response = await fetch('/api/admin/delivery', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'create-city', code: form.code.trim(), nameEn: form.nameEn, nameAr: form.nameAr, sameDay: form.sameDay, feeMinor: toMinor(form.fee), minimumOrderMinor: toMinor(form.minimum), cutoffHour: Number.parseInt(form.cutoff, 10) }),
     });
     if (!response.ok) {
-      setError(response.status === 409 ? t('cityCodeExists') : t('couldNotCreateCity'));
+      toast.error(response.status === 409 ? t('cityCodeExists') : t('couldNotCreateCity'));
       setSaving(false);
       return;
     }
+    toast.success(t('cityAdded'));
     router.refresh();
     setForm(empty);
   }
 
   return <form className="grid max-w-[60rem] gap-6" onSubmit={submit} noValidate>
-    {error ? <StatusMessage title={error} tone="error" /> : null}
     <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('addCity')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
       <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('codeLabel')}</span><input className={inputClass} type="text" value={form.code} onChange={(e) => patch({ code: e.target.value })} placeholder="greater-cairo" required /></label>
       <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('nameEn')}</span><input className={inputClass} type="text" value={form.nameEn} onChange={(e) => patch({ nameEn: e.target.value })} required /></label>

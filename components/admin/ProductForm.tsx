@@ -2,9 +2,9 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
-import { StatusMessage } from '@/components/ui/status-message';
 import { CATEGORIES, OCCASIONS, type SaveProductInput } from '@/features/admin/catalog-validation';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
@@ -36,7 +36,6 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
     priceMinor: 0, tone: '#bc6d63', imageUrl: '', delivery: 'Next-day delivery', active: true,
     variants: [emptyVariant()], addOns: [],
   });
-  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
   function patch(p: Partial<SaveProductInput>) { setProduct((current) => ({ ...current, ...p })); }
@@ -50,22 +49,20 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    setError('');
     const response = initial
       ? await fetch(`/api/admin/products/${initial.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product }) })
       : await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product }) });
     if (!response.ok) {
-      setError(t('couldNotSaveProduct'));
+      toast.error(t('couldNotSaveProduct'));
       setSaving(false);
       return;
     }
+    toast.success(t('productSaved'));
     router.push('/admin/products');
     router.refresh();
   }
 
   return <form className="grid max-w-[60rem] gap-6 pt-6" onSubmit={submit} noValidate>
-    {error ? <StatusMessage title={error} tone="error" /> : null}
-
     <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('identity')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
       <Field id="nameEn" label={t('nameEn')} value={product.nameEn} onChange={(e) => patch({ nameEn: e.target.value })} required />
       <Field id="nameAr" label={t('nameAr')} value={product.nameAr} onChange={(e) => patch({ nameAr: e.target.value })} required />

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
@@ -26,23 +27,22 @@ export function DeliveryRuleForm({ cityCode, initial }: { cityCode: string; init
   const [minimum, setMinimum] = useState(minorToEgp(initial.minimumOrderMinor));
   const [cutoff, setCutoff] = useState(String(initial.cutoffHour));
   const [active, setActive] = useState(initial.active);
-  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    setError('');
     const response = await fetch('/api/admin/delivery', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'update-rule', cityCode, feeMinor: toMinor(fee), minimumOrderMinor: toMinor(minimum), cutoffHour: Number.parseInt(cutoff, 10), active }),
     });
     if (!response.ok) {
-      setError(t('couldNotSaveRule'));
+      toast.error(t('couldNotSaveRule'));
       setSaving(false);
       return;
     }
+    toast.success(t('ruleSaved'));
     router.refresh();
   }
 
@@ -52,6 +52,5 @@ export function DeliveryRuleForm({ cityCode, initial }: { cityCode: string; init
     <select className={inputClass} value={cutoff} onChange={(e) => setCutoff(e.target.value)} aria-label={t('cutoffHour')}>{HOURS.map((h) => <option key={h} value={h}>{h}:00</option>)}</select>
     <label className="flex items-center gap-2"><input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} className="accent-primary" /><span className="text-sm">{t('active')}</span></label>
     <Button size="sm" type="submit" disabled={saving}>{saving ? t('saving') : t('save')}</Button>
-    {error ? <small className="text-sm text-destructive">{error}</small> : null}
   </form>;
 }

@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { StatusMessage } from '@/components/ui/status-message';
 import type { FulfillmentStatus } from '@/features/commerce/order-state';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
@@ -20,21 +20,20 @@ export function OrderActions({ orderId, transitions }: { orderId: string; transi
   const router = useRouter();
   const { t } = useI18n();
   const [pending, setPending] = useState<string | null>(null);
-  const [error, setError] = useState('');
 
   if (!transitions.length) return null;
 
   async function move(status: FulfillmentStatus) {
     setPending(status);
-    setError('');
     const response = await fetch(`/api/admin/orders/${orderId}/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
     if (!response.ok) {
-      setError(t('couldNotUpdateOrder'));
+      toast.error(t('couldNotUpdateOrder'));
       setPending(null);
       return;
     }
+    toast.success(t('statusUpdated'));
     router.refresh();
   }
 
-  return <div className="grid gap-3">{error ? <StatusMessage title={error} tone="error" /> : null}<div className="flex flex-wrap gap-2.5">{transitions.map((status) => <Button key={status} size="sm" variant="outline" disabled={pending !== null} onClick={() => void move(status)}>{pending === status ? t('updating') : t(labelKeys[status])}</Button>)}</div></div>;
+  return <div className="grid gap-3"><div className="flex flex-wrap gap-2.5">{transitions.map((status) => <Button key={status} size="sm" variant="outline" disabled={pending !== null} onClick={() => void move(status)}>{pending === status ? t('updating') : t(labelKeys[status])}</Button>)}</div></div>;
 }

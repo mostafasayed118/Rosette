@@ -7,6 +7,7 @@ import { CartProvider } from '@/features/cart/CartProvider';
 import { I18nProvider } from '@/features/i18n/I18nProvider';
 import { resolveHtmlAttributes } from '@/features/i18n/server-html';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
+import { Toaster } from '@/components/ui/sonner';
 import { ChatWidget } from '@/features/chat/ChatWidget';
 import { getOptionalServerEnv } from '@/lib/server-env';
 
@@ -22,5 +23,5 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const store = await cookies();
   const attrs = resolveHtmlAttributes(store.get('rosette.locale')?.value, store.get('rosette.theme')?.value);
-  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${inter.variable} ${cairo.variable}${attrs.themeClass}`}><body><ThemeProvider><I18nProvider><CartProvider>{children}</CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></body></html>;
+  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${inter.variable} ${cairo.variable}${attrs.themeClass}`}><body><ThemeProvider><I18nProvider><CartProvider>{children}</CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider><Toaster richColors position="top-center" /></ThemeProvider></body></html>;
 }
