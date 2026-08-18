@@ -22,7 +22,7 @@
 - No new tables, no migrations, no changes to customer-facing code (checkout already reads only active rules).
 - No secrets in code or tests; tests use fakes only, never live services.
 - TDD: failing test → run (red) → implement → run (green) → commit.
-- All 90 existing tests stay passing.
+- All 69 existing tests stay passing (the catalog editor's 21 tests are still in open PR #1 and are not on master).
 
 ---
 
@@ -328,7 +328,7 @@ Expected: PASS (9 tests).
 - [ ] **Step 5: Run the full suite, then commit**
 
 Run: `npm test`
-Expected: 90 existing + 17 new = **107 passed**.
+Expected: 69 existing + 17 new = **86 passed**.
 
 ```bash
 git add features/admin/delivery-actions.ts tests/domain/delivery-actions.test.ts
@@ -599,7 +599,7 @@ git commit -m "feat: add inline delivery rules editor and add-city form"
 - [ ] **Step 1: Run the full gate**
 
 Run: `npm test && npm run lint && npm run build && git diff --check`
-Expected: all tests pass (90 existing + 17 new = **107**), tsc clean, build succeeds, no whitespace errors.
+Expected: all tests pass (69 existing + 17 new = **86**), tsc clean, build succeeds, no whitespace errors.
 
 - [ ] **Step 2: Secret scan**
 
