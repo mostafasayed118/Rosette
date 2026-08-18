@@ -1,4 +1,27 @@
-import type { BlogPost } from './types';
+import type { Author, BlogPost } from './types';
+
+export const localAuthors: Author[] = [
+  {
+    id: 'a0000000-0000-4000-8000-000000000001',
+    slug: 'nour-hassan',
+    nameEn: 'Nour Hassan',
+    nameAr: 'نور حسن',
+    roleEn: 'Founder & head florist',
+    roleAr: 'المؤسِّسة ورئيسة الزهور',
+    bioEn: 'Nour founded Rosette after a decade behind the florist’s bench in Cairo, sourcing stems from local farms and tying every bouquet by hand.',
+    bioAr: 'أسّست نور روزيت بعد عقد خلف طاولة بائع الزهور في القاهرة، وهي تختار الأزهار من المزارع المحلية وتربط كل باقة يدوياً.',
+  },
+  {
+    id: 'a0000000-0000-4000-8000-000000000002',
+    slug: 'rosette-studio',
+    nameEn: 'The Rosette Studio',
+    nameAr: 'استوديو روزيت',
+    roleEn: 'The Rosette team',
+    roleAr: 'فريق روزيت',
+    bioEn: 'The people behind the bouquets — growers, couriers, and the studio hands who make same-day delivery happen across Egypt.',
+    bioAr: 'الأشخاص الذين يقفون خلف الباقات — المزارعون وسائقو التوصيل وأيدي الاستوديو الذين يجعلون التوصيل في نفس اليوم ممكناً في جميع أنحاء مصر.',
+  },
+];
 
 export const localPosts: BlogPost[] = [
   {
@@ -6,6 +29,7 @@ export const localPosts: BlogPost[] = [
     slug: 'how-flower-delivery-works',
     type: 'post',
     cityCode: null,
+    authorId: 'a0000000-0000-4000-8000-000000000001',
     titleEn: 'How flower delivery works in Egypt',
     titleAr: 'كيف تعمل خدمة توصيل الزهور في مصر',
     excerptEn: 'Same-day windows, city coverage, and what to expect when your bouquet arrives.',
@@ -23,6 +47,7 @@ export const localPosts: BlogPost[] = [
     slug: 'keep-roses-fresh',
     type: 'post',
     cityCode: null,
+    authorId: 'a0000000-0000-4000-8000-000000000001',
     titleEn: '5 tips for keeping roses fresh longer',
     titleAr: '5 نصائح لإبقاء الورد طازجاً لفترة أطول',
     excerptEn: 'Cut stems, fresh water, cool corners: the small habits that extend a bouquet’s life.',
@@ -40,6 +65,7 @@ export const localPosts: BlogPost[] = [
     slug: 'sympathy-flowers-etiquette',
     type: 'post',
     cityCode: null,
+    authorId: 'a0000000-0000-4000-8000-000000000002',
     titleEn: 'Sympathy flowers: etiquette and timing',
     titleAr: 'زهور التعازي: الآداب والتوقيت',
     excerptEn: 'When to send, what to choose, and how to word the card.',
@@ -57,6 +83,7 @@ export const localPosts: BlogPost[] = [
     slug: 'same-day-flower-delivery-cairo',
     type: 'city',
     cityCode: 'greater-cairo',
+    authorId: 'a0000000-0000-4000-8000-000000000002',
     titleEn: 'Same-day flower delivery in Cairo',
     titleAr: 'توصيل زهور في نفس اليوم في القاهرة',
     excerptEn: 'Fresh bouquets delivered across Greater Cairo the same day you order.',
@@ -74,6 +101,7 @@ export const localPosts: BlogPost[] = [
     slug: 'flower-delivery-alexandria',
     type: 'city',
     cityCode: 'alexandria',
+    authorId: 'a0000000-0000-4000-8000-000000000002',
     titleEn: 'Flower delivery in Alexandria',
     titleAr: 'توصيل الزهور في الإسكندرية',
     excerptEn: 'Same-day bouquets across the coastal city.',

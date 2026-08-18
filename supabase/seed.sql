@@ -332,12 +332,46 @@ on conflict (variant_id) do update
       reserved_quantity = least(inventory.reserved_quantity, excluded.quantity);
 
 -- ---------------------------------------------------------------------------
--- Blog posts & per-city landing pages (blog_posts, migration 006)
+-- Blog authors (authors, migration 007)
 -- ---------------------------------------------------------------------------
-insert into public.blog_posts (id, slug, type, city_code, title_en, title_ar, title_fr, excerpt_en, excerpt_ar, excerpt_fr, content_en, content_ar, content_fr, category, published, published_at)
+insert into public.authors (id, slug, name_en, name_ar, name_fr, role_en, role_ar, role_fr, bio_en, bio_ar, bio_fr)
 values
   (
-    '90000000-0000-4000-8000-000000000001', 'how-flower-delivery-works', 'post', null,
+    'a0000000-0000-4000-8000-000000000001', 'nour-hassan',
+    'Nour Hassan', 'نور حسن', 'Nour Hassan',
+    'Founder & head florist', 'المؤسِّسة ورئيسة الزهور', 'Fondatrice et fleuriste en chef',
+    'Nour founded Rosette after a decade behind the florist’s bench in Cairo, sourcing stems from local farms and tying every bouquet by hand.',
+    'أسّست نور روزيت بعد عقد خلف طاولة بائع الزهور في القاهرة، وهي تختار الأزهار من المزارع المحلية وتربط كل باقة يدوياً.',
+    'Nour a fondé Rosette après une décennie derrière l’établi de fleuriste au Caire, choisissant les fleurs auprès de fermes locales et nouant chaque bouquet à la main.'
+  ),
+  (
+    'a0000000-0000-4000-8000-000000000002', 'rosette-studio',
+    'The Rosette Studio', 'استوديو روزيت', 'Le Studio Rosette',
+    'The Rosette team', 'فريق روزيت', 'L’équipe Rosette',
+    'The people behind the bouquets — growers, couriers, and the studio hands who make same-day delivery happen across Egypt.',
+    'الأشخاص الذين يقفون خلف الباقات — المزارعون وسائقو التوصيل وأيدي الاستوديو الذين يجعلون التوصيل في نفس اليوم ممكناً في جميع أنحاء مصر.',
+    'Les personnes derrière les bouquets — producteurs, coursiers et les mains du studio qui rendent possible la livraison le jour même partout en Égypte.'
+  )
+on conflict (id) do update
+  set slug = excluded.slug,
+      name_en = excluded.name_en,
+      name_ar = excluded.name_ar,
+      name_fr = excluded.name_fr,
+      role_en = excluded.role_en,
+      role_ar = excluded.role_ar,
+      role_fr = excluded.role_fr,
+      bio_en = excluded.bio_en,
+      bio_ar = excluded.bio_ar,
+      bio_fr = excluded.bio_fr,
+      avatar_url = excluded.avatar_url;
+
+-- ---------------------------------------------------------------------------
+-- Blog posts & per-city landing pages (blog_posts, migration 006)
+-- ---------------------------------------------------------------------------
+insert into public.blog_posts (id, slug, type, city_code, author_id, title_en, title_ar, title_fr, excerpt_en, excerpt_ar, excerpt_fr, content_en, content_ar, content_fr, category, published, published_at)
+values
+  (
+    '90000000-0000-4000-8000-000000000001', 'how-flower-delivery-works', 'post', null, 'a0000000-0000-4000-8000-000000000001',
     'How flower delivery works in Egypt', 'كيف تعمل خدمة توصيل الزهور في مصر', 'Comment fonctionne la livraison de fleurs en Égypte',
     'Same-day windows, city coverage, and what to expect when your bouquet arrives.', 'نوافذ التوصيل في نفس اليوم، تغطية المدن، وما يمكن توقعه عند وصول باقتك.', 'Fenêtres de livraison le jour même, couverture des villes et à quoi vous attendre.',
     '<p>Ordering flowers online in Egypt is simpler than it looks. Pick your city, choose a delivery date and window, and we handle the rest.</p><h2>Same-day delivery</h2><p>Greater Cairo and Alexandria offer same-day delivery when you order before the afternoon cutoff. Other cities are served next day.</p><h2>What to expect</h2><p>Every bouquet arrives wrapped and ready to gift, with your message card included. The sender’s details stay private.</p>',
@@ -346,7 +380,7 @@ values
     'guides', true, now() - interval '10 days'
   ),
   (
-    '90000000-0000-4000-8000-000000000002', 'keep-roses-fresh', 'post', null,
+    '90000000-0000-4000-8000-000000000002', 'keep-roses-fresh', 'post', null, 'a0000000-0000-4000-8000-000000000001',
     '5 tips for keeping roses fresh longer', '5 نصائح لإبقاء الورد طازجاً لفترة أطول', '5 conseils pour garder vos roses fraîches',
     'Cut stems, fresh water, cool corners: the small habits that extend a bouquet’s life.', 'قص السيقان، ماء نظيف، زاوية باردة: عادات صغيرة تطيل عمر الباقة.', 'Tige coupée, eau fraîche, coin frais : les petites habitudes qui prolongent la vie d’un bouquet.',
     '<p>Fresh roses can easily last a week with a little care.</p><ul><li>Trim the stems at an angle every two days.</li><li>Change the water and rinse the vase.</li><li>Keep the bouquet away from direct sun and fruit bowls.</li></ul>',
@@ -355,7 +389,7 @@ values
     'care', true, now() - interval '6 days'
   ),
   (
-    '90000000-0000-4000-8000-000000000003', 'sympathy-flowers-etiquette', 'post', null,
+    '90000000-0000-4000-8000-000000000003', 'sympathy-flowers-etiquette', 'post', null, 'a0000000-0000-4000-8000-000000000002',
     'Sympathy flowers: etiquette and timing', 'زهور التعازي: الآداب والتوقيت', 'Fleurs de condoléances : étiquette et timing',
     'When to send, what to choose, and how to word the card for moments of loss.', 'متى ترسل، وماذا تختار، وكيف تصوغ البطاقة في لحظات الفقد.', 'Quand envoyer, que choisir et comment rédiger la carte dans les moments de deuil.',
     '<p>White and soft-hued arrangements are the classic choice for sympathy. Send as soon as you learn the news; a thoughtful message matters more than length.</p>',
@@ -364,7 +398,7 @@ values
     'occasions', true, now() - interval '2 days'
   ),
   (
-    '90000000-0000-4000-8000-000000000004', 'same-day-flower-delivery-cairo', 'city', 'greater-cairo',
+    '90000000-0000-4000-8000-000000000004', 'same-day-flower-delivery-cairo', 'city', 'greater-cairo', 'a0000000-0000-4000-8000-000000000002',
     'Same-day flower delivery in Cairo', 'توصيل زهور في نفس اليوم في القاهرة', 'Livraison de fleurs le jour même au Caire',
     'Fresh bouquets delivered across Greater Cairo the same day you order.', 'باقات طازجة تُوصَّل في جميع أنحاء القاهرة الكبرى في نفس يوم الطلب.', 'Bouquets frais livrés dans tout le Grand Caire le jour même de la commande.',
     '<p>Greater Cairo is our flagship same-day city. Order before the afternoon cutoff and your bouquet arrives in a chosen window, wrapped and ready.</p><p>We deliver to Cairo, Giza, and the surrounding districts every day except Friday.</p>',
@@ -373,7 +407,7 @@ values
     'delivery', true, now() - interval '4 days'
   ),
   (
-    '90000000-0000-4000-8000-000000000005', 'flower-delivery-alexandria', 'city', 'alexandria',
+    '90000000-0000-4000-8000-000000000005', 'flower-delivery-alexandria', 'city', 'alexandria', 'a0000000-0000-4000-8000-000000000002',
     'Flower delivery in Alexandria', 'توصيل الزهور في الإسكندرية', 'Livraison de fleurs à Alexandrie',
     'Same-day bouquets across the coastal city, from Raml to Maamoura.', 'باقات في نفس اليوم في جميع أنحاء المدينة الساحلية، من الرمل إلى المعمورة.', 'Bouquets le jour même dans toute la ville côtière, de Raml à Maamoura.',
     '<p>Alexandria enjoys same-day delivery across the coastal city, including Raml, Maamoura, and the east and west districts.</p><p>Order before the cutoff and pick a window that suits the recipient.</p>',
@@ -396,7 +430,8 @@ on conflict (id) do update
       content_fr = excluded.content_fr,
       category = excluded.category,
       published = excluded.published,
-      published_at = excluded.published_at;
+      published_at = excluded.published_at,
+      author_id = excluded.author_id;
 
 -- ---------------------------------------------------------------------------
 -- Done. Run supabase/migrations/001_commerce.sql first.
