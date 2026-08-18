@@ -332,5 +332,72 @@ on conflict (variant_id) do update
       reserved_quantity = least(inventory.reserved_quantity, excluded.quantity);
 
 -- ---------------------------------------------------------------------------
+-- Blog posts & per-city landing pages (blog_posts, migration 006)
+-- ---------------------------------------------------------------------------
+insert into public.blog_posts (id, slug, type, city_code, title_en, title_ar, title_fr, excerpt_en, excerpt_ar, excerpt_fr, content_en, content_ar, content_fr, category, published, published_at)
+values
+  (
+    '90000000-0000-4000-8000-000000000001', 'how-flower-delivery-works', 'post', null,
+    'How flower delivery works in Egypt', 'كيف تعمل خدمة توصيل الزهور في مصر', 'Comment fonctionne la livraison de fleurs en Égypte',
+    'Same-day windows, city coverage, and what to expect when your bouquet arrives.', 'نوافذ التوصيل في نفس اليوم، تغطية المدن، وما يمكن توقعه عند وصول باقتك.', 'Fenêtres de livraison le jour même, couverture des villes et à quoi vous attendre.',
+    '<p>Ordering flowers online in Egypt is simpler than it looks. Pick your city, choose a delivery date and window, and we handle the rest.</p><h2>Same-day delivery</h2><p>Greater Cairo and Alexandria offer same-day delivery when you order before the afternoon cutoff. Other cities are served next day.</p><h2>What to expect</h2><p>Every bouquet arrives wrapped and ready to gift, with your message card included. The sender’s details stay private.</p>',
+    '<p>طلب الزهور أونلاين في مصر أسهل مما يبدو. اختر مدينتك، وحدد تاريخ ووقت التوصيل، ونحن نتولى الباقي.</p><h2>توصيل نفس اليوم</h2><p>القاهرة الكبرى والإسكندرية توفران توصيل نفس اليوم عند الطلب قبل موعد القطع بعد الظهر. باقي المدن تُخدم في اليوم التالي.</p><h2>ما يمكن توقعه</h2><p>كل باقة تصل مغلفة وجاهزة للإهداء، مع بطاقة رسالتك. تظل بيانات المرسل خاصة.</p>',
+    '<p>Commander des fleurs en ligne en Égypte est plus simple qu’il n’y paraît. Choisissez votre ville, une date et un créneau de livraison, et nous nous occupons du reste.</p><h2>Livraison le jour même</h2><p>Le Grand Caire et Alexandrie offrent la livraison le jour même avant la limite de l’après-midi. Les autres villes sont livrées le lendemain.</p><h2>À quoi vous attendre</h2><p>Chaque bouquet arrive emballé et prêt à offrir, avec votre carte de message. Les coordonnées de l’expéditeur restent privées.</p>',
+    'guides', true, now() - interval '10 days'
+  ),
+  (
+    '90000000-0000-4000-8000-000000000002', 'keep-roses-fresh', 'post', null,
+    '5 tips for keeping roses fresh longer', '5 نصائح لإبقاء الورد طازجاً لفترة أطول', '5 conseils pour garder vos roses fraîches',
+    'Cut stems, fresh water, cool corners: the small habits that extend a bouquet’s life.', 'قص السيقان، ماء نظيف، زاوية باردة: عادات صغيرة تطيل عمر الباقة.', 'Tige coupée, eau fraîche, coin frais : les petites habitudes qui prolongent la vie d’un bouquet.',
+    '<p>Fresh roses can easily last a week with a little care.</p><ul><li>Trim the stems at an angle every two days.</li><li>Change the water and rinse the vase.</li><li>Keep the bouquet away from direct sun and fruit bowls.</li></ul>',
+    '<p>يمكن للورد الطازج أن يعيش أسبوعاً بسهولة مع قليل من العناية.</p><ul><li>قص السيقان بزاوية كل يومين.</li><li>غيّر الماء واغسل المزهرية.</li><li>أبعد الباقة عن الشمس المباشرة ووعاء الفاكهة.</li></ul>',
+    '<p>Les roses fraîches peuvent facilement durer une semaine avec un peu de soin.</p><ul><li>Coupez les tiges en biais tous les deux jours.</li><li>Changez l’eau et rincez le vase.</li><li>Gardez le bouquet loin du soleil direct et des fruits.</li></ul>',
+    'care', true, now() - interval '6 days'
+  ),
+  (
+    '90000000-0000-4000-8000-000000000003', 'sympathy-flowers-etiquette', 'post', null,
+    'Sympathy flowers: etiquette and timing', 'زهور التعازي: الآداب والتوقيت', 'Fleurs de condoléances : étiquette et timing',
+    'When to send, what to choose, and how to word the card for moments of loss.', 'متى ترسل، وماذا تختار، وكيف تصوغ البطاقة في لحظات الفقد.', 'Quand envoyer, que choisir et comment rédiger la carte dans les moments de deuil.',
+    '<p>White and soft-hued arrangements are the classic choice for sympathy. Send as soon as you learn the news; a thoughtful message matters more than length.</p>',
+    '<p>الترتيبات البيضاء والهادئة هي الخيار الكلاسيكي للتعازي. أرسل فور معرفتك بالخبر؛ الرسالة المدروسة أهم من طولها.</p>',
+    '<p>Les compositions blanches et douces sont le choix classique pour les condoléances. Envoyez dès que vous apprenez la nouvelle ; un message attentionné compte plus que sa longueur.</p>',
+    'occasions', true, now() - interval '2 days'
+  ),
+  (
+    '90000000-0000-4000-8000-000000000004', 'same-day-flower-delivery-cairo', 'city', 'greater-cairo',
+    'Same-day flower delivery in Cairo', 'توصيل زهور في نفس اليوم في القاهرة', 'Livraison de fleurs le jour même au Caire',
+    'Fresh bouquets delivered across Greater Cairo the same day you order.', 'باقات طازجة تُوصَّل في جميع أنحاء القاهرة الكبرى في نفس يوم الطلب.', 'Bouquets frais livrés dans tout le Grand Caire le jour même de la commande.',
+    '<p>Greater Cairo is our flagship same-day city. Order before the afternoon cutoff and your bouquet arrives in a chosen window, wrapped and ready.</p><p>We deliver to Cairo, Giza, and the surrounding districts every day except Friday.</p>',
+    '<p>القاهرة الكبرى هي مدينتنا الرئيسية للتوصيل في نفس اليوم. اطلب قبل موعد القطع بعد الظهر وستصل باقتك في الوقت الذي اخترته، مغلفة وجاهزة.</p><p>نوصل إلى القاهرة والجيزة والمناطق المحيطة كل يوم ما عدا الجمعة.</p>',
+    '<p>Le Grand Caire est notre ville phare pour la livraison le jour même. Commandez avant la limite de l’après-midi et votre bouquet arrive dans le créneau choisi, emballé et prêt.</p><p>Nous livrons au Caire, à Guizeh et aux quartiers environnants tous les jours sauf le vendredi.</p>',
+    'delivery', true, now() - interval '4 days'
+  ),
+  (
+    '90000000-0000-4000-8000-000000000005', 'flower-delivery-alexandria', 'city', 'alexandria',
+    'Flower delivery in Alexandria', 'توصيل الزهور في الإسكندرية', 'Livraison de fleurs à Alexandrie',
+    'Same-day bouquets across the coastal city, from Raml to Maamoura.', 'باقات في نفس اليوم في جميع أنحاء المدينة الساحلية، من الرمل إلى المعمورة.', 'Bouquets le jour même dans toute la ville côtière, de Raml à Maamoura.',
+    '<p>Alexandria enjoys same-day delivery across the coastal city, including Raml, Maamoura, and the east and west districts.</p><p>Order before the cutoff and pick a window that suits the recipient.</p>',
+    '<p>تتمتع الإسكندرية بتوصيل نفس اليوم في جميع أنحاء المدينة الساحلية، بما في ذلك الرمل والمعمورة والمناطق الشرقية والغربية.</p><p>اطلب قبل موعد القطع واختر الوقت المناسب للمستلم.</p>',
+    '<p>Alexandrie bénéficie de la livraison le jour même dans toute la ville côtière, y compris Raml, Maamoura et les quartiers est et ouest.</p><p>Commandez avant la limite et choisissez un créneau qui convient au destinataire.</p>',
+    'delivery', true, now() - interval '3 days'
+  )
+on conflict (id) do update
+  set slug = excluded.slug,
+      type = excluded.type,
+      city_code = excluded.city_code,
+      title_en = excluded.title_en,
+      title_ar = excluded.title_ar,
+      title_fr = excluded.title_fr,
+      excerpt_en = excluded.excerpt_en,
+      excerpt_ar = excluded.excerpt_ar,
+      excerpt_fr = excluded.excerpt_fr,
+      content_en = excluded.content_en,
+      content_ar = excluded.content_ar,
+      content_fr = excluded.content_fr,
+      category = excluded.category,
+      published = excluded.published,
+      published_at = excluded.published_at;
+
+-- ---------------------------------------------------------------------------
 -- Done. Run supabase/migrations/001_commerce.sql first.
 -- ---------------------------------------------------------------------------
