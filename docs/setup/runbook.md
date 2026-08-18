@@ -62,9 +62,10 @@ in `.env.local`.
 
 Open the **SQL Editor** in the dashboard and, in numeric order, paste and
 **Run** the full content of each file under `supabase/migrations/`
-(`001_commerce.sql`, `002_promos.sql`, `002_profiles_policy.sql`,
+(`001_commerce.sql`, `002_profiles_policy.sql`,
 `003_french_localization.sql`, `004_product_images.sql`,
-`005_customer_accounts.sql`). `001` creates:
+`005_customer_accounts.sql`, `006_blog.sql`,
+`007_blog_authors.sql`, `008_promos.sql`). `001` creates:
 
 - `profiles`, `categories`, `products`, `product_variants`, `cities`,
   `delivery_rules`, `inventory`, `orders`, `order_items`,
