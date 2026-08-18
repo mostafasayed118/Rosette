@@ -17,6 +17,7 @@ import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { formatMoney } from '@/features/money';
 import { createLocalOrder } from '@/features/order/local-repository';
+import { SignedInNotice } from './SignedInNotice';
 import { validateCheckout } from './validation';
 import type { CheckoutErrors, CheckoutInput } from './types';
 
@@ -93,6 +94,7 @@ export function CheckoutForm() {
   if (!cart.lines.length) return <StatusMessage title={t('bagWaiting')} />;
 
   return <form className="grid max-w-[60rem] gap-6 pt-8" onSubmit={submit} noValidate>
+    <SignedInNotice />
     {message ? <StatusMessage title={message} tone="error" /> : null}
     <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('whoFor')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1"><Field id="recipientName" label={t('recipientName')} value={input.recipientName} onChange={(event) => update('recipientName', event.target.value)} error={errors.recipientName} required /><Field id="recipientPhone" label={t('recipientPhone')} type="tel" value={input.recipientPhone} onChange={(event) => update('recipientPhone', event.target.value)} error={errors.recipientPhone} required /><Field id="address" label={t('address')} className="col-span-2 max-md:col-span-1" value={input.address} onChange={(event) => update('address', event.target.value)} error={errors.address} required /></div></section>
     <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('details')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1"><Field id="senderName" label={t('yourName')} value={input.senderName} onChange={(event) => update('senderName', event.target.value)} error={errors.senderName} required /><Field id="senderEmail" label={t('yourEmail')} type="email" value={input.senderEmail} onChange={(event) => update('senderEmail', event.target.value)} error={errors.senderEmail} required /><Field id="deliveryDate" label={t('deliveryDate')} type="date" min={minDeliveryDate(new Date())} value={input.deliveryDate} onChange={(event) => update('deliveryDate', event.target.value)} error={errors.deliveryDate} required /><div className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('deliveryWindow')}</span><Select value={input.deliveryWindow} onValueChange={(value) => update('deliveryWindow', value)}><SelectTrigger id="deliveryWindow"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="12-3">12:00–15:00</SelectItem><SelectItem value="3-6">15:00–18:00</SelectItem><SelectItem value="6-9">18:00–21:00</SelectItem></SelectContent></Select>{errors.deliveryWindow ? <small className="text-sm text-destructive">{errors.deliveryWindow}</small> : null}</div></div></section>

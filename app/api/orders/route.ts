@@ -4,6 +4,7 @@ import { validateOrderRequest } from '@/features/order/order-request';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
 import { getPublicOrigin } from '@/lib/origin';
+import { getCurrentCustomer } from '@/features/auth/customer';
 import { logRouteError } from '@/lib/api';
 
 export async function POST(request: Request) {
@@ -13,7 +14,8 @@ export async function POST(request: Request) {
     if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
     if (!body.destination || !body.checkout || (body.locale !== 'ar' && body.locale !== 'en' && body.locale !== 'fr')) return NextResponse.json({ error: 'Incomplete checkout details' }, { status: 400 });
 
-    const result = await getOrderRepository().createPending({ cart: body.cart as never, destination: body.destination as never, checkout: body.checkout as never, locale: body.locale });
+    const customer = await getCurrentCustomer();
+    const result = await getOrderRepository().createPending({ cart: body.cart as never, destination: body.destination as never, checkout: body.checkout as never, locale: body.locale, customerId: customer?.id ?? null });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.error === 'invalid_promo' ? 400 : 409 });
     const order = result.value;
     const paymobConfigured = Boolean(getOptionalServerEnv('PAYMOB_API_KEY') && getOptionalServerEnv('PAYMOB_PUBLIC_KEY') && getOptionalServerEnv('PAYMOB_INTEGRATION_ID') && getOptionalServerEnv('PAYMOB_HMAC_SECRET'));
