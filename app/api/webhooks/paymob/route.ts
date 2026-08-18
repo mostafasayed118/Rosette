@@ -4,6 +4,7 @@ import { getRequiredServerEnv } from '@/lib/server-env';
 import { sendOrderNotification } from '@/features/notifications/notification-service';
 import { verifyPaymobCallback } from '@/features/payment/paymob-hmac';
 import { getPublicOrigin } from '@/lib/origin';
+import { logRouteError } from '@/lib/api';
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as Record<string, unknown> & { hmac?: string; obj?: Record<string, unknown> };
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Paymob webhook error', error instanceof Error ? error.message : 'unknown');
+    logRouteError('paymob webhook', error);
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }

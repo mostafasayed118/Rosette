@@ -1,5 +1,6 @@
 import Groq from 'groq-sdk';
 import { getOptionalServerEnv } from '@/lib/server-env';
+import { logRouteError } from '@/lib/api';
 import { getStoreContext } from './context';
 import { parseChatResponse } from './response-schema';
 import { classifyChatTopic } from './topic-guard';
@@ -39,7 +40,7 @@ export async function answerStoreQuestion(input: { message: string; language: 'e
     const validSlugs = new Set(context.map((product) => product.slug));
     return { ...parsed, productSlugs: parsed.productSlugs?.filter((slug) => validSlugs.has(slug)) };
   } catch (error) {
-    console.error('[chat] assistant error:', error);
+    logRouteError('chat', error);
     return fallback(input.language);
   }
 }

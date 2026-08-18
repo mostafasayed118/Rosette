@@ -4,6 +4,7 @@ import { validateOrderRequest } from '@/features/order/order-request';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
 import { getPublicOrigin } from '@/lib/origin';
+import { logRouteError } from '@/lib/api';
 
 export async function POST(request: Request) {
   try {
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: 'payment_started', checkoutUrl: payment.checkoutUrl });
   } catch (error) {
-    console.error('Order creation error', error instanceof Error ? error.message : 'unknown');
+    logRouteError('order creation', error);
     return NextResponse.json({ error: 'Checkout is temporarily unavailable.' }, { status: 503 });
   }
 }
