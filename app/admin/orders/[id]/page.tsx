@@ -12,6 +12,7 @@ import { createAdminWhatsAppHref } from '@/features/support/whatsapp';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
 import { formatMoney } from '@/features/money';
+import { fulfillmentLabel, paymentLabel } from '@/features/admin/status-labels';
 
 const allFulfillmentStatuses: FulfillmentStatus[] = ['confirmed', 'preparing', 'ready_for_delivery', 'out_for_delivery', 'delivered', 'cancelled'];
 
@@ -31,7 +32,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
   return <AdminShell>
     <p className="text-xs font-bold uppercase tracking-[.16em] text-sage"><Link className="underline underline-offset-4" href="/admin/orders">{t('orders')}</Link> · {order.display_number}</p>
     <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{order.display_number}</h1>
-    <p className="text-muted-foreground">{formatMoney(order.total_minor, locale)} · {t('payment')} {order.payment_status} · {t('fulfillmentFilter')} {order.fulfillment_status}</p>
+    <p className="text-muted-foreground">{formatMoney(order.total_minor, locale)} · {t('payment')} {paymentLabel(order.payment_status, t)} · {t('fulfillmentFilter')} {fulfillmentLabel(order.fulfillment_status, t)}</p>
 
     <Card className="mt-6"><CardHeader><CardTitle>{t('recipientAndDelivery')}</CardTitle></CardHeader><CardContent>
       <p>{order.recipient_name} · {order.recipient_phone}</p>
@@ -55,7 +56,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     <Card className="mt-4"><CardHeader><CardTitle>{t('timeline')}</CardTitle></CardHeader><CardContent>
       <ol className="my-0 grid list-none gap-0 p-0">
         {((order.order_events ?? []) as Array<{ id: string; event_type: string; from_status: string | null; to_status: string | null; created_at: string }>).map((event) => (
-          <li key={event.id} className="flex min-h-10 items-center gap-3 text-sm text-muted-foreground"><span className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-border bg-background" aria-hidden="true" />{event.event_type}: {event.from_status ?? '—'} → {event.to_status ?? '—'} · {new Date(event.created_at).toLocaleString('en-GB')}</li>
+          <li key={event.id} className="flex min-h-10 items-center gap-3 text-sm text-muted-foreground"><span className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-border bg-background" aria-hidden="true" />{event.event_type}: {event.from_status ?? '—'} → {event.to_status ?? '—'} · {new Date(event.created_at).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</li>
         ))}
       </ol>
     </CardContent></Card>

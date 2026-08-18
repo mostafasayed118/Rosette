@@ -43,7 +43,28 @@ GMAIL_APP_PASSWORD=<local-secret-only>
 GMAIL_FROM=your-business-email@gmail.com
 ```
 
-The app sends bilingual order messages from server code. Gmail is intended for low-volume MVP traffic and has provider sending limits. Email failures are recorded as retryable and do not reverse successful payment.
+The app sends bilingual order messages from server code at these points:
+
+- `order_received` — when the order is placed (before payment).
+- `payment_confirmed` — when Paymob confirms payment.
+- `ready_for_delivery`, `out_for_delivery`, `delivered` — on the matching admin fulfillment transition.
+
+Every send is recorded in `notification_deliveries` (`pending` → `sent`/`failed`). Gmail is intended for low-volume MVP traffic and has provider sending limits. Email failures are recorded as retryable and do not reverse a successful payment.
+
+### Retry job
+
+A cron endpoint retries deliveries stuck in `failed` (up to 3 attempts) or
+stale `pending` (older than 15 minutes):
+
+```text
+POST /api/cron/notifications
+Authorization: Bearer <CRON_SECRET>
+```
+
+Point any scheduler (Render cron, Fly.io machines, or a GitHub Actions
+`schedule` workflow) at it. The response reports
+`{ retried, sent, failed, skipped }`. Set `CRON_SECRET` in the environment;
+`SITE_URL` must also be set so the retried email links use the public domain.
 
 ## Groq chatbot
 

@@ -2,9 +2,11 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { StatusMessage } from '@/components/ui/status-message';
+import { minorToEgp, toMinor } from '@/features/admin/money';
 import { CATEGORIES, OCCASIONS, type SaveProductInput } from '@/features/admin/catalog-validation';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
@@ -16,17 +18,6 @@ type AddOnEntry = SaveProductInput['addOns'][number];
 const emptyVariant = (): VariantEntry => ({ nameEn: '', nameAr: '', priceDeltaMinor: 0, active: true, quantity: 0 });
 const emptyAddOn = (): AddOnEntry => ({ id: '', nameEn: '', nameAr: '', priceMinor: 0 });
 
-const selectClass = 'h-11 w-full rounded-[10px] border border-border bg-background px-3.5 text-foreground';
-const fieldLabelClass = 'grid gap-1.5';
-
-function toMinor(egp: string): number {
-  const parsed = Number.parseFloat(egp);
-  return Number.isFinite(parsed) ? Math.round(parsed * 100) : 0;
-}
-
-function minorToEgp(minor: number): string {
-  return (minor / 100).toFixed(2);
-}
 
 export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
   const router = useRouter();
@@ -36,6 +27,7 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
     priceMinor: 0, tone: '#bc6d63', imageUrl: '', delivery: 'Next-day delivery', active: true,
     variants: [emptyVariant()], addOns: [],
   });
+  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
   function patch(p: Partial<SaveProductInput>) { setProduct((current) => ({ ...current, ...p })); }
@@ -49,20 +41,22 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
+    setError('');
     const response = initial
       ? await fetch(`/api/admin/products/${initial.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product }) })
       : await fetch('/api/admin/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product }) });
     if (!response.ok) {
-      toast.error(t('couldNotSaveProduct'));
+      setError(t('couldNotSaveProduct'));
       setSaving(false);
       return;
     }
-    toast.success(t('productSaved'));
     router.push('/admin/products');
     router.refresh();
   }
 
   return <form className="grid max-w-[60rem] gap-6 pt-6" onSubmit={submit} noValidate>
+    {error ? <StatusMessage title={error} tone="error" /> : null}
+
     <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('identity')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
       <Field id="nameEn" label={t('nameEn')} value={product.nameEn} onChange={(e) => patch({ nameEn: e.target.value })} required />
       <Field id="nameAr" label={t('nameAr')} value={product.nameAr} onChange={(e) => patch({ nameAr: e.target.value })} required />
@@ -71,13 +65,13 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
     </div></section>
 
     <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('catalogOperations')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
-      <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('category')}</span><select className={selectClass} value={product.category} onChange={(e) => patch({ category: e.target.value })}>{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></label>
-      <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('priceEgp')}</span><input className={selectClass} type="number" min="0" step="0.01" value={minorToEgp(product.priceMinor)} onChange={(e) => patch({ priceMinor: toMinor(e.target.value) })} required /></label>
-      <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('toneHex')}</span><input className={selectClass} type="text" pattern="#[0-9a-fA-F]{6}" value={product.tone} onChange={(e) => patch({ tone: e.target.value })} required /></label>
-      <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('deliveryCopy')}</span><input className={selectClass} type="text" value={product.delivery} onChange={(e) => patch({ delivery: e.target.value })} required /></label>
+      <div className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('category')}</span><Select value={product.category} onValueChange={(v) => patch({ category: v })}><SelectTrigger id="category"><SelectValue /></SelectTrigger><SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+      <Field id="price" label={t('priceEgp')} type="number" min={0} step="0.01" value={minorToEgp(product.priceMinor)} onChange={(e) => patch({ priceMinor: toMinor(e.target.value) })} required />
+      <Field id="tone" label={t('toneHex')} type="text" pattern="#[0-9a-fA-F]{6}" value={product.tone} onChange={(e) => patch({ tone: e.target.value })} required />
+      <Field id="delivery" label={t('deliveryCopy')} type="text" value={product.delivery} onChange={(e) => patch({ delivery: e.target.value })} required />
       <Field id="imageUrl" label={t('imageUrl')} className="col-span-2 max-md:col-span-1" type="url" value={product.imageUrl} onChange={(e) => patch({ imageUrl: e.target.value })} placeholder="https://…" />
-      <fieldset className="col-span-2 grid gap-2.5 border-0 p-0 max-md:col-span-1"><legend className="mb-1.5 font-bold">{t('occasionsLabel')}</legend><div className="flex flex-wrap gap-2.5">{OCCASIONS.map((o) => <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3" key={o}><input type="checkbox" checked={product.occasions.includes(o)} onChange={(e) => patch({ occasions: e.target.checked ? [...product.occasions, o] : product.occasions.filter((x) => x !== o) })} className="accent-primary" /><span>{o}</span></label>)}</div></fieldset>
-      <label className="col-span-2 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 max-md:col-span-1"><input type="checkbox" checked={product.active} onChange={(e) => patch({ active: e.target.checked })} className="accent-primary" /><span>{t('activeVisible')}</span></label>
+      <fieldset className="col-span-2 grid gap-2.5 border-0 p-0 max-md:col-span-1"><legend className="mb-1.5 font-bold">{t('occasionsLabel')}</legend><div className="flex flex-wrap gap-2.5">{OCCASIONS.map((o) => <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring" key={o}><input type="checkbox" checked={product.occasions.includes(o)} onChange={(e) => patch({ occasions: e.target.checked ? [...product.occasions, o] : product.occasions.filter((x) => x !== o) })} className="accent-primary" /><span>{o}</span></label>)}</div></fieldset>
+      <label className="col-span-2 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 max-md:col-span-1 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"><input type="checkbox" checked={product.active} onChange={(e) => patch({ active: e.target.checked })} className="accent-primary" /><span>{t('activeVisible')}</span></label>
     </div></section>
 
     <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('variantsStock')}</p>
@@ -87,7 +81,7 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
           <Field id={`variant-ar-${index}`} label={t('variantAr')} value={variant.nameAr} onChange={(e) => updateVariant(index, { nameAr: e.target.value })} />
           <Field id={`variant-delta-${index}`} label={t('priceDeltaEgp')} type="number" step="0.01" value={minorToEgp(variant.priceDeltaMinor)} onChange={(e) => updateVariant(index, { priceDeltaMinor: toMinor(e.target.value) })} />
           <Field id={`variant-qty-${index}`} label={t('stockLabel')} type="number" min="0" value={String(variant.quantity)} onChange={(e) => updateVariant(index, { quantity: Math.max(0, Number.parseInt(e.target.value || '0', 10)) })} />
-          <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4"><input type="checkbox" checked={variant.active} onChange={(e) => updateVariant(index, { active: e.target.checked })} className="accent-primary" /><span>{t('active')}</span></label>
+          <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"><input type="checkbox" checked={variant.active} onChange={(e) => updateVariant(index, { active: e.target.checked })} className="accent-primary" /><span>{t('active')}</span></label>
           {!variant.id ? <Button type="button" variant="outline" onClick={() => setProduct((current) => ({ ...current, variants: current.variants.filter((_, i) => i !== index) }))}>{t('remove')}</Button> : null}
         </div>
       ))}

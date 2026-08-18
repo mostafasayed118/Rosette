@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getRequiredServerEnv } from '@/lib/server-env';
-import { sendOrderNotification } from '@/features/notifications/notification-service';
+import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import { verifyPaymobCallback } from '@/features/payment/paymob-hmac';
 import { getPublicOrigin } from '@/lib/origin';
+import { logRouteError } from '@/lib/api';
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as Record<string, unknown> & { hmac?: string; obj?: Record<string, unknown> };
@@ -33,13 +34,19 @@ export async function POST(request: Request) {
     await supabase.from('orders').update({ payment_status: success ? 'paid' : 'payment_failed' }).eq('id', order.id).in('payment_status', ['pending', 'payment_started']);
     await supabase.from('order_events').insert({ order_id: order.id, event_type: success ? 'payment_confirmed' : 'payment_failed', from_status: order.payment_status, to_status: success ? 'paid' : 'payment_failed', metadata: { providerReference } });
     if (success) {
-      const { data: delivery } = await supabase.from('notification_deliveries').insert({ order_id: order.id, type: 'payment_confirmed', recipient: order.customer_email, locale: order.locale, status: 'pending', attempts: 1 }).select('id').single();
-      const email = await sendOrderNotification({ locale: order.locale === 'ar' || order.locale === 'fr' ? order.locale : 'en', type: 'payment_confirmed', orderNumber: order.display_number, totalMinor: order.total_minor, recipientEmail: order.customer_email, orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}` });
-      if (delivery?.id) await supabase.from('notification_deliveries').update({ status: email.accepted ? 'sent' : 'failed', last_error: email.accepted ? null : 'Gmail delivery failed', sent_at: email.accepted ? new Date().toISOString() : null }).eq('id', delivery.id);
+      await deliverOrderNotification(supabase, {
+        orderId: order.id,
+        type: 'payment_confirmed',
+        recipient: order.customer_email ?? '',
+        locale: order.locale === 'ar' || order.locale === 'fr' ? order.locale : 'en',
+        orderNumber: order.display_number,
+        totalMinor: order.total_minor,
+        orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}`,
+      });
     }
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Paymob webhook error', error instanceof Error ? error.message : 'unknown');
+    logRouteError('paymob webhook', error);
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }

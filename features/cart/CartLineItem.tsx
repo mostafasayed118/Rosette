@@ -1,15 +1,12 @@
 import { Input } from '@/components/ui/input';
 import { ProductVisual } from '@/components/ui/ProductVisual';
-import { formatMoney } from './CartSummary';
+import { formatMoney } from '@/features/money';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { pickLocalized } from '@/features/i18n/pick';
+import { addOnLabel } from '@/features/catalog/add-on-labels';
 import type { CartLine } from './types';
 
 type CartLineItemProps = { line: CartLine; onQuantityChange: (quantity: number) => void; onRemove: () => void };
-
-function addOnLabel(addOn: CartLine['addOns'][number], t: (key: string) => string) {
-  return addOn.id === 'note' ? t('handwrittenNote') : addOn.id === 'chocolate' ? t('darkChocolate') : addOn.id === 'balloon' ? t('balloon') : addOn.name;
-}
 
 export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemProps) {
   const { locale, t } = useI18n();

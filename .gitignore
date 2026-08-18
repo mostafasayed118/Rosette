@@ -7,3 +7,6 @@ coverage/
 !.env.example
 .worktrees/
 .claude/
+
+# Python bytecode cache
+__pycache__/

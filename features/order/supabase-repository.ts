@@ -3,6 +3,7 @@ import { calculateCartTotals } from '@/features/cart/pricing';
 import { applyPromoToOrderTotals, validatePromo } from '@/features/promo/apply';
 import { fetchPromo } from '@/features/promo/repository';
 import { applyDeliveryRule, fetchDeliveryRule } from './delivery-rules';
+import { buildOrderInsertRow } from './order-insert';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import type { CartLine } from '@/features/cart/types';
 import type { OrderRepository, CreatePendingOrderInput, Order, PendingOrder, Result, OrderCreateError } from './types';
@@ -60,26 +61,25 @@ export const supabaseOrderRepository: OrderRepository = {
       }
       const number = displayNumber();
       const publicToken = randomUUID();
-      const { data: order, error } = await supabase.from('orders').insert({
-        display_number: number,
-        public_token: publicToken,
-        customer_email: input.checkout.senderEmail.trim(),
-        customer_phone: input.checkout.recipientPhone.trim(),
-        recipient_name: input.checkout.recipientName.trim(),
-        recipient_phone: input.checkout.recipientPhone.trim(),
-        delivery_address: input.checkout.address.trim(),
-        delivery_city_code: input.destination.cityCode,
-        delivery_date: input.checkout.deliveryDate,
-        delivery_window: input.checkout.deliveryWindow,
+      const { data: order, error } = await supabase.from('orders').insert(buildOrderInsertRow({
+        number,
+        publicToken,
+        customerId: input.customerId,
+        customerEmail: input.checkout.senderEmail,
+        customerPhone: input.checkout.recipientPhone,
+        recipientName: input.checkout.recipientName,
+        recipientPhone: input.checkout.recipientPhone,
+        deliveryAddress: input.checkout.address,
+        deliveryCityCode: input.destination.cityCode,
+        deliveryDate: input.checkout.deliveryDate,
+        deliveryWindow: input.checkout.deliveryWindow,
         locale: input.locale,
-        subtotal_minor: totals.subtotal,
-        delivery_fee_minor: totals.deliveryFee,
-        discount_minor: discountMinor,
-        promo_code: promoCode,
-        total_minor: totals.total,
-        payment_status: 'pending',
-        fulfillment_status: 'confirmed',
-      }).select('id,display_number,public_token,total_minor').single();
+        subtotalMinor: totals.subtotal,
+        deliveryFeeMinor: totals.deliveryFee,
+        discountMinor,
+        promoCode,
+        totalMinor: totals.total,
+      })).select('id,display_number,public_token,total_minor').single();
       if (error || !order) return { ok: false, error: 'unavailable' };
       if (promoCode) await supabase.rpc('increment_promo_usage', { p_code: promoCode });
 

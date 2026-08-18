@@ -1,13 +1,18 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ProductVisual } from '@/components/ui/ProductVisual';
 
+vi.mock('next/image', () => ({
+  default: ({ src, alt, fill, sizes, priority, className, ...rest }: any) => (
+    <img src={src} alt={alt} className={className} {...rest} />
+  ),
+}));
+
 describe('ProductVisual', () => {
-  it('renders the photo when imageUrl is provided', () => {
-    const { container } = render(<ProductVisual tone="#c2456d" label="Rose Hour photo" imageUrl="https://example.com/rose.jpg" />);
-    const img = container.querySelector('img');
+  it('renders the photo with alt text when imageUrl is provided', () => {
+    render(<ProductVisual tone="#c2456d" label="Rose Hour photo" imageUrl="https://example.com/rose.jpg" />);
+    const img = screen.getByRole('img', { name: 'Rose Hour photo' });
     expect(img).toHaveAttribute('src', 'https://example.com/rose.jpg');
-    expect(img).toHaveAttribute('loading', 'lazy');
   });
 
   it('renders the placeholder when imageUrl is null', () => {

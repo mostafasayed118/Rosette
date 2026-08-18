@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Boxes, Home, Package, ShoppingCart, Truck, type LucideIcon } from 'lucide-react';
+import { Boxes, Home, Mail, Package, ShoppingCart, Ticket, Truck, type LucideIcon } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 
 const ICONS: Record<string, LucideIcon> = {
@@ -10,6 +10,8 @@ const ICONS: Record<string, LucideIcon> = {
   '/admin/products': Package,
   '/admin/inventory': Boxes,
   '/admin/delivery': Truck,
+  '/admin/promos': Ticket,
+  '/admin/notifications': Mail,
 };
 
 export function AppSidebar({ items }: { items: { href: string; label: string }[] }) {
