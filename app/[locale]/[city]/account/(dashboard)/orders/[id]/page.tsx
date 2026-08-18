@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCustomerOrder } from '@/features/account/account-repository';
+import { getCustomerOrder, getCancelRequestForOrder } from '@/features/account/account-repository';
+import { CancelRequestButton } from '@/components/account/CancelRequestButton';
+import { canRequestCancellation } from '@/features/orders/cancel-request';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { getServerT } from '@/features/i18n/server';
@@ -17,6 +19,8 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
   const supabase = await getServerSupabase();
   const order = supabase ? await getCustomerOrder(supabase, customer.id, id) : null;
   if (!order) notFound();
+  const cancelRequest = supabase ? await getCancelRequestForOrder(supabase, customer.id, order.id) : null;
+  const eligibility = canRequestCancellation({ fulfillmentStatus: order.fulfillmentStatus, paymentStatus: order.paymentStatus, hasPendingRequest: cancelRequest?.status === 'pending' });
 
   return (
     <div className="grid gap-6">
@@ -44,6 +48,12 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
         <p className="flex justify-between gap-4 text-sm">{t('delivery')}<strong>{formatMoney(order.deliveryFeeMinor, locale)}</strong></p>
         <p className="flex justify-between gap-4 font-bold">{t('total')}<strong>{formatMoney(order.totalMinor, locale)}</strong></p>
       </CardContent></Card>
+
+      {cancelRequest?.status === 'pending' ? <Card><CardHeader><CardTitle>{t('cancelRequestPending')}</CardTitle></CardHeader><CardContent>{cancelRequest.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {cancelRequest.reason}</p> : null}</CardContent></Card>
+        : cancelRequest?.status === 'approved' ? <Card><CardHeader><CardTitle>{t('cancelRequestApproved')}</CardTitle></CardHeader><CardContent>{cancelRequest.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {cancelRequest.reason}</p> : null}</CardContent></Card>
+        : cancelRequest?.status === 'rejected' ? <Card><CardHeader><CardTitle>{t('cancelRequestRejected')}</CardTitle></CardHeader><CardContent>{cancelRequest.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {cancelRequest.reason}</p> : null}</CardContent></Card>
+        : eligibility === 'ok' ? <Card><CardHeader><CardTitle>{t('requestCancellation')}</CardTitle></CardHeader><CardContent><CancelRequestButton orderId={order.id} /></CardContent></Card>
+        : null}
 
       {order.events.length ? (
         <Card><CardHeader><CardTitle>{t('timeline')}</CardTitle></CardHeader><CardContent>
