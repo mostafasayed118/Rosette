@@ -69,6 +69,18 @@ describe('updateFulfillmentStatus', () => {
     expect(updated!.payload).toMatchObject({ status: 'sent' });
   });
 
+  it('enqueues and sends a milestone email for ready_for_delivery', async () => {
+    const { client, calls } = fakeClient({ order: { ...baseOrder, fulfillment_status: 'preparing' } });
+    const result = await updateFulfillmentStatus(client, { ...baseInput, status: 'ready_for_delivery' }, { sendNotification: sendOk });
+    expect(result).toBe('updated');
+    const inserted = calls.find((c) => c.table === 'notification_deliveries' && c.op === 'insert');
+    expect(inserted).toBeDefined();
+    expect(inserted!.payload).toMatchObject({ order_id: 'o1', type: 'ready_for_delivery', recipient: 'buyer@example.com', locale: 'en', status: 'pending' });
+    const updated = calls.find((c) => c.table === 'notification_deliveries' && c.op === 'update');
+    expect(updated).toBeDefined();
+    expect(updated!.payload).toMatchObject({ status: 'sent' });
+  });
+
   it('marks the notification failed but still succeeds the transition when the email send fails', async () => {
     const { client, calls } = fakeClient({ order: { ...baseOrder, fulfillment_status: 'ready_for_delivery' } });
     const sendFail = async () => ({ accepted: false as const, retryable: true as const });

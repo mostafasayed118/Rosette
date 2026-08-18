@@ -43,7 +43,13 @@ GMAIL_APP_PASSWORD=<local-secret-only>
 GMAIL_FROM=your-business-email@gmail.com
 ```
 
-The app sends bilingual order messages from server code. Gmail is intended for low-volume MVP traffic and has provider sending limits. Email failures are recorded as retryable and do not reverse successful payment.
+The app sends bilingual order messages from server code at these points:
+
+- `order_received` — when the order is placed (before payment).
+- `payment_confirmed` — when Paymob confirms payment.
+- `ready_for_delivery`, `out_for_delivery`, `delivered` — on the matching admin fulfillment transition.
+
+Every send is recorded in `notification_deliveries` (`pending` → `sent`/`failed`). Gmail is intended for low-volume MVP traffic and has provider sending limits. Email failures are recorded as retryable and do not reverse a successful payment.
 
 ## Groq chatbot
 

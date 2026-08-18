@@ -5,9 +5,9 @@ function escapeHtml(value: string) {
 }
 
 const subjects = {
-  en: { order_received: 'Order received', payment_confirmed: 'Payment confirmed', payment_failed: 'Payment failed', preparing: 'Your order is being prepared', out_for_delivery: 'Your order is out for delivery', delivered: 'Your order was delivered' },
-  ar: { order_received: 'تم استلام الطلب', payment_confirmed: 'تأكيد الدفع', payment_failed: 'تعذر الدفع', preparing: 'طلبك قيد التجهيز', out_for_delivery: 'طلبك خرج للتوصيل', delivered: 'تم توصيل طلبك' },
-  fr: { order_received: 'Commande reçue', payment_confirmed: 'Paiement confirmé', payment_failed: 'Paiement échoué', preparing: 'Votre commande est en préparation', out_for_delivery: 'Votre commande est en cours de livraison', delivered: 'Votre commande a été livrée' },
+  en: { order_received: 'Order received', payment_confirmed: 'Payment confirmed', payment_failed: 'Payment failed', preparing: 'Your order is being prepared', ready_for_delivery: 'Your order is ready for delivery', out_for_delivery: 'Your order is out for delivery', delivered: 'Your order was delivered' },
+  ar: { order_received: 'تم استلام الطلب', payment_confirmed: 'تأكيد الدفع', payment_failed: 'تعذر الدفع', preparing: 'طلبك قيد التجهيز', ready_for_delivery: 'طلبك جاهز للتوصيل', out_for_delivery: 'طلبك خرج للتوصيل', delivered: 'تم توصيل طلبك' },
+  fr: { order_received: 'Commande reçue', payment_confirmed: 'Paiement confirmé', payment_failed: 'Paiement échoué', preparing: 'Votre commande est en préparation', ready_for_delivery: 'Votre commande est prête pour la livraison', out_for_delivery: 'Votre commande est en cours de livraison', delivered: 'Votre commande a été livrée' },
 } as const;
 
 const intlLocales = { en: 'en-EG', ar: 'ar-EG', fr: 'fr-FR' } as const;
