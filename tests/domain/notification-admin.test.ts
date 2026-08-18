@@ -33,25 +33,61 @@ describe('isStuckRow', () => {
   });
 });
 
+const stuckRows = [
+  row({ id: 'd1', order_id: 'o1', type: 'delivered', status: 'failed', attempts: 1, recipient: 'buyer@example.com', created_at: '2026-08-18T00:00:00.000Z' }),
+  row({ id: 'd2', order_id: 'o2', type: 'order_received', status: 'pending', attempts: 0, recipient: 'alice@example.com', created_at: '2026-08-18T11:44:00.000Z' }),
+  row({ id: 'd3', order_id: 'o3', type: 'payment_failed', status: 'failed', attempts: 2, recipient: 'carol@example.com', created_at: '2026-08-18T10:00:00.000Z' }),
+];
+const orders = [
+  { id: 'o1', display_number: 'RO-1' },
+  { id: 'o2', display_number: 'RO-2' },
+  { id: 'o3', display_number: 'RO-3' },
+];
+
 describe('listStuckDeliveries', () => {
-  it('returns only stuck rows with their order number', async () => {
-    const rows = [
-      row({ id: 'd1' }),
-      row({ id: 'd2', order_id: 'o2', type: 'order_received', status: 'pending', attempts: 0, created_at: '2026-08-18T11:44:00.000Z' }),
-      row({ id: 'd3', status: 'pending', attempts: 0, created_at: '2026-08-18T11:50:00.000Z' }),
-      row({ id: 'd4', attempts: 3 }),
-    ];
-    const client = fakeClient(rows, [{ id: 'o1', display_number: 'RO-1' }, { id: 'o2', display_number: 'RO-2' }]);
-    const result = await listStuckDeliveries(client, { now });
-    expect(result.map((r) => r.id)).toEqual(['d1', 'd2']);
-    expect(result[0]!.orderNumber).toBe('RO-1');
-    expect(result[1]!).toMatchObject({ type: 'order_received', status: 'pending', attempts: 0, orderNumber: 'RO-2' });
-    expect(result[0]!.lastError).toBe('smtp_failed');
+  it('returns only stuck rows sorted newest-first with their order number and total', async () => {
+    const { rows, total } = await listStuckDeliveries(fakeClient(stuckRows, orders), { now });
+    expect(rows.map((r) => r.id)).toEqual(['d2', 'd3', 'd1']);
+    expect(total).toBe(3);
+    expect(rows[2]!.orderNumber).toBe('RO-1');
+    expect(rows[2]!.lastError).toBe('smtp_failed');
   });
 
   it('leaves orderNumber null when the order is missing', async () => {
-    const client = fakeClient([row()], []);
-    const result = await listStuckDeliveries(client, { now });
-    expect(result[0]!.orderNumber).toBeNull();
+    const { rows } = await listStuckDeliveries(fakeClient([row()], []), { now });
+    expect(rows[0]!.orderNumber).toBeNull();
+  });
+
+  it('searches by order number case-insensitively', async () => {
+    const { rows, total } = await listStuckDeliveries(fakeClient(stuckRows, orders), { now, q: 'ro-2' });
+    expect(rows.map((r) => r.id)).toEqual(['d2']);
+    expect(total).toBe(1);
+  });
+
+  it('searches by recipient email', async () => {
+    const { rows } = await listStuckDeliveries(fakeClient(stuckRows, orders), { now, q: 'carol@' });
+    expect(rows.map((r) => r.id)).toEqual(['d3']);
+  });
+
+  it('filters by status', async () => {
+    const { rows } = await listStuckDeliveries(fakeClient(stuckRows, orders), { now, status: 'pending' });
+    expect(rows.map((r) => r.id)).toEqual(['d2']);
+  });
+
+  it('filters by email type', async () => {
+    const { rows } = await listStuckDeliveries(fakeClient(stuckRows, orders), { now, type: 'delivered' });
+    expect(rows.map((r) => r.id)).toEqual(['d1']);
+  });
+
+  it('paginates after filtering and reports the unfiltered total', async () => {
+    const { rows, total } = await listStuckDeliveries(fakeClient(stuckRows, orders), { now, page: 2, pageSize: 2 });
+    expect(rows.map((r) => r.id)).toEqual(['d1']);
+    expect(total).toBe(3);
+  });
+
+  it('ignores invalid status/type and clamps page to at least 1', async () => {
+    const { rows, total } = await listStuckDeliveries(fakeClient(stuckRows, orders), { now, status: 'bogus', type: 'bogus', page: 0 });
+    expect(rows).toHaveLength(3);
+    expect(total).toBe(3);
   });
 });

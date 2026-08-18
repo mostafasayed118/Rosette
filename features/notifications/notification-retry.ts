@@ -4,7 +4,7 @@ import type { EmailLocale, NotificationType } from './email-types';
 export const MAX_ATTEMPTS = 3;
 export const STALE_PENDING_MS = 15 * 60 * 1000;
 
-const NOTIFICATION_TYPES = new Set<NotificationType>([
+export const NOTIFICATION_TYPES = new Set<NotificationType>([
   'order_received', 'payment_confirmed', 'payment_failed', 'preparing', 'ready_for_delivery', 'out_for_delivery', 'delivered',
 ]);
 
