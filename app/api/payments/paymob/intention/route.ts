@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getRequiredServerEnv } from '@/lib/server-env';
+import { getPublicOrigin } from '@/lib/origin';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 
 export async function POST(request: Request) {
@@ -12,7 +13,7 @@ export async function POST(request: Request) {
     if (error || !order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     if (order.total_minor <= 0) return NextResponse.json({ error: 'Invalid order total' }, { status: 400 });
 
-    const origin = new URL(request.url).origin;
+    const origin = getPublicOrigin(request);
     const result = await createPaymobIntention({
       amountMinor: order.total_minor,
       orderReference: order.display_number,

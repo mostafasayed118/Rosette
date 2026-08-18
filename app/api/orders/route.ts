@@ -3,6 +3,7 @@ import { getOrderRepository } from '@/features/order/provider';
 import { validateOrderRequest } from '@/features/order/order-request';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
+import { getPublicOrigin } from '@/lib/origin';
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
     if (!paymobConfigured) return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: order.paymentStatus, checkoutUrl: null });
 
     const checkout = body.checkout as { senderEmail: string; recipientPhone: string; recipientName: string };
-    const origin = new URL(request.url).origin;
+    const origin = getPublicOrigin(request);
     const payment = await createPaymobIntention({
       amountMinor: order.totalMinor,
       orderReference: order.displayNumber,
