@@ -66,14 +66,14 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
   return <form className="grid max-w-[60rem] gap-6 pt-6" onSubmit={submit} noValidate>
     {error ? <StatusMessage title={error} tone="error" /> : null}
 
-    <section className="grid gap-4 border-b py-6"><p className="eyebrow">{t('identity')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+    <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('identity')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
       <Field id="nameEn" label={t('nameEn')} value={product.nameEn} onChange={(e) => patch({ nameEn: e.target.value })} required />
       <Field id="nameAr" label={t('nameAr')} value={product.nameAr} onChange={(e) => patch({ nameAr: e.target.value })} required />
       <Field id="descriptionEn" label={t('descriptionEn')} className="col-span-2 max-md:col-span-1" value={product.descriptionEn} onChange={(e) => patch({ descriptionEn: e.target.value })} />
       <Field id="descriptionAr" label={t('descriptionAr')} className="col-span-2 max-md:col-span-1" value={product.descriptionAr} onChange={(e) => patch({ descriptionAr: e.target.value })} />
     </div></section>
 
-    <section className="grid gap-4 border-b py-6"><p className="eyebrow">{t('catalogOperations')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+    <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('catalogOperations')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
       <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('category')}</span><select className={selectClass} value={product.category} onChange={(e) => patch({ category: e.target.value })}>{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></label>
       <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('priceEgp')}</span><input className={selectClass} type="number" min="0" step="0.01" value={minorToEgp(product.priceMinor)} onChange={(e) => patch({ priceMinor: toMinor(e.target.value) })} required /></label>
       <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('toneHex')}</span><input className={selectClass} type="text" pattern="#[0-9a-fA-F]{6}" value={product.tone} onChange={(e) => patch({ tone: e.target.value })} required /></label>
@@ -83,7 +83,7 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
       <label className="col-span-2 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 max-md:col-span-1"><input type="checkbox" checked={product.active} onChange={(e) => patch({ active: e.target.checked })} className="accent-primary" /><span>{t('activeVisible')}</span></label>
     </div></section>
 
-    <section className="grid gap-4 border-b py-6"><p className="eyebrow">{t('variantsStock')}</p>
+    <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('variantsStock')}</p>
       {product.variants.map((variant, index) => (
         <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1" key={variant.id ?? `new-${index}`}>
           <Field id={`variant-en-${index}`} label={t('variantEn')} value={variant.nameEn} onChange={(e) => updateVariant(index, { nameEn: e.target.value })} required />
@@ -97,7 +97,7 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
       <Button type="button" variant="outline" onClick={() => patch({ variants: [...product.variants, emptyVariant()] })}>{t('addVariant')}</Button>
     </section>
 
-    <section className="grid gap-4 border-b py-6"><p className="eyebrow">{t('addOnsLabel')}</p>
+    <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('addOnsLabel')}</p>
       {product.addOns.map((addOn, index) => (
         <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1" key={index}>
           <Field id={`addon-id-${index}`} label={t('keyId')} value={addOn.id} onChange={(e) => updateAddOn(index, { id: e.target.value })} required />

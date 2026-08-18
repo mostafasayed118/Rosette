@@ -36,7 +36,7 @@ export default async function AdminPage() {
   const pipelineEntries = Object.entries(stats.pipeline) as Array<[string, number]>;
   const maxPipeline = Math.max(1, ...pipelineEntries.map(([, count]) => count));
   return <AdminShell>
-    <p className="eyebrow">{t('adminEyebrow')}</p>
+    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('adminEyebrow')}</p>
     <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('adminDashboard')}</h1>
     <p className="text-muted-foreground">{t('signedInAs', { role: admin.role })}</p>
     <div className="mb-8 mt-6 grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">

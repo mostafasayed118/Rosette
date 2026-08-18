@@ -31,7 +31,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   const rows = (data ?? []) as Array<{ id: string; display_number: string; customer_email: string; recipient_name: string; total_minor: number; payment_status: string; fulfillment_status: string }>;
 
   return <AdminShell>
-    <p className="eyebrow">{t('customerOrders')}</p>
+    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('customerOrders')}</p>
     <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('orders')}</h1>
     <OrderListToolbar />
     {rows.length === 0 ? <p className="text-muted-foreground">{t('noOrdersMatch')}</p> : <Card><Table><TableHeader><TableRow><TableHead>{t('orders')}</TableHead><TableHead>{t('recipient')}</TableHead><TableHead>{t('payment')}</TableHead><TableHead>{t('fulfillment')}</TableHead><TableHead className="text-end">{t('total')}</TableHead></TableRow></TableHeader><TableBody>{rows.map((order) => (

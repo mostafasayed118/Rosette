@@ -46,7 +46,7 @@ export function AddCityForm() {
 
   return <form className="grid max-w-[60rem] gap-6" onSubmit={submit} noValidate>
     {error ? <StatusMessage title={error} tone="error" /> : null}
-    <section className="grid gap-4 border-b py-6"><p className="eyebrow">{t('addCity')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+    <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('addCity')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
       <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('codeLabel')}</span><input className={inputClass} type="text" value={form.code} onChange={(e) => patch({ code: e.target.value })} placeholder="greater-cairo" required /></label>
       <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('nameEn')}</span><input className={inputClass} type="text" value={form.nameEn} onChange={(e) => patch({ nameEn: e.target.value })} required /></label>
       <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('nameAr')}</span><input className={inputClass} type="text" value={form.nameAr} onChange={(e) => patch({ nameAr: e.target.value })} required /></label>

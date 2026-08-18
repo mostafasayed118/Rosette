@@ -17,7 +17,7 @@ export default async function AdminProductsPage() {
   const { data } = await getAdminSupabase().from('products').select('id,slug,name_en,name_ar,price_minor,active').order('created_at', { ascending: false });
   const rows = (data ?? []) as Array<{ id: string; slug: string; name_en: string; name_ar: string; price_minor: number; active: boolean }>;
   return <AdminShell>
-    <p className="eyebrow">{t('catalogOperations')}</p>
+    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('catalogOperations')}</p>
     <div className="flex items-end justify-between gap-6">
       <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('products')}</h1>
       <Button asChild size="sm"><Link href="/admin/products/new">{t('newProduct')}</Link></Button>

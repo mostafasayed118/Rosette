@@ -14,7 +14,7 @@ export default async function AdminInventoryPage() {
   const { data } = await getAdminSupabase().from('inventory').select('variant_id,quantity,reserved_quantity,updated_at').order('updated_at', { ascending: false });
   const rows = (data ?? []) as Array<{ variant_id: string; quantity: number; reserved_quantity: number }>;
   return <AdminShell>
-    <p className="eyebrow">{t('stockOperations')}</p>
+    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('stockOperations')}</p>
     <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('inventory')}</h1>
     <Card className="mt-6"><Table><TableHeader><TableRow><TableHead>{t('variant')}</TableHead><TableHead>{t('available')}</TableHead><TableHead>{t('reserved')}</TableHead><TableHead className="text-end">{t('setQuantity')}</TableHead></TableRow></TableHeader><TableBody>{rows.map((row) => (
       <TableRow key={row.variant_id}>

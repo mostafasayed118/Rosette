@@ -29,7 +29,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
   const whatsapp = createAdminWhatsAppHref({ number: order.recipient_phone, orderId: order.display_number });
 
   return <AdminShell>
-    <p className="eyebrow"><Link className="underline underline-offset-4" href="/admin/orders">{t('orders')}</Link> · {order.display_number}</p>
+    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage"><Link className="underline underline-offset-4" href="/admin/orders">{t('orders')}</Link> · {order.display_number}</p>
     <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{order.display_number}</h1>
     <p className="text-muted-foreground">{formatMoney(order.total_minor, locale)} · {t('payment')} {order.payment_status} · {t('fulfillmentFilter')} {order.fulfillment_status}</p>
 

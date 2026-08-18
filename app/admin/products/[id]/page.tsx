@@ -29,5 +29,5 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     })),
     addOns: ((data.add_ons ?? []) as AddOnRow[]).map((addOn) => ({ id: addOn.id, nameEn: addOn.name_en, nameAr: addOn.name_ar, priceMinor: addOn.price_minor })),
   };
-  return <AdminShell><p className="eyebrow">{t('catalogOperations')}</p><h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{data.name_en}</h1><ProductForm initial={initial} /></AdminShell>;
+  return <AdminShell><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('catalogOperations')}</p><h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{data.name_en}</h1><ProductForm initial={initial} /></AdminShell>;
 }

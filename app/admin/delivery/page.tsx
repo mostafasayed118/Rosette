@@ -18,7 +18,7 @@ export default async function AdminDeliveryPage() {
   const { data } = await getAdminSupabase().from('cities').select('code,name_en,name_ar,same_day,delivery_rules(*)').order('code');
   const rows = (data ?? []) as CityRow[];
   return <AdminShell>
-    <p className="eyebrow">{t('deliveryOperations')}</p>
+    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('deliveryOperations')}</p>
     <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('deliveryRules')}</h1>
     <AddCityForm />
     <div className="mt-6 grid gap-4">

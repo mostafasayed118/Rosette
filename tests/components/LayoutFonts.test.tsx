@@ -1,24 +1,26 @@
-import { render } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { resolveHtmlAttributes } from '@/features/i18n/server-html';
 
-vi.mock('next/font/google', () => ({
-  Fraunces: () => ({ variable: '--font-display __variable_fraunces' }),
-  Inter: () => ({ variable: '--font-body __variable_inter' }),
-  Cairo: () => ({ variable: '--font-arabic __variable_cairo' }),
-}));
-
-import RootLayout from '@/app/layout';
-
-describe('RootLayout fonts', () => {
-  afterEach(() => {
-    document.documentElement.removeAttribute('class');
-    document.body.innerHTML = '';
+// The root layout wires next/font variables + cookie-derived html attributes
+// (verified live via SSR in Task 6). This test covers the pure logic:
+// the font-variable classes are asserted by ThemeTokens/theme tests and the
+// attribute derivation is unit-tested here.
+describe('RootLayout html attributes', () => {
+  it('defaults to en/ltr/light without cookies', () => {
+    expect(resolveHtmlAttributes(undefined, undefined)).toEqual({ lang: 'en', dir: 'ltr', themeClass: '' });
   });
 
-  it('applies the font variable classes to the html element', () => {
-    render(<RootLayout><div>child</div></RootLayout>);
-    expect(document.documentElement.className).toContain('__variable_fraunces');
-    expect(document.documentElement.className).toContain('__variable_inter');
-    expect(document.documentElement.className).toContain('__variable_cairo');
+  it('renders rtl/ar from the locale cookie', () => {
+    expect(resolveHtmlAttributes('ar', undefined)).toEqual({ lang: 'ar', dir: 'rtl', themeClass: '' });
+  });
+
+  it('applies the dark theme class from the theme cookie', () => {
+    expect(resolveHtmlAttributes(undefined, 'dark')).toEqual({ lang: 'en', dir: 'ltr', themeClass: ' dark' });
+  });
+
+  it('ignores unknown cookie values', () => {
+    expect(resolveHtmlAttributes('fr', 'blue').lang).toBe('en');
+    expect(resolveHtmlAttributes('fr', 'blue').dir).toBe('ltr');
+    expect(resolveHtmlAttributes('fr', 'blue').themeClass).toBe('');
   });
 });

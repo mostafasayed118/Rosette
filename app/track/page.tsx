@@ -28,7 +28,7 @@ export default async function TrackPage({ searchParams }: { searchParams: Promis
   const searched = Boolean(number && email);
   const order = searched ? await lookupOrder(getAdminSupabase(), { number: number as string, email: email as string }) : null;
   return <main className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4">
-    <p className="eyebrow">{t('trackOrder')}</p>
+    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('trackOrder')}</p>
     <h1 className="mt-2 mb-4 max-w-[12ch] font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[.95] tracking-[-.02em]">{t('trackTitle')}</h1>
     <p className="max-w-[42rem] text-[1.1rem] text-muted-foreground">{t('trackLede')}</p>
     <form className="grid max-w-[60rem] gap-6 pt-8" action="/track" method="get">
@@ -40,7 +40,7 @@ export default async function TrackPage({ searchParams }: { searchParams: Promis
     </form>
     {searched && !order ? <StatusMessage title={t('trackLookupFailed')} tone="error">{t('checkConfirmationEmail')}</StatusMessage> : null}
     {searched && order ? <section className="grid gap-4 border-b py-6">
-      <p className="eyebrow">{t('orderEyebrow', { number: order.number })}</p>
+      <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('orderEyebrow', { number: order.number })}</p>
       <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
         <div className={infoCardClass}><strong className="block">{t('payment')}</strong><span className="text-sm text-muted-foreground">{t(PAYMENT_KEYS[order.paymentStatus] ?? 'statusPending')}</span></div>
         <div className={infoCardClass}><strong className="block">{t('fulfillment')}</strong><span className="text-sm text-muted-foreground">{t(FULFILLMENT_KEYS[order.fulfillmentStatus] ?? 'statusPending')}</span></div>
