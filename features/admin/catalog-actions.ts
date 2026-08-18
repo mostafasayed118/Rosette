@@ -90,6 +90,7 @@ function toProductRow(slug: string, input: SaveProductInput) {
     occasions: input.occasions,
     price_minor: input.priceMinor,
     tone: input.tone,
+    image_url: input.imageUrl || null,
     delivery: input.delivery,
     active: input.active,
     add_ons: input.addOns.map((addOn) => ({ id: addOn.id, name_en: addOn.nameEn, name_ar: addOn.nameAr, price_minor: addOn.priceMinor })),

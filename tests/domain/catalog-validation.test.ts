@@ -3,7 +3,7 @@ import { slugify, validateProductInput, type SaveProductInput } from '@/features
 
 const base: SaveProductInput = {
   nameEn: 'Rose Hour', nameAr: 'ساعة الورد', descriptionEn: '', descriptionAr: '',
-  category: 'hand-bouquet', occasions: ['birthday'], priceMinor: 12000, tone: '#bc6d63',
+  category: 'hand-bouquet', occasions: ['birthday'], priceMinor: 12000, tone: '#bc6d63', imageUrl: '',
   delivery: 'Same-day', active: true,
   variants: [{ nameEn: 'Classic', nameAr: 'كلاسيكي', priceDeltaMinor: 0, active: true, quantity: 5 }],
   addOns: [],
@@ -47,5 +47,10 @@ describe('validateProductInput', () => {
   it('rejects bad add-ons', () => {
     expect(validateProductInput({ ...base, addOns: [{ id: '', nameEn: 'Note', nameAr: '', priceMinor: 500 }] })).toBe('addon_required');
     expect(validateProductInput({ ...base, addOns: [{ id: 'note', nameEn: 'Note', nameAr: '', priceMinor: -1 }] })).toBe('invalid_addon_price');
+  });
+  it('accepts an empty or valid image URL', () => {
+    expect(validateProductInput({ ...base, imageUrl: '' })).toBeNull();
+    expect(validateProductInput({ ...base, imageUrl: 'https://example.com/a.jpg' })).toBeNull();
+    expect(validateProductInput({ ...base, imageUrl: 'not a url' })).toBe('invalid_image_url');
   });
 });

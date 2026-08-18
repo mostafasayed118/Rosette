@@ -29,7 +29,7 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
   const { t } = useI18n();
   const [product, setProduct] = useState<SaveProductInput>(initial ?? {
     nameEn: '', nameAr: '', descriptionEn: '', descriptionAr: '', category: CATEGORIES[0] ?? 'hand-bouquet', occasions: [],
-    priceMinor: 0, tone: '#bc6d63', delivery: 'Next-day delivery', active: true,
+    priceMinor: 0, tone: '#bc6d63', imageUrl: '', delivery: 'Next-day delivery', active: true,
     variants: [emptyVariant()], addOns: [],
   });
   const [error, setError] = useState('');
@@ -74,6 +74,7 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
       <label className="field"><span>{t('priceEgp')}</span><input type="number" min="0" step="0.01" value={minorToEgp(product.priceMinor)} onChange={(e) => patch({ priceMinor: toMinor(e.target.value) })} required /></label>
       <label className="field"><span>{t('toneHex')}</span><input type="text" pattern="#[0-9a-fA-F]{6}" value={product.tone} onChange={(e) => patch({ tone: e.target.value })} required /></label>
       <label className="field"><span>{t('deliveryCopy')}</span><input type="text" value={product.delivery} onChange={(e) => patch({ delivery: e.target.value })} required /></label>
+      <Field id="imageUrl" label={t('imageUrl')} className="span-two" type="url" value={product.imageUrl} onChange={(e) => patch({ imageUrl: e.target.value })} placeholder="https://…" />
       <fieldset className="span-two"><legend>{t('occasionsLabel')}</legend>{OCCASIONS.map((o) => <label className="choice" key={o}><input type="checkbox" checked={product.occasions.includes(o)} onChange={(e) => patch({ occasions: e.target.checked ? [...product.occasions, o] : product.occasions.filter((x) => x !== o) })} /><span>{o}</span></label>)}</fieldset>
       <label className="choice span-two"><input type="checkbox" checked={product.active} onChange={(e) => patch({ active: e.target.checked })} /><span>{t('activeVisible')}</span></label>
     </div></section>

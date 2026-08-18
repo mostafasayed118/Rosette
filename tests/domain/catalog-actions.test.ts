@@ -31,7 +31,7 @@ const operator = { userId: 'op-1', role: 'operator' as const };
 
 const productInput: SaveProductInput = {
   nameEn: 'Rose Hour', nameAr: 'ساعة الورد', descriptionEn: 'Soft roses', descriptionAr: 'ورود ناعمة',
-  category: 'hand-bouquet', occasions: ['birthday'], priceMinor: 12000, tone: '#bc6d63',
+  category: 'hand-bouquet', occasions: ['birthday'], priceMinor: 12000, tone: '#bc6d63', imageUrl: '',
   delivery: 'Same-day', active: true,
   variants: [
     { nameEn: 'Classic', nameAr: 'كلاسيكي', priceDeltaMinor: 0, active: true, quantity: 5 },
@@ -46,10 +46,18 @@ describe('saveProduct', () => {
     const result = await saveProduct(client, admin, { mode: 'create', product: productInput });
     expect(result).toBe('saved');
     const productInsert = calls.find((c) => c.table === 'products' && c.op === 'insert');
-    expect(productInsert!.payload).toMatchObject({ slug: 'rose-hour', price_minor: 12000, add_ons: [{ id: 'note', name_en: 'Handwritten note', name_ar: 'بطاقة', price_minor: 500 }] });
+    expect(productInsert!.payload).toMatchObject({ slug: 'rose-hour', price_minor: 12000, image_url: null, add_ons: [{ id: 'note', name_en: 'Handwritten note', name_ar: 'بطاقة', price_minor: 500 }] });
     expect(calls.filter((c) => c.table === 'product_variants' && c.op === 'insert')).toHaveLength(2);
     expect(calls.filter((c) => c.table === 'inventory' && c.op === 'insert')).toHaveLength(2);
     expect(calls.find((c) => c.table === 'admin_audit_logs')).toBeDefined();
+  });
+
+  it('writes the image_url when a product has one', async () => {
+    const { client, calls } = fakeClient({ existingProduct: null });
+    const result = await saveProduct(client, admin, { mode: 'create', product: { ...productInput, imageUrl: 'https://example.com/rose.jpg' } });
+    expect(result).toBe('saved');
+    const productInsert = calls.find((c) => c.table === 'products' && c.op === 'insert');
+    expect(productInsert!.payload).toMatchObject({ image_url: 'https://example.com/rose.jpg' });
   });
 
   it('returns slug_taken with no writes when the slug exists', async () => {

@@ -19,7 +19,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const initial: ProductFormInitial = {
     id,
     nameEn: data.name_en, nameAr: data.name_ar, descriptionEn: data.description_en, descriptionAr: data.description_ar,
-    category: data.category, occasions: data.occasions, priceMinor: data.price_minor, tone: data.tone,
+    category: data.category, occasions: data.occasions, priceMinor: data.price_minor, tone: data.tone, imageUrl: data.image_url ?? '',
     delivery: data.delivery, active: data.active,
     variants: ((data.product_variants ?? []) as VariantRow[]).map((variant) => ({
       id: variant.id, nameEn: variant.name_en, nameAr: variant.name_ar,
