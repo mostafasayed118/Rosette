@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatusMessage } from '@/components/ui/status-message';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { OrderActions } from '@/components/admin/OrderActions';
+import { NOTIFICATION_TYPE_LABEL_KEYS } from '@/features/admin/notification-type-labels';
 import { canTransitionFulfillment } from '@/features/commerce/order-state';
 import type { FulfillmentStatus } from '@/features/commerce/order-state';
 import { canUpdateOrderStatus } from '@/features/admin/authorization';
@@ -12,7 +15,7 @@ import { createAdminWhatsAppHref } from '@/features/support/whatsapp';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
 import { formatMoney } from '@/features/money';
-import { fulfillmentLabel, paymentLabel } from '@/features/admin/status-labels';
+import { deliveryBadgeVariant, deliveryLabel, fulfillmentLabel, paymentLabel } from '@/features/admin/status-labels';
 
 const allFulfillmentStatuses: FulfillmentStatus[] = ['confirmed', 'preparing', 'ready_for_delivery', 'out_for_delivery', 'delivered', 'cancelled'];
 
@@ -22,12 +25,13 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
   const { t, locale } = await getServerT();
   const { id } = await params;
   const supabase = getAdminSupabase();
-  const { data: order } = await supabase.from('orders').select('*,order_items(*),payments(*),order_events(*)').eq('id', id).maybeSingle();
+  const { data: order } = await supabase.from('orders').select('*,order_items(*),payments(*),order_events(*),notification_deliveries(*)').eq('id', id).maybeSingle();
   if (!order) return <AdminShell><h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('orderNotFound')}</h1><p className="mt-4"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/orders">{t('backToOrders')}</Link></p></AdminShell>;
 
   const current = order.fulfillment_status as FulfillmentStatus;
   const transitions = allFulfillmentStatuses.filter((next) => canTransitionFulfillment(current, next) && canUpdateOrderStatus(admin.role, current, next));
   const whatsapp = createAdminWhatsAppHref({ number: order.recipient_phone, orderId: order.display_number });
+  const deliveries = ((order.notification_deliveries ?? []) as Array<{ id: string; type: string; recipient: string; status: string; attempts: number; last_error: string | null; created_at: string; sent_at: string | null }>).sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0));
 
   return <AdminShell>
     <p className="text-xs font-bold uppercase tracking-[.16em] text-sage"><Link className="underline underline-offset-4" href="/admin/orders">{t('orders')}</Link> · {order.display_number}</p>
@@ -50,6 +54,20 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     <Card className="mt-4"><CardHeader><CardTitle>{t('payment')}</CardTitle></CardHeader><CardContent className="grid gap-2">
       {((order.payments ?? []) as Array<{ id: string; provider: string; provider_reference: string | null; amount_minor: number; status: string }>).map((payment) => (
         <p key={payment.id} className="flex justify-between gap-4 border-b py-2 text-sm">{payment.provider} · {payment.provider_reference ?? 'n/a'}<strong>{formatMoney(payment.amount_minor, locale)} · {payment.status}</strong></p>
+      ))}
+    </CardContent></Card>
+
+    <Card className="mt-4"><CardHeader><CardTitle>{t('emailLog')}</CardTitle></CardHeader><CardContent className="grid gap-2">
+      {deliveries.length === 0 ? <StatusMessage title={t('noEmailsYet')} /> : deliveries.map((delivery) => (
+        <div key={delivery.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b py-2 text-sm">
+          <span>{t(NOTIFICATION_TYPE_LABEL_KEYS[delivery.type] ?? delivery.type)}</span>
+          <span className="text-muted-foreground">{delivery.recipient}</span>
+          <Badge variant={deliveryBadgeVariant(delivery.status)}>{deliveryLabel(delivery.status, t)}</Badge>
+          <span className="text-muted-foreground">{t('attempts')}: {delivery.attempts}</span>
+          <span className="text-muted-foreground">{new Date(delivery.created_at).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</span>
+          {delivery.sent_at ? <span className="text-muted-foreground">{t('sentAt')}: {new Date(delivery.sent_at).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</span> : null}
+          {delivery.last_error ? <span className="font-mono text-xs text-muted-foreground">{delivery.last_error}</span> : null}
+        </div>
       ))}
     </CardContent></Card>
 
