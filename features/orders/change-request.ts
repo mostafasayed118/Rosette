@@ -76,3 +76,32 @@ export function parseChangeRequestDiff(value: unknown): { ok: true; diff: Change
   if (Object.keys(diff).length === 0) return { ok: false, error: 'empty_diff' };
   return { ok: true, diff };
 }
+
+export type ApplyChangesResult =
+  | { ok: true; fields: ChangeRequestDiff; items: Array<{ id: string; unit_price_minor: number; quantity: number; gift_message: string }>; subtotalMinor: number; totalMinor: number; deltaMinor: number }
+  | { ok: false; reason: string };
+
+export function applyChanges(
+  order: { subtotal_minor: number; delivery_fee_minor: number; discount_minor: number | null; total_minor: number },
+  items: Array<{ id: string; unit_price_minor: number; quantity: number; gift_message: string }>,
+  diff: ChangeRequestDiff,
+): ApplyChangesResult {
+  const fields: ChangeRequestDiff = {};
+  for (const key of ['delivery_date', 'delivery_window', 'recipient_name', 'recipient_phone', 'delivery_address'] as const) {
+    if (diff[key] !== undefined) fields[key] = diff[key];
+  }
+  const updated = items.map((item) => ({ ...item }));
+  for (const change of diff.items ?? []) {
+    const target = updated.find((item) => item.id === change.id);
+    if (!target) return { ok: false, reason: 'unknown_item' };
+    if (change.quantity !== undefined) {
+      if (typeof change.quantity !== 'number' || !Number.isInteger(change.quantity) || change.quantity < 1) return { ok: false, reason: 'invalid_quantity' };
+      target.quantity = change.quantity;
+    }
+    if (change.gift_message !== undefined) target.gift_message = change.gift_message.trim();
+  }
+  const subtotalMinor = updated.reduce((sum, item) => sum + item.unit_price_minor * item.quantity, 0);
+  const totalMinor = subtotalMinor + order.delivery_fee_minor - (order.discount_minor ?? 0);
+  const deltaMinor = totalMinor - order.total_minor;
+  return { ok: true, fields, items: updated, subtotalMinor, totalMinor, deltaMinor };
+}
