@@ -3,6 +3,8 @@ import { canRequestCancellation, requiresReview } from './cancel-request';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import type { AdminIdentity } from '@/features/admin/authorization';
 import { canTransitionFulfillment, type FulfillmentStatus } from '@/features/commerce/order-state';
+import { refundPaymobTransaction } from '@/features/payment/paymob-refund';
+import type { PaymobRefundResult } from '@/features/payment/paymob-refund';
 
 type CancelClient = { from: (table: string) => any };
 
@@ -13,6 +15,7 @@ type OrderRow = {
   customer_id: string | null; customer_email: string | null; locale: 'en' | 'ar' | 'fr';
   total_minor: number; subtotal_minor: number; delivery_fee_minor: number; discount_minor: number | null;
   public_token: string | null;
+  payments?: Array<{ id: string; provider_reference: string | null; amount_minor: number; status: string }>;
 };
 
 export type RequestCancellationResult =
@@ -79,16 +82,18 @@ export type ReviewCancellationResult =
   | { status: 'rejected' }
   | { status: 'not_found' }
   | { status: 'not_cancellable' }
+  | { status: 'refund_failed' }
   | { status: 'failure' };
 
 export async function reviewCancellationRequest(
   client: CancelClient,
   input: { admin: AdminIdentity; requestId: string; action: 'approve' | 'reject'; reason?: string; orderUrlBase: string },
-  deps: { deliver?: typeof deliverOrderNotification } = {},
+  deps: { deliver?: typeof deliverOrderNotification; refund?: typeof refundPaymobTransaction } = {},
 ): Promise<ReviewCancellationResult> {
   const deliver = deps.deliver ?? deliverOrderNotification;
+  const refund: typeof refundPaymobTransaction = deps.refund ?? refundPaymobTransaction;
   try {
-    const { data } = await client.from('order_cancel_requests').select(`*,orders(${orderSelect})`).eq('id', input.requestId).maybeSingle();
+    const { data } = await client.from('order_cancel_requests').select(`*,orders(${orderSelect},payments(id,provider_reference,amount_minor,status))`).eq('id', input.requestId).maybeSingle();
     if (!data || !data.orders) return { status: 'not_found' };
     const request = data as { id: string; status: string; reason: string | null; orders: OrderRow };
     const order = request.orders;
@@ -117,6 +122,21 @@ export async function reviewCancellationRequest(
     }
 
     if (!canTransitionFulfillment(order.fulfillment_status as FulfillmentStatus, 'cancelled')) return { status: 'not_cancellable' };
+
+    // Block-approval: a paid order is only approved once Paymob has actually refunded the
+    // money. On any refund problem the request stays pending and the order stays paid so
+    // the admin can retry — the DB never claims a refund that did not happen.
+    if (order.payment_status === 'paid') {
+      const payment = (order.payments ?? []).find((row) => row.status === 'paid' || row.status === 'refunded');
+      if (!payment?.provider_reference) return { status: 'refund_failed' };
+      if (payment.status === 'paid') {
+        const refundResult: PaymobRefundResult = await refund({ transactionId: payment.provider_reference, amountMinor: payment.amount_minor });
+        if (!refundResult.ok) return { status: 'refund_failed' };
+        const { error: paymentError } = await client.from('payments').update({ status: 'refunded', raw_event: { refund: { transaction_id: refundResult.refundTransactionId, at: now } } }).eq('id', payment.id);
+        if (paymentError) return { status: 'failure' };
+      }
+    }
+
     const { error: requestError } = await client.from('order_cancel_requests').update({ status: 'approved', reason, reviewed_by: input.admin.userId, reviewed_at: now }).eq('id', input.requestId);
     const { error: orderError } = await client.from('orders').update({ fulfillment_status: 'cancelled', payment_status: order.payment_status === 'paid' ? 'refunded' : 'cancelled', updated_at: now }).eq('id', order.id);
     if (requestError || orderError) return { status: 'failure' };

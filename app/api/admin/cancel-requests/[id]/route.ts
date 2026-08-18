@@ -16,6 +16,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   return respond(result.status, {
     not_found: { status: 404, error: 'Request not found' },
     not_cancellable: { status: 409, error: 'Order is no longer cancellable' },
+    refund_failed: { status: 502, error: 'Refund failed — order kept as paid, retry later' },
     failure: { status: 500, error: 'Could not review cancellation' },
   }, { ok: true, status: result.status });
 }

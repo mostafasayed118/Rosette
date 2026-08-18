@@ -81,9 +81,11 @@ describe('requestCancellation', () => {
 
 const admin = { userId: 'a1', role: 'admin' as const };
 
+const paidPayment = { id: 'pay-1', provider_reference: 'txn-1', amount_minor: 10000, status: 'paid' };
+
 const requestWithOrder = (overrides: Record<string, unknown> = {}) => ({
   id: 'req-1', status: 'pending', reason: 'changed my mind', customer_id: 'c1', reviewed_by: null, reviewed_at: null,
-  orders: { id: 'o1', display_number: 'RO-1', fulfillment_status: 'preparing', payment_status: 'paid', customer_email: 'buyer@example.com', locale: 'en', total_minor: 10000, subtotal_minor: 10000, delivery_fee_minor: 0, discount_minor: null, public_token: 'tok' },
+  orders: { id: 'o1', display_number: 'RO-1', fulfillment_status: 'preparing', payment_status: 'paid', customer_email: 'buyer@example.com', locale: 'en', total_minor: 10000, subtotal_minor: 10000, delivery_fee_minor: 0, discount_minor: null, public_token: 'tok', payments: [paidPayment] },
   ...overrides,
 });
 
@@ -100,25 +102,49 @@ function reviewClient(request: unknown) {
   return { client, calls };
 }
 
+const refund = vi.fn().mockResolvedValue({ ok: true, refundTransactionId: 'refund-1' });
+
+beforeEach(() => refund.mockClear());
+
 describe('reviewCancellationRequest', () => {
   it('returns not_found when the request is missing', async () => {
     const { client } = reviewClient(null);
-    expect(await reviewCancellationRequest(client, { admin, requestId: 'req-x', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver })).toEqual({ status: 'not_found' });
+    expect(await reviewCancellationRequest(client, { admin, requestId: 'req-x', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver, refund })).toEqual({ status: 'not_found' });
   });
 
-  it('approves and cancels a paid order, marking the payment refunded', async () => {
+  it('approves and cancels a paid order, refunding through Paymob first', async () => {
     const { client, calls } = reviewClient(requestWithOrder());
-    const result = await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', reason: 'ok', orderUrlBase: 'https://example.com' }, { deliver });
+    const result = await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', reason: 'ok', orderUrlBase: 'https://example.com' }, { deliver, refund });
     expect(result).toEqual({ status: 'approved' });
+    expect(refund).toHaveBeenCalledWith({ transactionId: 'txn-1', amountMinor: 10000 });
+    expect(calls).toContainEqual(expect.objectContaining({ table: 'payments', op: 'update', payload: expect.objectContaining({ status: 'refunded' }) }));
     expect(calls).toContainEqual(expect.objectContaining({ table: 'orders', op: 'update', payload: expect.objectContaining({ fulfillment_status: 'cancelled', payment_status: 'refunded' }) }));
     expect(calls).toContainEqual(expect.objectContaining({ table: 'order_cancel_requests', op: 'update', payload: expect.objectContaining({ status: 'approved', reviewed_by: 'a1' }) }));
     expect(calls).toContainEqual(expect.objectContaining({ table: 'admin_audit_logs', op: 'insert' }));
     expect(deliver).toHaveBeenCalled();
   });
 
-  it('cancels an unpaid order with payment_status cancelled', async () => {
+  it('blocks approval when the Paymob refund fails, leaving the order paid and the request pending', async () => {
+    const { client, calls } = reviewClient(requestWithOrder());
+    refund.mockResolvedValueOnce({ ok: false, error: 'Paymob refund failed with status 400' });
+    const result = await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver, refund });
+    expect(result).toEqual({ status: 'refund_failed' });
+    expect(calls.filter((call) => call.table === 'orders')).toEqual([]);
+    expect(calls.filter((call) => call.table === 'order_cancel_requests')).toEqual([]);
+    expect(deliver).not.toHaveBeenCalled();
+  });
+
+  it('blocks approval when the order is paid but has no refundable payment row', async () => {
+    const { client } = reviewClient(requestWithOrder({ orders: { ...requestWithOrder().orders, payments: [] } }));
+    const result = await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver, refund });
+    expect(result).toEqual({ status: 'refund_failed' });
+    expect(refund).not.toHaveBeenCalled();
+  });
+
+  it('cancels an unpaid order with payment_status cancelled and no refund call', async () => {
     const { client, calls } = reviewClient(requestWithOrder({ orders: { ...requestWithOrder().orders, payment_status: 'payment_failed' } }));
-    await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver });
+    await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver, refund });
+    expect(refund).not.toHaveBeenCalled();
     expect(calls).toContainEqual(expect.objectContaining({ table: 'orders', op: 'update', payload: expect.objectContaining({ payment_status: 'cancelled' }) }));
   });
 

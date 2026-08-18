@@ -14,6 +14,11 @@ export async function POST(request: Request) {
   const callback = { ...transaction, hmac: payload.hmac ?? transaction.hmac ?? queryHmac };
   if (!verifyPaymobCallback(callback, getRequiredServerEnv('PAYMOB_HMAC_SECRET'))) return NextResponse.json({ error: 'Invalid callback signature' }, { status: 401 });
 
+  // Refund callbacks must never be treated as payments: they would insert a bogus
+  // payments row and flip the order's payment_status from 'refunded' back to 'paid'.
+  // The approval flow already refunds synchronously and records the result itself.
+  if (transaction.is_refund === true || transaction.is_refunded === true || transaction.has_parent_transaction === true) return NextResponse.json({ received: true });
+
   const orderReference = String(transaction.merchant_order_id ?? transaction.order?.merchant_order_id ?? transaction.order?.id ?? '');
   const amountMinor = Number(transaction.amount_cents ?? 0);
   const success = transaction.success === true;
