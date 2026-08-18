@@ -28,8 +28,10 @@ anything goes live.
 create table if not exists public.product_reviews (
   id uuid primary key default gen_random_uuid(),
   product_id uuid not null references public.products(id) on delete cascade,
-  order_id uuid not null references public.orders(id) on delete cascade,
-  customer_id uuid not null references public.profiles(id),
+  -- Nullable only so the seed can ship demo reviews without fabricating
+  -- profiles/orders; every real review sets both.
+  order_id uuid references public.orders(id) on delete cascade,
+  customer_id uuid references public.profiles(id),
   rating integer not null check (rating between 1 and 5),
   body text not null check (char_length(body) between 1 and 400),
   status text not null default 'pending' check (status in ('pending', 'approved')),
@@ -117,10 +119,12 @@ client (RLS: approved rows visible to everyone). Sections:
 
 ### Product cards + product page rating line
 
-`features/catalog/types.ts` `Product` gains `rating: { average: number; count: number }`
-(defaults `{ average: 0, count: 0 }`). Both catalog repository impls
-(`local-repository.ts`, `supabase-repository.ts`) compute the aggregate
-from **approved** reviews:
+`features/catalog/types.ts` `Product` gains an optional
+`rating?: { average: number; count: number }`. Both catalog repository
+impls (`local-repository.ts`, `supabase-repository.ts`) always populate it
+via a shared pure helper (absent means `{ average: 0, count: 0 }`), and the
+storefront renders the rating line only when `count > 0`. Both impls
+compute the aggregate from **approved** reviews:
 
 - Local: aggregate over a demo `reviews` array added to the local catalog
   data module (`features/catalog/data.ts`), keyed by product slug.
@@ -181,16 +185,21 @@ from the same `Product` object.
 ('You've reviewed this product.'), `reviewCount` ('{count} reviews'),
 `reviewAverage` ('{average} · {count} reviews'), `approveReview` ('Approve'),
 `rejectReview` ('Reject'), `noReviews` ('No reviews yet.'),
-`noPendingReviews` ('No reviews waiting for approval.').
+`noPendingReviews` ('No reviews waiting for approval.'),
+`verifiedCustomer` ('Verified customer' — storefront fallback name when a
+seed review has no customer profile).
 
 ## Seed
 
-`supabase/seed.sql` gains a `product_reviews` block: 6–10 approved reviews
-spread across products (varied ratings, short EN bodies), referencing
-existing seed order/product ids where stable — otherwise product slugs are
-resolved by subquery so the seed stays idempotent (`on conflict` on the
-unique constraint or `delete then insert` like the existing seed pattern).
-No pending reviews in seed (the queue starts empty).
+`supabase/seed.sql` gains a `product_reviews` block: 8–10 **approved**
+reviews spread across products (varied ratings, short EN bodies) with fixed
+ids, `order_id`/`customer_id` **null** (demo content), `product_id`
+resolved by subquery on `products.slug`, and `on conflict (id) do update`
+like the rest of the seed. No pending reviews in seed (the queue starts
+empty). The storefront falls back to the `verifiedCustomer` label for the
+reviewer name. The local demo catalog (`features/catalog/data.ts`) gains a
+parallel small `demoReviews` array (same slug keys) so the local repository
+has aggregates to show.
 
 ## Out of scope
 
