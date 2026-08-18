@@ -339,6 +339,9 @@ The repo ships `fly.toml` with the non-secret env (`SITE_URL`,
    the order becomes `paid` with the live callback.
 4. Daily operational checks: orders table, `admin_audit_logs`, email
    delivery, Groq rate limit usage.
+5. Approved cancellations of **paid** orders flip the order to `refunded`
+   store-side only — the actual Paymob refund is manual: issue it in the
+   Paymob dashboard, then confirm the money reaches the customer.
 
 ---
 
