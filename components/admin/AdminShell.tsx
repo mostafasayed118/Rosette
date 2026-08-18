@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/admin/products', key: 'products' },
   { href: '/admin/inventory', key: 'inventory' },
   { href: '/admin/delivery', key: 'deliveryRules' },
+  { href: '/admin/promos', key: 'promos' },
 ] as const;
 
 export async function AdminShell({ children }: { children: ReactNode }) {
