@@ -9,7 +9,7 @@ import { readDestination } from '@/features/destination/storage';
 import { calculateCartTotals } from '@/features/cart/pricing';
 import { useCart } from '@/features/cart/CartProvider';
 import { useDeliveryFee } from '@/features/delivery/useDeliveryFee';
-import { usePromoCode } from '@/features/promo/usePromoCode';
+import type { PromoCodeState } from '@/features/promo/usePromoCode';
 import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { formatMoney } from '@/features/money';
@@ -23,7 +23,7 @@ const selectClass = 'h-11 w-full rounded-[10px] border border-border bg-backgrou
 
 type OrderApiResponse = { orderId?: string; checkoutUrl?: string | null; error?: string };
 
-export function CheckoutForm() {
+export function CheckoutForm({ promo, promoDiscount }: { promo: PromoCodeState; promoDiscount: number }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const { cart, ready, clearCart } = useCart();
@@ -31,8 +31,6 @@ export function CheckoutForm() {
   const { feeMinor } = useDeliveryFee(cityCode);
   const deliveryFee = feeMinor ?? estimateDeliveryFeeMinor(cityCode) ?? 1500;
   const liveTotal = calculateCartTotals(cart.lines, cart.lines.length ? deliveryFee : 0).total;
-  const promo = usePromoCode(calculateCartTotals(cart.lines, 0).subtotal);
-  const promoDiscount = promo.discountMinor ?? 0;
   const [input, setInput] = useState(initialInput);
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [simulateFailure, setSimulateFailure] = useState(false);
