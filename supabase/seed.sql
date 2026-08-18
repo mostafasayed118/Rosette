@@ -12,17 +12,18 @@
 -- ---------------------------------------------------------------------------
 -- Categories (values match `products.category` and the storefront filter)
 -- ---------------------------------------------------------------------------
-insert into public.categories (id, slug, name_en, name_ar)
+insert into public.categories (id, slug, name_en, name_ar, name_fr)
 values
-  ('20000000-0000-4000-8000-000000000001', 'hand-bouquet',    'Hand bouquets',      'باقات يدوية'),
-  ('20000000-0000-4000-8000-000000000002', 'vase-arrangement','Vase arrangements', 'تنسيقات في مزهرية'),
-  ('20000000-0000-4000-8000-000000000003', 'plants',          'Plants',            'نباتات'),
-  ('20000000-0000-4000-8000-000000000004', 'gift-boxes',      'Gift boxes',        'صناديق هدايا'),
-  ('20000000-0000-4000-8000-000000000005', 'sympathy',        'Sympathy',          'واجب العزاء')
+  ('20000000-0000-4000-8000-000000000001', 'hand-bouquet',    'Hand bouquets',      'باقات يدوية',        'Bouquets main'),
+  ('20000000-0000-4000-8000-000000000002', 'vase-arrangement','Vase arrangements', 'تنسيقات في مزهرية', 'Arrangements en vase'),
+  ('20000000-0000-4000-8000-000000000003', 'plants',          'Plants',            'نباتات',            'Plantes'),
+  ('20000000-0000-4000-8000-000000000004', 'gift-boxes',      'Gift boxes',        'صناديق هدايا',      'Coffrets cadeaux'),
+  ('20000000-0000-4000-8000-000000000005', 'sympathy',        'Sympathy',          'واجب العزاء',       'Condoléances')
 on conflict (id) do update
   set slug = excluded.slug,
       name_en = excluded.name_en,
-      name_ar = excluded.name_ar;
+      name_ar = excluded.name_ar,
+      name_fr = excluded.name_fr;
 
 -- Remove the occasion-style rows from the original minimal seed (they are not
 -- product categories in the storefront).
@@ -31,23 +32,24 @@ delete from public.categories where slug in ('birthday', 'romance', 'thanks');
 -- ---------------------------------------------------------------------------
 -- Cities (must match features/destination/catalog.ts exactly)
 -- ---------------------------------------------------------------------------
-insert into public.cities (id, code, name_en, name_ar, same_day)
+insert into public.cities (id, code, name_en, name_ar, name_fr, same_day)
 values
-  ('30000000-0000-4000-8000-000000000001', 'greater-cairo', 'Greater Cairo', 'القاهرة الكبرى', true),
-  ('30000000-0000-4000-8000-000000000002', 'alexandria',    'Alexandria',    'الإسكندرية',     true),
-  ('30000000-0000-4000-8000-000000000003', 'mansoura',      'Mansoura',      'المنصورة',       false),
-  ('30000000-0000-4000-8000-000000000004', 'zagazig',       'Zagazig',       'الزقازيق',       false),
-  ('30000000-0000-4000-8000-000000000005', 'tanta',         'Tanta',         'طنطا',           false),
-  ('30000000-0000-4000-8000-000000000006', 'menofya',       'Menofya',       'المنوفية',       false),
-  ('30000000-0000-4000-8000-000000000007', 'north-coast',   'North Coast',   'الساحل الشمالي', false),
-  ('30000000-0000-4000-8000-000000000008', 'ain-sokhna',    'Ain Sokhna',    'العين السخنة',   false),
-  ('30000000-0000-4000-8000-000000000009', 'ismailia',      'Ismailia',      'الإسماعيلية',    false),
-  ('30000000-0000-4000-8000-000000000010', 'banha',         'Banha',         'بنها',           false),
-  ('30000000-0000-4000-8000-000000000011', 'suez',          'Suez',          'السويس',         false)
+  ('30000000-0000-4000-8000-000000000001', 'greater-cairo', 'Greater Cairo', 'القاهرة الكبرى', 'Le Grand Caire', true),
+  ('30000000-0000-4000-8000-000000000002', 'alexandria',    'Alexandria',    'الإسكندرية',     'Alexandrie',     true),
+  ('30000000-0000-4000-8000-000000000003', 'mansoura',      'Mansoura',      'المنصورة',       'Mansourah',      false),
+  ('30000000-0000-4000-8000-000000000004', 'zagazig',       'Zagazig',       'الزقازيق',       'Zagazig',        false),
+  ('30000000-0000-4000-8000-000000000005', 'tanta',         'Tanta',         'طنطا',           'Tanta',          false),
+  ('30000000-0000-4000-8000-000000000006', 'menofya',       'Menofya',       'المنوفية',       'Menoufia',       false),
+  ('30000000-0000-4000-8000-000000000007', 'north-coast',   'North Coast',   'الساحل الشمالي', 'Côte Nord',      false),
+  ('30000000-0000-4000-8000-000000000008', 'ain-sokhna',    'Ain Sokhna',    'العين السخنة',   'Aïn Sokhna',     false),
+  ('30000000-0000-4000-8000-000000000009', 'ismailia',      'Ismailia',      'الإسماعيلية',    'Ismaïlia',       false),
+  ('30000000-0000-4000-8000-000000000010', 'banha',         'Banha',         'بنها',           'Benha',          false),
+  ('30000000-0000-4000-8000-000000000011', 'suez',          'Suez',          'السويس',         'Suez',           false)
 on conflict (id) do update
   set code = excluded.code,
       name_en = excluded.name_en,
       name_ar = excluded.name_ar,
+      name_fr = excluded.name_fr,
       same_day = excluded.same_day;
 
 -- Drop the old seed's city codes so they cannot linger next to the new ones.
@@ -79,126 +81,144 @@ on conflict (id) do update
 -- ---------------------------------------------------------------------------
 -- Products (tone = hex visual color; add_ons ids match CartAddOn ids)
 -- ---------------------------------------------------------------------------
-insert into public.products (id, slug, name_en, name_ar, description_en, description_ar, category, occasions, price_minor, tone, delivery, add_ons, created_at)
+insert into public.products (id, slug, name_en, name_ar, name_fr, description_en, description_ar, description_fr, category, occasions, price_minor, tone, delivery, add_ons, created_at)
 values
-  ('00000000-0000-4000-8000-000000000001', 'rose-hour', 'Rose Hour', 'ساعة الورد',
+  ('00000000-0000-4000-8000-000000000001', 'rose-hour', 'Rose Hour', 'ساعة الورد', 'L’Heure des Roses',
    'Soft garden roses in a hand-tied bouquet, wrapped the way a quiet message deserves.',
    'ورود حدائق ناعمة في باقة يدوية بتغليف يليق برسالة لا تحتاج كلمات.',
+   'Des roses de jardin douces en bouquet noué main, emballées comme le mérite un message discret.',
    'hand-bouquet', array['birthday','love'], 12000, '#bc6d63',
    'Same-day in Greater Cairo and Alexandria',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","price_minor":1800}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
    '2026-01-02T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000002', 'green-morning', 'Green Morning', 'صباح أخضر',
+  ('00000000-0000-4000-8000-000000000002', 'green-morning', 'Green Morning', 'صباح أخضر', 'Matin Vert',
    'A leafy vase arrangement with the calm of a window left open.',
    'تنسيق أخضر في مزهرية يحمل هدوء نافذة مفتوحة.',
+   'Un arrangement feuillu en vase, avec le calme d’une fenêtre laissée ouverte.',
    'vase-arrangement', ARRAY['thank-you','new-home'], 18000, '#6f8b73',
    'Next-day delivery',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
    '2026-03-02T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000003', 'sunlit-stems', 'Sunlit Stems', 'سيقان مضيئة',
+  ('00000000-0000-4000-8000-000000000003', 'sunlit-stems', 'Sunlit Stems', 'سيقان مضيئة', 'Tiges Ensoleillées',
    'Golden stems with a little movement, gathered for a bright day.',
    'سيقان ذهبية مليئة بالحيوية، جمعت ليوم مشرق.',
+   'Des tiges dorées pleines de mouvement, cueillies pour une journée lumineuse.',
    'hand-bouquet', ARRAY['birthday','congratulations'], 14500, '#d6b56d',
    'Same-day in Greater Cairo and Alexandria',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500},{"id":"balloon","name_en":"Celebration balloon","name_ar":"بالون احتفالي","price_minor":1200}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"balloon","name_en":"Celebration balloon","name_ar":"بالون احتفالي","name_fr":"Ballon de fête","price_minor":1200}]'::jsonb,
    '2026-02-14T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000004', 'terracotta-love', 'Terracotta Love', 'حب بلون الطين',
+  ('00000000-0000-4000-8000-000000000004', 'terracotta-love', 'Terracotta Love', 'حب بلون الطين', 'Amour Terracotta',
    'Warm ranunculus with a sculptural wrap — a gesture from the heart.',
    'أزهار رانانكيولوس دافئة بتغليف نحتي، مبادرة من القلب.',
+   'Des renoncules chaleureuses dans un emballage sculptural — un geste venu du cœur.',
    'hand-bouquet', ARRAY['love'], 22000, '#d19a82',
    'Next-day delivery',
-   '[{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","price_minor":1800}]'::jsonb,
+   '[{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
    '2026-02-01T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000005', 'quiet-orchid', 'Quiet Orchid', 'أوركيد هادئ',
+  ('00000000-0000-4000-8000-000000000005', 'quiet-orchid', 'Quiet Orchid', 'أوركيد هادئ', 'Orchidée Sereine',
    'An elegant orchid plant that keeps the sentiment alive for months.',
    'نبتة أوركيد أنيقة تُطيل بقاء الشعور حياً لأشهر.',
+   'Une orchidée élégante qui garde le sentiment vivant pendant des mois.',
    'plants', ARRAY['new-home','thank-you'], 26000, '#b7a8c7',
    'Next-day delivery',
    '[]'::jsonb,
    '2026-01-20T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000006', 'wild-meadow', 'Wild Meadow', 'مرج بري',
+  ('00000000-0000-4000-8000-000000000006', 'wild-meadow', 'Wild Meadow', 'مرج بري', 'Prairie Sauvage',
    'Loose seasonal color, as if gathered on a morning walk.',
    'ألوان موسمية حرة، كأنها جُمعت في نزهة صباحية.',
+   'Des couleurs de saison libres, comme cueillies lors d’une promenade matinale.',
    'vase-arrangement', ARRAY['congratulations'], 19500, '#9aaf83',
    'Next-day delivery',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
    '2026-03-10T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000007', 'little-thanks', 'Little Thanks', 'شكر صغير',
+  ('00000000-0000-4000-8000-000000000007', 'little-thanks', 'Little Thanks', 'شكر صغير', 'Petit Merci',
    'A petite posy for the people who make our days brighter.',
    'باقة صغيرة لمن يجعلون أيامنا أجمل.',
+   'Un petit bouquet pour ceux qui illuminent nos journées.',
    'hand-bouquet', ARRAY['thank-you'], 8500, '#e2b5a6',
    'Same-day in Greater Cairo and Alexandria',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
    '2026-01-09T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000008', 'citrus-cloud', 'Citrus Cloud', 'سحابة حمضية',
+  ('00000000-0000-4000-8000-000000000008', 'citrus-cloud', 'Citrus Cloud', 'سحابة حمضية', 'Nuage d’Agrumes',
    'A light, fragrant arrangement with a zesty touch.',
    'تنسيق خفيف وعطِر بلمسة حمضية منعشة.',
+   'Un arrangement léger et parfumé, avec une touche d’agrumes.',
    'vase-arrangement', ARRAY['birthday'], 16000, '#e4c57b',
    'Next-day delivery',
    '[]'::jsonb,
    '2026-02-28T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000009', 'midnight-roses', 'Midnight Roses', 'ورد منتصف الليل',
+  ('00000000-0000-4000-8000-000000000009', 'midnight-roses', 'Midnight Roses', 'ورد منتصف الليل', 'Roses de Minuit',
    'Deep wine-red roses on tall stems — dramatic and unforgettable.',
    'ورود حمراء داكنة على سيقان طويلة — فخامة لا تُنسى.',
+   'Des roses rouge vin profond sur de longues tiges — dramatiques et inoubliables.',
    'hand-bouquet', ARRAY['love','congratulations'], 24000, '#6b2d3f',
    'Same-day in Greater Cairo and Alexandria',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","price_minor":1800}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
    '2026-04-08T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000010', 'sakura-breath', 'Breath of Sakura', 'نَفَس الساكورا',
+  ('00000000-0000-4000-8000-000000000010', 'sakura-breath', 'Breath of Sakura', 'نَفَس الساكورا', 'Souffle de Sakura',
    'Pale pink blossoms arranged like a spring breeze in a vase.',
    'أزهار وردية فاتحة كنسيم الربيع، منسقة في مزهرية.',
+   'De pâles fleurs roses arrangées comme une brise de printemps dans un vase.',
    'vase-arrangement', ARRAY['birthday','thank-you'], 21000, '#e8b4c8',
    'Same-day in Greater Cairo and Alexandria',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
    '2026-06-15T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000011', 'white-lotus', 'White Lotus', 'لوتس أبيض',
+  ('00000000-0000-4000-8000-000000000011', 'white-lotus', 'White Lotus', 'لوتس أبيض', 'Lotus Blanc',
    'A calm white lotus arrangement — serenity for a new beginning.',
    'تنسيق لوتس أبيض هادئ — سكينة لبداية جديدة.',
+   'Un arrangement de lotus blanc apaisant — la sérénité pour un nouveau départ.',
    'plants', ARRAY['new-home','thank-you'], 28000, '#e7e0d3',
    'Next-day delivery',
    '[]'::jsonb,
    '2026-04-21T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000012', 'petal-box', 'Petal Box', 'علبة البتلات',
+  ('00000000-0000-4000-8000-000000000012', 'petal-box', 'Petal Box', 'علبة البتلات', 'Coffret de Pétales',
    'A tidy box of loose petals and stems — the modern way to say it.',
    'علبة أنيقة من البتلات والزهور — الطريقة العصرية لتقولها.',
+   'Un coffret soigné de pétales et de fleurs détachées — la façon moderne de le dire.',
    'gift-boxes', ARRAY['love','birthday'], 19000, '#c96f8a',
    'Same-day in Greater Cairo and Alexandria',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","price_minor":1800}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
    '2026-05-12T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000013', 'roses-in-a-box', 'Roses in a Box', 'ورد في علبة',
+  ('00000000-0000-4000-8000-000000000013', 'roses-in-a-box', 'Roses in a Box', 'ورد في علبة', 'Roses en Coffret',
    'A dozen long-stemmed roses in a keepsake box, door to door.',
    'دستة ورود طويلة الساق في علبة تذكارية تصل إلى الباب.',
+   'Une douzaine de roses à longues tiges dans un coffret souvenir, livrées à votre porte.',
    'gift-boxes', ARRAY['love'], 26000, '#b23a48',
    'Same-day in Greater Cairo and Alexandria',
-   '[{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","price_minor":1800},{"id":"balloon","name_en":"Celebration balloon","name_ar":"بالون احتفالي","price_minor":1200}]'::jsonb,
+   '[{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800},{"id":"balloon","name_en":"Celebration balloon","name_ar":"بالون احتفالي","name_fr":"Ballon de fête","price_minor":1200}]'::jsonb,
    '2026-06-01T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000014', 'white-serenade', 'White Serenade', 'سيريناد أبيض',
+  ('00000000-0000-4000-8000-000000000014', 'white-serenade', 'White Serenade', 'سيريناد أبيض', 'Sérénade Blanche',
    'A quiet arrangement of white blooms for a moment of respect.',
    'تنسيق هادئ من الأزهار البيضاء لحظة من الاحترام والسكينة.',
+   'Un arrangement discret de fleurs blanches pour un moment de respect.',
    'sympathy', ARRAY['sympathy'], 20000, '#e8e4e1',
    'Next-day delivery',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
    '2026-05-20T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000015', 'quiet-remembrance', 'Quiet Remembrance', 'ذكرى هادئة',
+  ('00000000-0000-4000-8000-000000000015', 'quiet-remembrance', 'Quiet Remembrance', 'ذكرى هادئة', 'Souvenir Discret',
    'A calm green plant that keeps a memory growing.',
    'نبتة خضراء هادئة تُبقي الذكرى مستمرة بأبسط صورة.',
+   'Une plante verte apaisante qui fait grandir un souvenir.',
    'sympathy', ARRAY['sympathy'], 28000, '#c9c3cf',
    'Next-day delivery',
    '[]'::jsonb,
    '2026-05-20T09:00:00Z'),
-  ('00000000-0000-4000-8000-000000000016', 'grand-roses', 'Grand Roses', 'ورود فاخرة',
+  ('00000000-0000-4000-8000-000000000016', 'grand-roses', 'Grand Roses', 'ورود فاخرة', 'Roses Grandioses',
    'A generous hand-tied armful of long roses, nothing held back.',
    'باقة يدوية سخية من الورود الطويلة، بلا حدود ولا تحفظ.',
+   'Une brassée généreuse de roses à longues tiges, nouée main, sans retenue.',
    'hand-bouquet', ARRAY['love','congratulations'], 32000, '#c2185b',
    'Same-day in Greater Cairo and Alexandria',
-   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","price_minor":1800}]'::jsonb,
+   '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
    '2026-07-01T09:00:00Z')
 on conflict (id) do update
   set slug = excluded.slug,
       name_en = excluded.name_en,
       name_ar = excluded.name_ar,
+      name_fr = excluded.name_fr,
       description_en = excluded.description_en,
       description_ar = excluded.description_ar,
+      description_fr = excluded.description_fr,
       category = excluded.category,
       occasions = excluded.occasions,
       price_minor = excluded.price_minor,
@@ -209,54 +229,55 @@ on conflict (id) do update
 -- ---------------------------------------------------------------------------
 -- Variants (every product has at least one so it can be ordered)
 -- ---------------------------------------------------------------------------
-insert into public.product_variants (id, product_id, name_en, name_ar, price_delta_minor)
+insert into public.product_variants (id, product_id, name_en, name_ar, name_fr, price_delta_minor)
 values
   -- rose-hour
-  ('10000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000001', 'Classic', 'كلاسيكي', 0),
-  ('10000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000001', 'Generous', 'سخي', 4500),
+  ('10000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000001', 'Classic', 'كلاسيكي', 'Classique', 0),
+  ('10000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000001', 'Generous', 'سخي', 'Généreux', 4500),
   -- green-morning
-  ('10000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000002', 'Single', 'مزهرية فردية', 0),
-  ('10000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000002', 'Double', 'مزهرية مزدوجة', 7000),
+  ('10000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-000000000002', 'Single', 'مزهرية فردية', 'Vase simple', 0),
+  ('10000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000002', 'Double', 'مزهرية مزدوجة', 'Vase double', 7000),
   -- sunlit-stems
-  ('10000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-000000000003', 'Classic', 'كلاسيكي', 0),
+  ('10000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-000000000003', 'Classic', 'كلاسيكي', 'Classique', 0),
   -- terracotta-love
-  ('10000000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-000000000004', 'Classic', 'كلاسيكي', 0),
+  ('10000000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-000000000004', 'Classic', 'كلاسيكي', 'Classique', 0),
   -- quiet-orchid
-  ('10000000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-000000000005', 'Small', 'صغير', 0),
-  ('10000000-0000-4000-8000-000000000008', '00000000-0000-4000-8000-000000000005', 'Large', 'كبير', 8000),
+  ('10000000-0000-4000-8000-000000000007', '00000000-0000-4000-8000-000000000005', 'Small', 'صغير', 'Petit', 0),
+  ('10000000-0000-4000-8000-000000000008', '00000000-0000-4000-8000-000000000005', 'Large', 'كبير', 'Grand', 8000),
   -- wild-meadow
-  ('10000000-0000-4000-8000-000000000009', '00000000-0000-4000-8000-000000000006', 'Single', 'مزهرية فردية', 0),
+  ('10000000-0000-4000-8000-000000000009', '00000000-0000-4000-8000-000000000006', 'Single', 'مزهرية فردية', 'Vase simple', 0),
   -- little-thanks
-  ('10000000-0000-4000-8000-000000000010', '00000000-0000-4000-8000-000000000007', 'Classic', 'كلاسيكي', 0),
+  ('10000000-0000-4000-8000-000000000010', '00000000-0000-4000-8000-000000000007', 'Classic', 'كلاسيكي', 'Classique', 0),
   -- citrus-cloud
-  ('10000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000008', 'Single', 'مزهرية فردية', 0),
+  ('10000000-0000-4000-8000-000000000011', '00000000-0000-4000-8000-000000000008', 'Single', 'مزهرية فردية', 'Vase simple', 0),
   -- midnight-roses
-  ('10000000-0000-4000-8000-000000000012', '00000000-0000-4000-8000-000000000009', 'Classic', 'كلاسيكي', 0),
-  ('10000000-0000-4000-8000-000000000013', '00000000-0000-4000-8000-000000000009', 'Generous', 'سخي', 5000),
+  ('10000000-0000-4000-8000-000000000012', '00000000-0000-4000-8000-000000000009', 'Classic', 'كلاسيكي', 'Classique', 0),
+  ('10000000-0000-4000-8000-000000000013', '00000000-0000-4000-8000-000000000009', 'Generous', 'سخي', 'Généreux', 5000),
   -- sakura-breath
-  ('10000000-0000-4000-8000-000000000014', '00000000-0000-4000-8000-000000000010', 'Single', 'مزهرية فردية', 0),
-  ('10000000-0000-4000-8000-000000000015', '00000000-0000-4000-8000-000000000010', 'Double', 'مزهرية مزدوجة', 6000),
+  ('10000000-0000-4000-8000-000000000014', '00000000-0000-4000-8000-000000000010', 'Single', 'مزهرية فردية', 'Vase simple', 0),
+  ('10000000-0000-4000-8000-000000000015', '00000000-0000-4000-8000-000000000010', 'Double', 'مزهرية مزدوجة', 'Vase double', 6000),
   -- white-lotus
-  ('10000000-0000-4000-8000-000000000016', '00000000-0000-4000-8000-000000000011', 'Small', 'صغير', 0),
-  ('10000000-0000-4000-8000-000000000017', '00000000-0000-4000-8000-000000000011', 'Large', 'كبير', 7000),
+  ('10000000-0000-4000-8000-000000000016', '00000000-0000-4000-8000-000000000011', 'Small', 'صغير', 'Petit', 0),
+  ('10000000-0000-4000-8000-000000000017', '00000000-0000-4000-8000-000000000011', 'Large', 'كبير', 'Grand', 7000),
   -- petal-box
-  ('10000000-0000-4000-8000-000000000018', '00000000-0000-4000-8000-000000000012', 'Classic', 'كلاسيكي', 0),
-  ('10000000-0000-4000-8000-000000000019', '00000000-0000-4000-8000-000000000012', 'Generous', 'سخي', 5000),
+  ('10000000-0000-4000-8000-000000000018', '00000000-0000-4000-8000-000000000012', 'Classic', 'كلاسيكي', 'Classique', 0),
+  ('10000000-0000-4000-8000-000000000019', '00000000-0000-4000-8000-000000000012', 'Generous', 'سخي', 'Généreux', 5000),
   -- roses-in-a-box
-  ('10000000-0000-4000-8000-000000000020', '00000000-0000-4000-8000-000000000013', 'Classic', 'كلاسيكي', 0),
-  ('10000000-0000-4000-8000-000000000021', '00000000-0000-4000-8000-000000000013', 'Generous', 'سخي', 6000),
+  ('10000000-0000-4000-8000-000000000020', '00000000-0000-4000-8000-000000000013', 'Classic', 'كلاسيكي', 'Classique', 0),
+  ('10000000-0000-4000-8000-000000000021', '00000000-0000-4000-8000-000000000013', 'Generous', 'سخي', 'Généreux', 6000),
   -- white-serenade
-  ('10000000-0000-4000-8000-000000000022', '00000000-0000-4000-8000-000000000014', 'Single', 'مزهرية فردية', 0),
+  ('10000000-0000-4000-8000-000000000022', '00000000-0000-4000-8000-000000000014', 'Single', 'مزهرية فردية', 'Vase simple', 0),
   -- quiet-remembrance
-  ('10000000-0000-4000-8000-000000000023', '00000000-0000-4000-8000-000000000015', 'Small', 'صغير', 0),
-  ('10000000-0000-4000-8000-000000000024', '00000000-0000-4000-8000-000000000015', 'Large', 'كبير', 7000),
+  ('10000000-0000-4000-8000-000000000023', '00000000-0000-4000-8000-000000000015', 'Small', 'صغير', 'Petit', 0),
+  ('10000000-0000-4000-8000-000000000024', '00000000-0000-4000-8000-000000000015', 'Large', 'كبير', 'Grand', 7000),
   -- grand-roses
-  ('10000000-0000-4000-8000-000000000025', '00000000-0000-4000-8000-000000000016', 'Classic', 'كلاسيكي', 0),
-  ('10000000-0000-4000-8000-000000000026', '00000000-0000-4000-8000-000000000016', 'Generous', 'سخي', 6000)
+  ('10000000-0000-4000-8000-000000000025', '00000000-0000-4000-8000-000000000016', 'Classic', 'كلاسيكي', 'Classique', 0),
+  ('10000000-0000-4000-8000-000000000026', '00000000-0000-4000-8000-000000000016', 'Generous', 'سخي', 'Généreux', 6000)
 on conflict (id) do update
   set product_id = excluded.product_id,
       name_en = excluded.name_en,
       name_ar = excluded.name_ar,
+      name_fr = excluded.name_fr,
       price_delta_minor = excluded.price_delta_minor;
 
 -- ---------------------------------------------------------------------------
