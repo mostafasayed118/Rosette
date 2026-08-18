@@ -258,7 +258,8 @@ update public.products set name_fr = 'Roses Grandioses', description_fr = 'Une b
 update public.products set add_ons = '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb where slug = 'rose-hour';
 update public.products set add_ons = '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb where slug in ('green-morning', 'wild-meadow', 'little-thanks', 'sakura-breath', 'white-serenade');
 update public.products set add_ons = '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"balloon","name_en":"Celebration balloon","name_ar":"بالون احتفالي","name_fr":"Ballon de fête","price_minor":1200}]'::jsonb where slug = 'sunlit-stems';
-update public.products set add_ons = '[{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb where slug in ('terracotta-love', 'roses-in-a-box');
+update public.products set add_ons = '[{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb where slug = 'terracotta-love';
+update public.products set add_ons = '[{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800},{"id":"balloon","name_en":"Celebration balloon","name_ar":"بالون احتفالي","name_fr":"Ballon de fête","price_minor":1200}]'::jsonb where slug = 'roses-in-a-box';
 update public.products set add_ons = '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb where slug in ('midnight-roses', 'petal-box', 'grand-roses');
 ```
 
@@ -408,7 +409,7 @@ git commit -m "feat: thread French fields through catalog, destination, and orde
 - [ ] **Step 1: Convert content picks to `pickLocalized`**
 
 - `features/catalog/ProductCard.tsx`: `const name = pickLocalized(locale, { en: product.name, ar: product.nameAr, fr: product.nameFr });` and the same for `description`. Use `formatMoney(product.price, locale)`.
-- `features/product/ProductDetail.tsx`: same `name`/`description` picks; replace the inline `Intl.NumberFormat(...)` price with `formatMoney(unitPrice, locale)`.
+- `features/product/ProductDetail.tsx`: same `name`/`description` picks; replace the inline `Intl.NumberFormat(...)` price with `formatMoney(unitPrice, locale)`; in the `addItem` call add `productNameFr: product.nameFr`.
 - `features/cart/CartLineItem.tsx`: product name via `pickLocalized(locale, { en: line.productName, ar: line.productNameAr, fr: line.productNameFr })` (add `productNameFr?: string` to the cart line type in `features/cart/types.ts`); for add-ons, map known ids through `t()` for **all** locales: `const addOnLabel = (addOn) => addOn.id === 'note' ? t('handwrittenNote') : addOn.id === 'chocolate' ? t('darkChocolate') : addOn.id === 'balloon' ? t('balloon') : addOn.name;`.
 - `features/destination/DestinationGate.tsx`: `pickLocalized(locale, { en: city.name, ar: city.nameAr, fr: city.nameFr })`.
 - `features/order/OrderPageContent.tsx`: item name via `pickLocalized(locale, { en: item.productName, ar: item.productNameAr, fr: item.productNameFr })`; replace the `paymentCopy` ternary with `t('paymentConfirmed')` / `t('paymentPending')`; replace the inline `Intl.NumberFormat` with `formatMoney(..., locale)`.
@@ -619,10 +620,16 @@ git commit -m "feat: support French in WhatsApp messages and the chat assistant"
 - Modify: `app/admin/orders/page.tsx`
 - Modify: `app/admin/orders/[id]/page.tsx`
 - Modify: `app/admin/products/page.tsx`
+- Modify: `app/admin/products/new/page.tsx`
+- Modify: `app/admin/products/[id]/page.tsx`
 - Modify: `app/admin/inventory/page.tsx`
 - Modify: `app/admin/delivery/page.tsx`
 - Modify: `components/admin/OrderListToolbar.tsx`
 - Modify: `components/admin/OrderActions.tsx`
+- Modify: `components/admin/ProductForm.tsx`
+- Modify: `components/admin/SetQuantityForm.tsx`
+- Modify: `components/admin/AddCityForm.tsx`
+- Modify: `components/admin/DeliveryRuleForm.tsx`
 
 **Interfaces:**
 - Consumes: `cookies()` (Next 16), `messages` from Task 1, `formatMoney` from Task 1, `useI18n` (client admin components).
@@ -665,11 +672,17 @@ In each page, add `const t = await getServerT();` (after the `redirect` guard) a
 
 `components/admin/OrderActions.tsx` — `const { t } = useI18n();`; replace `labels` values with `t('statusConfirmed')` etc. (build the label inside render: `t(statusLabelKeys[status])`), and `t('updating')`, `t('couldNotUpdateOrder')`.
 
-- [ ] **Step 4: Verify in the browser**
+`components/admin/ProductForm.tsx`, `SetQuantityForm.tsx`, `AddCityForm.tsx`, `DeliveryRuleForm.tsx` — `const { t } = useI18n();` and replace hardcoded English labels with `t()` keys (e.g. product name/price/description/category fields, quantity, city name, fee, cutoff hour, save/cancel buttons). Add any new keys to all three locales in `features/i18n/dictionaries.ts` (reuse existing keys where the meaning matches, e.g. `products`, `deliveryRules`, `active`).
 
-With the dev server running: sign in to `/admin`, set `document.cookie='rosette.locale=fr'`, reload — the dashboard, orders list, order detail, products, inventory, and delivery pages render French labels; the toolbar and status buttons are French too. Typecheck: `npx tsc --noEmit`.
+- [ ] **Step 4: Localize the two new product editor pages**
 
-- [ ] **Step 5: Commit**
+`app/admin/products/new/page.tsx` and `app/admin/products/[id]/page.tsx` are server components; add `const { t, locale } = await getServerT();` and replace hardcoded headings/labels (e.g. product name, price, category, active) using the same dictionary keys as Step 3. Re-read both files first — they render `ProductForm` (localized in Step 3) and page-level copy.
+
+- [ ] **Step 5: Verify in the browser**
+
+With the dev server running: sign in to `/admin`, set `document.cookie='rosette.locale=fr'`, reload — the dashboard, orders list, order detail, products (list, new, and edit), inventory, and delivery pages render French labels; the toolbar, status buttons, and editor forms are French too. Typecheck: `npx tsc --noEmit`.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 git add features/i18n/server.ts app/admin components/admin

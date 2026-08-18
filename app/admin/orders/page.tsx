@@ -4,18 +4,17 @@ import { OrderListToolbar } from '@/components/admin/OrderListToolbar';
 import { buildOrderListQuery } from '@/features/admin/order-list-query';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
+import { getServerT } from '@/features/i18n/server';
+import { formatMoney } from '@/features/money';
 
 function first(value: string | string[] | undefined) {
   return typeof value === 'string' ? value : undefined;
 }
 
-function money(minor: number) {
-  return new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(minor / 100);
-}
-
 export default async function AdminOrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const admin = await getCurrentAdmin();
   if (!admin) redirect('/login');
+  const { t, locale } = await getServerT();
   const params = await searchParams;
   const constraints = buildOrderListQuery({ q: first(params.q), payment: first(params.payment), fulfillment: first(params.fulfillment) });
 
@@ -28,14 +27,14 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
   const rows = (data ?? []) as Array<{ id: string; display_number: string; customer_email: string; recipient_name: string; total_minor: number; payment_status: string; fulfillment_status: string }>;
 
   return <main className="content-frame">
-    <p className="eyebrow">Customer orders</p>
-    <h1>Orders</h1>
+    <p className="eyebrow">{t('customerOrders')}</p>
+    <h1>{t('orders')}</h1>
     <OrderListToolbar />
     <div className="admin-table">
-      {rows.length === 0 ? <p className="status-message">No orders match.</p> : rows.map((order) => (
+      {rows.length === 0 ? <p className="status-message">{t('noOrdersMatch')}</p> : rows.map((order) => (
         <article className="status-message" key={order.id}>
           <Link href={`/admin/orders/${order.id}`}><strong>{order.display_number}</strong></Link>
-          <span>{order.recipient_name} · {order.customer_email} · {money(order.total_minor)} · {order.payment_status} · {order.fulfillment_status}</span>
+          <span>{order.recipient_name} · {order.customer_email} · {formatMoney(order.total_minor, locale)} · {order.payment_status} · {order.fulfillment_status}</span>
         </article>
       ))}
     </div>
