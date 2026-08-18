@@ -312,6 +312,20 @@ commercial store.
    a staging deployment) to confirm the 401 guard and summary response.
 5. Redeploy, then repeat Section 6 from the public domain with test keys.
 
+### Fly.io (with fly.toml)
+
+The repo ships `fly.toml` with the non-secret env (`SITE_URL`,
+`PAYMOB_BASE_URL`, `GROQ_MODEL`) and the HTTP service definition.
+
+1. Run `fly launch` to generate a Dockerfile (keep the committed `fly.toml`).
+2. Set every secret with `fly secrets set` — never in `fly.toml`:
+   `SUPABASE_SERVICE_ROLE_KEY`, `PAYMOB_API_KEY`, `PAYMOB_PUBLIC_KEY`,
+   `PAYMOB_INTEGRATION_ID`, `PAYMOB_HMAC_SECRET`, `GMAIL_USER`,
+   `GMAIL_APP_PASSWORD`, `GMAIL_FROM`, `GROQ_API_KEY`, `CRON_SECRET`, plus the
+   public Supabase pair `NEXT_PUBLIC_SUPABASE_URL` /
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+3. Update `SITE_URL` in `fly.toml` to your real domain, then `fly deploy`.
+
 ---
 
 ## 9. Go live with Paymob
