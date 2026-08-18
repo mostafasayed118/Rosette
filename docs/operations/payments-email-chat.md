@@ -53,8 +53,11 @@ Every send is recorded in `notification_deliveries` (`pending` → `sent`/`faile
 
 ### Retry job
 
-A cron endpoint retries deliveries stuck in `failed` (up to 3 attempts) or
-stale `pending` (older than 15 minutes):
+A cron endpoint retries deliveries stuck in `failed` (up to
+`NOTIFICATION_RETRY_MAX_ATTEMPTS`, default 3) or stale `pending` (older than
+`NOTIFICATION_RETRY_STALE_PENDING_MINUTES`, default 15 minutes). Both values
+are optional positive-integer env vars that fall back to those defaults when
+unset or invalid:
 
 ```text
 POST /api/cron/notifications

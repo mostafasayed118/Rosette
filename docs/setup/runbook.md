@@ -240,6 +240,8 @@ cp .env.example .env.local
 | `GROQ_MODEL` | `groq/compound-mini` (default) |
 | `WHATSAPP_BUSINESS_NUMBER` | e.g. `201000000000` |
 | `CRON_SECRET` | a random string shared with your scheduler (e.g. `openssl rand -hex 32`) |
+| `NOTIFICATION_RETRY_MAX_ATTEMPTS` | optional; retry attempt cap (default `3`) |
+| `NOTIFICATION_RETRY_STALE_PENDING_MINUTES` | optional; stale-`pending` window in minutes (default `15`) |
 
 `.env.local` is git-ignored. Keep a second copy for the deployment host and
 never paste these values in chat, issues, or commits.

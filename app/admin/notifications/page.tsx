@@ -9,6 +9,7 @@ import { AdminShell } from '@/components/admin/AdminShell';
 import { NotificationsToolbar } from '@/components/admin/NotificationsToolbar';
 import { RetryEmailsButton } from '@/components/admin/RetryEmailsButton';
 import { listStuckDeliveries } from '@/features/admin/notification-admin';
+import { resolveRetryLimits } from '@/features/notifications/notification-retry';
 import { NOTIFICATION_TYPE_LABEL_KEYS } from '@/features/admin/notification-type-labels';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
@@ -30,7 +31,7 @@ export default async function AdminNotificationsPage({ searchParams }: { searchP
   const type = first(params.type);
   const page = Math.max(1, Number.parseInt(first(params.page) ?? '1', 10) || 1);
 
-  const { rows, total } = await listStuckDeliveries(getAdminSupabase(), { q, status, type, page, pageSize: PAGE_SIZE });
+  const { rows, total } = await listStuckDeliveries(getAdminSupabase(), { q, status, type, page, pageSize: PAGE_SIZE, ...resolveRetryLimits() });
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const current = Math.min(page, pageCount);
 

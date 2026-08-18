@@ -15,6 +15,8 @@ const serverKeys = [
   'WHATSAPP_BUSINESS_NUMBER',
   'SITE_URL',
   'CRON_SECRET',
+  'NOTIFICATION_RETRY_MAX_ATTEMPTS',
+  'NOTIFICATION_RETRY_STALE_PENDING_MINUTES',
 ] as const;
 
 type ServerKey = (typeof serverKeys)[number];

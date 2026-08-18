@@ -1,4 +1,5 @@
-import { isStuckRow, NOTIFICATION_TYPES } from '@/features/notifications/notification-retry';
+import { isStuckRow, MAX_ATTEMPTS, NOTIFICATION_TYPES, STALE_PENDING_MS } from '@/features/notifications/notification-retry';
+import type { RetryLimits } from '@/features/notifications/notification-retry';
 import type { NotificationType } from '@/features/notifications/email-types';
 
 type AdminClient = { from: (table: string) => any };
@@ -28,8 +29,9 @@ export type StuckDeliveryQuery = {
 type DeliveryRow = { id: string; order_id: string; type: string; recipient: string; locale: string; status: string; attempts: number; last_error: string | null; created_at: string };
 type OrderRow = { id: string; display_number: string };
 
-export async function listStuckDeliveries(client: AdminClient, deps: { now?: () => Date } & StuckDeliveryQuery = {}): Promise<StuckDeliveryPage> {
+export async function listStuckDeliveries(client: AdminClient, deps: { now?: () => Date; maxAttempts?: number; stalePendingMs?: number } & StuckDeliveryQuery = {}): Promise<StuckDeliveryPage> {
   const now = deps.now ?? (() => new Date());
+  const limits: RetryLimits = { maxAttempts: deps.maxAttempts ?? MAX_ATTEMPTS, stalePendingMs: deps.stalePendingMs ?? STALE_PENDING_MS };
   const q = deps.q?.trim().toLowerCase();
   const status = deps.status === 'failed' || deps.status === 'pending' ? deps.status : undefined;
   const type = deps.type && NOTIFICATION_TYPES.has(deps.type as NotificationType) ? deps.type : undefined;
@@ -38,7 +40,7 @@ export async function listStuckDeliveries(client: AdminClient, deps: { now?: () 
 
   const { data } = await client.from('notification_deliveries').select('id,order_id,type,recipient,locale,status,attempts,last_error,created_at').in('status', ['failed', 'pending']);
   const rows = (data ?? []) as DeliveryRow[];
-  const stuck = rows.filter((r) => isStuckRow({ status: r.status, attempts: r.attempts, created_at: r.created_at }, now()));
+  const stuck = rows.filter((r) => isStuckRow({ status: r.status, attempts: r.attempts, created_at: r.created_at }, now(), limits));
 
   const orderIds = [...new Set(stuck.map((r) => r.order_id))];
   const { data: orders } = orderIds.length ? await client.from('orders').select('id,display_number').in('id', orderIds) : { data: [] };
