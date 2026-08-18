@@ -123,7 +123,9 @@ export async function updateAuthor(client: AdminClient, id: string, input: Autho
   const { error } = await client.from('authors').update(toAuthorRow(input)).eq('id', id);
   if (error) throw new Error(`Author update failed: ${error.message}`);
   return true;
-}export async function deleteAuthor(client: AdminClient, id: string): Promise<boolean> {
+}
+
+export async function deleteAuthor(client: AdminClient, id: string): Promise<boolean> {
   const { error } = await client.from('authors').delete().eq('id', id);
   if (error) throw new Error(`Author delete failed: ${error.message}`);
   return true;
