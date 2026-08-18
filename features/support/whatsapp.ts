@@ -9,7 +9,9 @@ export function createWhatsAppHref(input: { number: string; locale: 'ar' | 'en' 
   if (!number) return null;
   const message = input.locale === 'ar'
     ? `مرحبا روزيت، أحتاج إلى مساعدة${input.orderId ? ` بخصوص الطلب ${input.orderId}` : ''}.`
-    : `Hello Rosette, I need help${input.orderId ? ` with order ${input.orderId}.` : '.'}`;
+    : input.locale === 'fr'
+      ? `Bonjour Rosette, j’ai besoin d’aide${input.orderId ? ` avec la commande ${input.orderId}` : ''}.`
+      : `Hello Rosette, I need help${input.orderId ? ` with order ${input.orderId}.` : '.'}`;
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 

@@ -9,4 +9,8 @@ describe('chat response validation', () => {
   it('rejects unknown actions and oversized answers', () => {
     expect(parseChatResponse({ answer: 'x'.repeat(1001), language: 'en', action: 'execute_sql' })).toBeNull();
   });
+
+  it('accepts French as a response language', () => {
+    expect(parseChatResponse({ answer: 'Oui, nous livrons au Caire.', language: 'fr', action: 'none' })).toEqual({ answer: 'Oui, nous livrons au Caire.', language: 'fr', action: 'none' });
+  });
 });

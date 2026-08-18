@@ -5,20 +5,20 @@ import { parseChatResponse } from './response-schema';
 import { classifyChatTopic } from './topic-guard';
 import type { ChatResponse } from './types';
 
-const fallback = (language: 'en' | 'ar'): ChatResponse => ({
-  answer: language === 'ar' ? 'يمكنني المساعدة في الزهور والمنتجات والتوصيل والطلبات فقط. تواصل معنا عبر واتساب للمساعدة.' : 'I can help only with flowers, products, delivery, and orders. Use WhatsApp to reach our team.',
+const fallback = (language: 'en' | 'ar' | 'fr'): ChatResponse => ({
+  answer: language === 'ar' ? 'يمكنني المساعدة في الزهور والمنتجات والتوصيل والطلبات فقط. تواصل معنا عبر واتساب للمساعدة.' : language === 'fr' ? 'Je ne peux aider qu’avec les fleurs, les produits, la livraison et les commandes. Contactez-nous sur WhatsApp pour obtenir de l’aide.' : 'I can help only with flowers, products, delivery, and orders. Use WhatsApp to reach our team.',
   language,
   action: 'whatsapp',
   requiresHuman: true,
 });
 
-export async function answerStoreQuestion(input: { message: string; language: 'en' | 'ar' }): Promise<ChatResponse> {
+export async function answerStoreQuestion(input: { message: string; language: 'en' | 'ar' | 'fr' }): Promise<ChatResponse> {
   const topic = classifyChatTopic(input.message);
   if (topic === 'unsupported') return fallback(input.language);
-  if (topic === 'order_lookup') return { answer: input.language === 'ar' ? 'أرسل رقم الطلب ورقم الهاتف للتحقق من حالة الطلب.' : 'Please provide your order number and phone number so I can verify the order.', language: input.language, action: 'lookup_order' };
+  if (topic === 'order_lookup') return { answer: input.language === 'ar' ? 'أرسل رقم الطلب ورقم الهاتف للتحقق من حالة الطلب.' : input.language === 'fr' ? 'Veuillez fournir votre numéro de commande et votre numéro de téléphone pour vérifier la commande.' : 'Please provide your order number and phone number so I can verify the order.', language: input.language, action: 'lookup_order' };
 
   const apiKey = getOptionalServerEnv('GROQ_API_KEY');
-  if (!apiKey) return { ...fallback(input.language), answer: input.language === 'ar' ? 'المساعد الذكي غير متاح الآن. يمكن لفريقنا مساعدتك عبر واتساب.' : 'The smart assistant is unavailable right now. Our team can help you on WhatsApp.' };
+  if (!apiKey) return { ...fallback(input.language), answer: input.language === 'ar' ? 'المساعد الذكي غير متاح الآن. يمكن لفريقنا مساعدتك عبر واتساب.' : input.language === 'fr' ? 'L’assistant intelligent est indisponible pour le moment. Notre équipe peut vous aider sur WhatsApp.' : 'The smart assistant is unavailable right now. Our team can help you on WhatsApp.' };
 
   try {
     const groq = new Groq({ apiKey });

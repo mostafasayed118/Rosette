@@ -10,4 +10,8 @@ describe('WhatsApp support links', () => {
   it('uses Arabic copy without exposing address or payment details', () => {
     expect(createWhatsAppHref({ number: '201000000000', locale: 'ar' })).toContain('%D9%85%D8%B1%D8%AD%D8%A8%D8%A7');
   });
+
+  it('uses French copy when the locale is French', () => {
+    expect(createWhatsAppHref({ number: '201000000000', locale: 'fr' })).toContain('Bonjour%20Rosette');
+  });
 });
