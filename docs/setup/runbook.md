@@ -300,7 +300,13 @@ commercial store.
    in the repo.
 3. Set the custom domain. After that, callbacks automatically use it
    (`https://shop.example.com/api/webhooks/paymob`) — no code change.
-4. Redeploy, then repeat Section 6 from the public domain with test keys.
+4. Enable the email retry scheduler: add two repository secrets under
+   **GitHub → Settings → Secrets and variables → Actions** —
+   `CRON_ENDPOINT` (the full `https://<your-domain>/api/cron/notifications`
+   URL) and `CRON_SECRET` (the same random string set in this host's env).
+   Then open the **Actions** tab, run the "Retry stuck email notifications"
+   workflow once manually, and confirm it succeeds.
+5. Redeploy, then repeat Section 6 from the public domain with test keys.
 
 ---
 
