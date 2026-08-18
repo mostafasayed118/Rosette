@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { AdminShell } from '@/components/admin/AdminShell';
 import { AddCityForm } from '@/components/admin/AddCityForm';
 import { DeliveryRuleForm, type DeliveryRuleInitial } from '@/components/admin/DeliveryRuleForm';
 import { getCurrentAdmin } from '@/features/auth/server';
@@ -15,7 +16,7 @@ export default async function AdminDeliveryPage() {
   const { t } = await getServerT();
   const { data } = await getAdminSupabase().from('cities').select('code,name_en,name_ar,same_day,delivery_rules(*)').order('code');
   const rows = (data ?? []) as CityRow[];
-  return <main className="content-frame">
+  return <AdminShell>
     <p className="eyebrow">{t('deliveryOperations')}</p>
     <h1>{t('deliveryRules')}</h1>
     <AddCityForm />
@@ -30,5 +31,5 @@ export default async function AdminDeliveryPage() {
         </article>;
       })}
     </div>
-  </main>;
+  </AdminShell>;
 }

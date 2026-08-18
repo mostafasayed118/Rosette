@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { AdminShell } from '@/components/admin/AdminShell';
 import { OrderActions } from '@/components/admin/OrderActions';
 import { canTransitionFulfillment } from '@/features/commerce/order-state';
 import type { FulfillmentStatus } from '@/features/commerce/order-state';
@@ -19,13 +20,13 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
   const { id } = await params;
   const supabase = getAdminSupabase();
   const { data: order } = await supabase.from('orders').select('*,order_items(*),payments(*),order_events(*)').eq('id', id).maybeSingle();
-  if (!order) return <main className="content-frame"><h1>{t('orderNotFound')}</h1><p><Link href="/admin/orders">{t('backToOrders')}</Link></p></main>;
+  if (!order) return <AdminShell><h1>{t('orderNotFound')}</h1><p><Link href="/admin/orders">{t('backToOrders')}</Link></p></AdminShell>;
 
   const current = order.fulfillment_status as FulfillmentStatus;
   const transitions = allFulfillmentStatuses.filter((next) => canTransitionFulfillment(current, next) && canUpdateOrderStatus(admin.role, current, next));
   const whatsapp = createAdminWhatsAppHref({ number: order.recipient_phone, orderId: order.display_number });
 
-  return <main className="content-frame">
+  return <AdminShell>
     <p className="eyebrow"><Link href="/admin/orders">{t('orders')}</Link> · {order.display_number}</p>
     <h1>{order.display_number}</h1>
     <p>{formatMoney(order.total_minor, locale)} · {t('payment')} {order.payment_status} · {t('fulfillmentFilter')} {order.fulfillment_status}</p>
@@ -60,5 +61,5 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     <section className="form-section"><p className="eyebrow">{t('updateStatus')}</p>
       <OrderActions orderId={order.id} transitions={transitions} />
     </section>
-  </main>;
+  </AdminShell>;
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { AdminShell } from '@/components/admin/AdminShell';
 import { ProductForm, type ProductFormInitial } from '@/components/admin/ProductForm';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
@@ -14,7 +15,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { t } = await getServerT();
   const { id } = await params;
   const { data } = await getAdminSupabase().from('products').select('*,product_variants(*,inventory(quantity,reserved_quantity))').eq('id', id).maybeSingle();
-  if (!data) return <main className="content-frame"><h1>{t('productNotFound')}</h1><p><Link href="/admin/products">{t('backToProducts')}</Link></p></main>;
+  if (!data) return <AdminShell><h1>{t('productNotFound')}</h1><p><Link href="/admin/products">{t('backToProducts')}</Link></p></AdminShell>;
 
   const initial: ProductFormInitial = {
     id,
@@ -28,5 +29,5 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     })),
     addOns: ((data.add_ons ?? []) as AddOnRow[]).map((addOn) => ({ id: addOn.id, nameEn: addOn.name_en, nameAr: addOn.name_ar, priceMinor: addOn.price_minor })),
   };
-  return <main className="content-frame"><p className="eyebrow">{t('catalogOperations')}</p><h1>{data.name_en}</h1><ProductForm initial={initial} /></main>;
+  return <AdminShell><p className="eyebrow">{t('catalogOperations')}</p><h1>{data.name_en}</h1><ProductForm initial={initial} /></AdminShell>;
 }

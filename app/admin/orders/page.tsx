@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { AdminShell } from '@/components/admin/AdminShell';
 import { OrderListToolbar } from '@/components/admin/OrderListToolbar';
 import { buildOrderListQuery } from '@/features/admin/order-list-query';
 import { getCurrentAdmin } from '@/features/auth/server';
@@ -26,7 +27,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 
   const rows = (data ?? []) as Array<{ id: string; display_number: string; customer_email: string; recipient_name: string; total_minor: number; payment_status: string; fulfillment_status: string }>;
 
-  return <main className="content-frame">
+  return <AdminShell>
     <p className="eyebrow">{t('customerOrders')}</p>
     <h1>{t('orders')}</h1>
     <OrderListToolbar />
@@ -38,5 +39,5 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
         </article>
       ))}
     </div>
-  </main>;
+  </AdminShell>;
 }
