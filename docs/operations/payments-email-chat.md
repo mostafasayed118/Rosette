@@ -76,6 +76,11 @@ reports `{ retried, sent, failed, skipped }`. Set `CRON_SECRET` and `SITE_URL`
 in the app environment; `SITE_URL` must be set so retried email links use the
 public domain.
 
+A smoke-test workflow (`.github/workflows/smoke-cron.yml`) checks the endpoint
+daily and on demand: it asserts unauthenticated requests return 401 and an
+authenticated request returns 200 with the summary. Run it manually and pass a
+staging URL via the `url` input to verify a freshly deployed environment.
+
 ## Groq chatbot
 
 Set `GROQ_API_KEY` and optionally `GROQ_MODEL`. The API key is used only by `/api/chat`. The deterministic guard rejects unrelated questions and prompt-injection attempts before a model call. Model output is schema-validated and product slugs are checked against the catalog.

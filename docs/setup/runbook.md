@@ -305,7 +305,9 @@ commercial store.
    `CRON_ENDPOINT` (the full `https://<your-domain>/api/cron/notifications`
    URL) and `CRON_SECRET` (the same random string set in this host's env).
    Then open the **Actions** tab, run the "Retry stuck email notifications"
-   workflow once manually, and confirm it succeeds.
+   workflow once manually, and confirm it succeeds. Run the "Smoke test cron
+   endpoint" workflow too (pass the deployed URL via the `url` input to check
+   a staging deployment) to confirm the 401 guard and summary response.
 5. Redeploy, then repeat Section 6 from the public domain with test keys.
 
 ---
