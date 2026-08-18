@@ -13,7 +13,7 @@
   --color-popover: var(--color-surface);
   --color-popover-foreground: var(--color-ink);
   --color-primary: var(--color-brand);
-  --color-primary-foreground: var(--color-surface);
+  --color-primary-foreground: var(--color-primary-foreground);
   --color-secondary: var(--color-surface-muted);
   --color-secondary-foreground: var(--color-ink);
   --color-muted: var(--color-surface-muted);
@@ -44,12 +44,13 @@
   --color-sidebar: var(--sidebar);
 }
 
-.dark {
+:root.dark {
   --color-canvas: #1a211e;
   --color-surface: #232a26;
   --color-surface-muted: #2c3530;
   --color-ink: #ece7df;
   --color-ink-muted: #a8a296;
+  --color-primary-foreground: #fbf5f7;
   --color-brand: #d96a8e;
   --color-brand-hover: #e582a2;
   --color-brand-soft: #3a2430;
@@ -74,6 +75,7 @@
   --color-surface-muted: #f3eee6;
   --color-ink: #2d2a26;
   --color-ink-muted: #6d675f;
+  --color-primary-foreground: #ffffff;
   --color-brand: #c2456d;
   --color-brand-hover: #a83358;
   --color-brand-soft: #fae3ea;
