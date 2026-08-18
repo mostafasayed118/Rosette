@@ -11,7 +11,7 @@ describe('respond', () => {
   });
 
   it('falls through to the ok body when the result has no case', async () => {
-    const res = respond('saved' as const, { forbidden: { status: 403, error: 'Forbidden' } });
+    const res = respond<'saved' | 'forbidden'>('saved', { forbidden: { status: 403, error: 'Forbidden' } });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
   });
