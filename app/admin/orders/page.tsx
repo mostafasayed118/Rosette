@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { OrderListToolbar } from '@/components/admin/OrderListToolbar';
@@ -35,7 +36,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
     <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('customerOrders')}</p>
     <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('orders')}</h1>
     <OrderListToolbar />
-    {rows.length === 0 ? <p className="text-muted-foreground">{t('noOrdersMatch')}</p> : <Card><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('orders')}</TableHead><TableHead>{t('recipient')}</TableHead><TableHead>{t('payment')}</TableHead><TableHead>{t('fulfillment')}</TableHead><TableHead className="text-end">{t('total')}</TableHead></TableRow></TableHeader><TableBody>{rows.map((order) => (
+    {rows.length === 0 ? <StatusMessage title={t('noOrdersMatch')} /> : <Card><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('orders')}</TableHead><TableHead>{t('recipient')}</TableHead><TableHead>{t('payment')}</TableHead><TableHead>{t('fulfillment')}</TableHead><TableHead className="text-end">{t('total')}</TableHead></TableRow></TableHeader><TableBody>{rows.map((order) => (
       <TableRow key={order.id}>
         <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/orders/${order.id}`}>{order.display_number}</Link></TableCell>
         <TableCell><span className="block">{order.recipient_name}</span><span className="block text-sm text-muted-foreground">{order.customer_email}</span></TableCell>

@@ -4,6 +4,7 @@ import { ClipboardList, TrendingUp, Wallet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { computeDashboardStats, LOW_STOCK_THRESHOLD, type InventoryRow, type OrderRow } from '@/features/admin/dashboard-stats';
@@ -51,7 +52,7 @@ export default async function AdminPage() {
       ))}
     </div>
     <h2 className="mt-8 font-display text-2xl">{t('lowStockTitle', { count: LOW_STOCK_THRESHOLD })}</h2>
-    {stats.lowStock.length === 0 ? <p className="mt-4 text-muted-foreground">{t('nothingLow')}</p> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('products')}</TableHead><TableHead>{t('available')}</TableHead></TableRow></TableHeader><TableBody>{stats.lowStock.map((row) => <TableRow key={row.variant_id}><TableCell><strong>{row.name}</strong></TableCell><TableCell><Badge variant="secondary">{row.available} {t('available')}</Badge></TableCell></TableRow>)}</TableBody></Table></div></Card>}
+    {stats.lowStock.length === 0 ? <StatusMessage title={t('nothingLow')} /> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('products')}</TableHead><TableHead>{t('available')}</TableHead></TableRow></TableHeader><TableBody>{stats.lowStock.map((row) => <TableRow key={row.variant_id}><TableCell><strong>{row.name}</strong></TableCell><TableCell><Badge variant="secondary">{row.available} {t('available')}</Badge></TableCell></TableRow>)}</TableBody></Table></div></Card>}
     <p className="mt-6"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/inventory">{t('openInventory')}</Link></p>
   </AdminShell>;
 }
