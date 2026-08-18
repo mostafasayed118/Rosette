@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AdminShell } from '@/components/admin/AdminShell';
+import { AutoRefresh } from '@/components/admin/AutoRefresh';
 import { CancelRequestReview } from '@/components/admin/CancelRequestReview';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
@@ -41,6 +42,7 @@ export default async function AdminCancelRequestsPage() {
   });
 
   return <AdminShell>
+    <AutoRefresh />
     <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('customerOrders')}</p>
     <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('cancelRequests')}</h1>
     {rows.length === 0 ? <StatusMessage title={t('noCancelRequests')} /> : <Card><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('orders')}</TableHead><TableHead>{t('cancellationRequestedBy')}</TableHead><TableHead>{t('cancellationReason')}</TableHead><TableHead>{t('payment')}</TableHead><TableHead>{t('fulfillment')}</TableHead><TableHead className="text-end">{t('total')}</TableHead><TableHead className="text-end">{t('review')}</TableHead></TableRow></TableHeader><TableBody>{rows.map((request) => (
