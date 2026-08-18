@@ -7,6 +7,7 @@ export type City = {
   code: string;
   name: string;
   nameAr: string;
+  nameFr?: string;
   countryCode: string;
   sameDay: boolean;
 };

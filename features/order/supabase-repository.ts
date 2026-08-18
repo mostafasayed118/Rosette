@@ -5,7 +5,7 @@ import { getAdminSupabase } from '@/lib/supabase/admin';
 import type { CartLine } from '@/features/cart/types';
 import type { OrderRepository, CreatePendingOrderInput, Order, PendingOrder, Result, OrderCreateError } from './types';
 
-type ProductRow = { id: string; slug: string; name_en: string; name_ar: string; price_minor: number; add_ons: Array<{ id: string; name_en: string; price_minor: number }>; product_variants: Array<{ id: string; name_en: string; price_delta_minor: number }> };
+type ProductRow = { id: string; slug: string; name_en: string; name_ar: string; name_fr?: string; price_minor: number; add_ons: Array<{ id: string; name_en: string; price_minor: number }>; product_variants: Array<{ id: string; name_en: string; price_delta_minor: number }> };
 
 function displayNumber() {
   return `RO-${Date.now().toString(36).toUpperCase()}`;
@@ -13,7 +13,7 @@ function displayNumber() {
 
 async function authoritativeLines(supabase: ReturnType<typeof getAdminSupabase>, lines: CartLine[]) {
   const slugs = [...new Set(lines.map((line) => line.productSlug))];
-  const { data, error } = await supabase.from('products').select('id,slug,name_en,name_ar,price_minor,add_ons,product_variants(name_en,price_delta_minor)').in('slug', slugs).eq('active', true);
+  const { data, error } = await supabase.from('products').select('id,slug,name_en,name_ar,name_fr,price_minor,add_ons,product_variants(name_en,price_delta_minor)').in('slug', slugs).eq('active', true);
   if (error) throw error;
   const products = (data ?? []) as unknown as ProductRow[];
   if (products.length !== slugs.length) return null;
@@ -26,7 +26,7 @@ async function authoritativeLines(supabase: ReturnType<typeof getAdminSupabase>,
       const authoritative = allowedAddOns.get(addOn.id);
       return authoritative ? [{ id: authoritative.id, name: authoritative.name_en, price: authoritative.price_minor }] : [];
     });
-    return { ...line, productName: product.name_en, productNameAr: product.name_ar, unitPrice: product.price_minor + (variant?.price_delta_minor ?? 0), variantId: line.variantId ?? variant?.id, addOns };
+    return { ...line, productName: product.name_en, productNameAr: product.name_ar, productNameFr: product.name_fr, unitPrice: product.price_minor + (variant?.price_delta_minor ?? 0), variantId: line.variantId ?? variant?.id, addOns };
   });
 }
 
@@ -73,6 +73,7 @@ export const supabaseOrderRepository: OrderRepository = {
         product_slug: line.productSlug,
         product_name_en: line.productName,
         product_name_ar: line.productNameAr ?? '',
+        product_name_fr: (line as { productNameFr?: string }).productNameFr ?? '',
         unit_price_minor: line.unitPrice,
         quantity: line.quantity,
         add_ons: line.addOns,

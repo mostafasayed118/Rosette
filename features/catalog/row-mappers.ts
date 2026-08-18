@@ -4,19 +4,22 @@ type SupabaseProductRow = {
   slug: string;
   name_en: string;
   name_ar: string;
+  name_fr?: string;
   description_en: string;
   description_ar: string;
+  description_fr?: string;
   category: string;
   occasions: string[];
   price_minor: number;
   tone: string;
   delivery: string;
   created_at: string;
-  add_ons?: Array<{ id: string; name_en: string; name_ar?: string; price_minor: number }>;
+  add_ons?: Array<{ id: string; name_en: string; name_ar?: string; name_fr?: string; price_minor: number }>;
   product_variants?: Array<{
     id: string;
     name_en: string;
     name_ar: string;
+    name_fr?: string;
     price_delta_minor: number;
     inventory?: Array<{ quantity: number; reserved_quantity: number }>;
   }>;
@@ -33,8 +36,10 @@ export function mapSupabaseProduct(row: SupabaseProductRow): Product {
     slug: row.slug,
     name: row.name_en,
     nameAr: row.name_ar,
+    nameFr: row.name_fr,
     description: row.description_en,
     descriptionAr: row.description_ar,
+    descriptionFr: row.description_fr,
     category: row.category,
     occasions: row.occasions,
     price: row.price_minor,
@@ -42,7 +47,7 @@ export function mapSupabaseProduct(row: SupabaseProductRow): Product {
     inventory: available,
     delivery: row.delivery,
     createdAt: row.created_at,
-    variants: (row.product_variants ?? []).map((variant) => ({ id: variant.id, name: variant.name_en, priceDelta: variant.price_delta_minor })),
-    addOns: (row.add_ons ?? []).map((addOn) => ({ id: addOn.id, name: addOn.name_en, price: addOn.price_minor })),
+    variants: (row.product_variants ?? []).map((variant) => ({ id: variant.id, name: variant.name_en, nameFr: variant.name_fr, priceDelta: variant.price_delta_minor })),
+    addOns: (row.add_ons ?? []).map((addOn) => ({ id: addOn.id, name: addOn.name_en, nameFr: addOn.name_fr, price: addOn.price_minor })),
   };
 }

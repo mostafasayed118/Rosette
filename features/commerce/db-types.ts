@@ -8,8 +8,10 @@ export type ProductRow = {
   slug: string;
   name_en: string;
   name_ar: string;
+  name_fr?: string;
   description_en: string;
   description_ar: string;
+  description_fr?: string;
   category: string;
   occasions: string[];
   price_minor: MoneyMinor;
