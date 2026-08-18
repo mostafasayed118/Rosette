@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return buildSitemapEntries({
     base,
     locales: LOCALES,
-    cities: cities.map((city) => city.code),
+    cities: cities.map((city) => city.slug),
     products: products.map((product) => ({ slug: product.slug })),
   });
 }

@@ -5,6 +5,7 @@ export type Country = {
 
 export type City = {
   code: string;
+  slug: string;
   name: string;
   nameAr: string;
   nameFr?: string;

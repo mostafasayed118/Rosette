@@ -23,7 +23,8 @@ export function DestinationGate({ locale }: DestinationGateProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!cityCode) return;
-    router.push(`/${locale}/${cityCode}`);
+    const city = cities.find((c) => c.code === cityCode);
+    router.push(`/${locale}/${city?.slug ?? cityCode}`);
   }
 
   return (
