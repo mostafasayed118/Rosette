@@ -14,6 +14,7 @@ const serverKeys = [
   'GROQ_MODEL',
   'WHATSAPP_BUSINESS_NUMBER',
   'SITE_URL',
+  'CRON_SECRET',
 ] as const;
 
 type ServerKey = (typeof serverKeys)[number];

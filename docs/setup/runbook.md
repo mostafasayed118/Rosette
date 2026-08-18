@@ -239,6 +239,7 @@ cp .env.example .env.local
 | `GROQ_API_KEY` | Groq console |
 | `GROQ_MODEL` | `groq/compound-mini` (default) |
 | `WHATSAPP_BUSINESS_NUMBER` | e.g. `201000000000` |
+| `CRON_SECRET` | a random string shared with your scheduler (e.g. `openssl rand -hex 32`) |
 
 `.env.local` is git-ignored. Keep a second copy for the deployment host and
 never paste these values in chat, issues, or commits.
@@ -281,6 +282,9 @@ npm run dev
 9. Admin: sign in (see 2.4) → `/admin/orders` → move an order through
    `preparing → out_for_delivery → delivered` → the `order_events` rows above
    record each transition.
+10. Configure the retry cron (see "Retry job" in
+    `docs/operations/payments-email-chat.md`) and trigger it once manually;
+    stuck `notification_deliveries` rows move to `sent`/`failed`.
 
 ---
 

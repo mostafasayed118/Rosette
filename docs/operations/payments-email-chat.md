@@ -51,6 +51,21 @@ The app sends bilingual order messages from server code at these points:
 
 Every send is recorded in `notification_deliveries` (`pending` → `sent`/`failed`). Gmail is intended for low-volume MVP traffic and has provider sending limits. Email failures are recorded as retryable and do not reverse a successful payment.
 
+### Retry job
+
+A cron endpoint retries deliveries stuck in `failed` (up to 3 attempts) or
+stale `pending` (older than 15 minutes):
+
+```text
+POST /api/cron/notifications
+Authorization: Bearer <CRON_SECRET>
+```
+
+Point any scheduler (Render cron, Fly.io machines, or a GitHub Actions
+`schedule` workflow) at it. The response reports
+`{ retried, sent, failed, skipped }`. Set `CRON_SECRET` in the environment;
+`SITE_URL` must also be set so the retried email links use the public domain.
+
 ## Groq chatbot
 
 Set `GROQ_API_KEY` and optionally `GROQ_MODEL`. The API key is used only by `/api/chat`. The deterministic guard rejects unrelated questions and prompt-injection attempts before a model call. Model output is schema-validated and product slugs are checked against the catalog.
