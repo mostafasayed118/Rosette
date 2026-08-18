@@ -11,5 +11,5 @@ export function SiteHeader({ cityName, cartCount, onDestinationChange }: SiteHea
   const cart = useCart();
   const { t } = useI18n();
   const count = cartCount ?? (cart.ready ? cart.itemCount : 0);
-  return <header className="site-header"><Link className="brand-mark" href="/">Rosette</Link><nav aria-label="Main navigation"><Link href="/shop">{t('shop')}</Link><button className="header-destination" type="button" onClick={onDestinationChange}>{cityName ? t('deliveringTo', { city: cityName }) : t('chooseDestination')}</button><Link className="cart-link" href="/cart">{t('bag')} <span>{count}</span></Link><LanguageToggle /></nav></header>;
+  return <header className="site-header"><Link className="brand-mark" href="/">Rosette</Link><nav aria-label="Main navigation"><Link href="/shop">{t('shop')}</Link><Link href="/track">{t('trackOrder')}</Link><button className="header-destination" type="button" onClick={onDestinationChange}>{cityName ? t('deliveringTo', { city: cityName }) : t('chooseDestination')}</button><Link className="cart-link" href="/cart">{t('bag')} <span>{count}</span></Link><LanguageToggle /></nav></header>;
 }
