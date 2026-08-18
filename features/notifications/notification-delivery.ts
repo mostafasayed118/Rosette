@@ -10,6 +10,9 @@ export type DeliverNotificationInput = {
   locale: EmailLocale;
   orderNumber: string;
   totalMinor: number;
+  subtotalMinor?: number;
+  deliveryFeeMinor?: number;
+  discountMinor?: number;
   orderUrl: string;
 };
 
@@ -36,6 +39,9 @@ export async function deliverOrderNotification(
     type: input.type,
     orderNumber: input.orderNumber,
     totalMinor: input.totalMinor,
+    subtotalMinor: input.subtotalMinor,
+    deliveryFeeMinor: input.deliveryFeeMinor,
+    discountMinor: input.discountMinor,
     recipientEmail: input.recipient,
     orderUrl: input.orderUrl,
   });

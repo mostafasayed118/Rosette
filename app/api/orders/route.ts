@@ -28,6 +28,9 @@ export async function POST(request: Request) {
       locale: body.locale,
       orderNumber: order.displayNumber,
       totalMinor: order.totalMinor,
+      subtotalMinor: order.subtotalMinor,
+      deliveryFeeMinor: order.deliveryFeeMinor,
+      discountMinor: order.discountMinor,
       orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}`,
     });
     const paymobConfigured = Boolean(getOptionalServerEnv('PAYMOB_API_KEY') && getOptionalServerEnv('PAYMOB_PUBLIC_KEY') && getOptionalServerEnv('PAYMOB_INTEGRATION_ID') && getOptionalServerEnv('PAYMOB_HMAC_SECRET'));

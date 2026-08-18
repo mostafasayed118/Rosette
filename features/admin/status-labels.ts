@@ -18,6 +18,12 @@ export const paymentStatusKeys: Record<string, string> = {
   refunded: 'statusRefunded',
 };
 
+export const deliveryStatusKeys: Record<string, string> = {
+  pending: 'statusPending',
+  sent: 'statusSent',
+  failed: 'statusFailed',
+};
+
 export function fulfillmentBadgeVariant(status: string): BadgeTone {
   if (status === 'delivered') return 'success';
   if (status === 'cancelled') return 'destructive';
@@ -32,10 +38,20 @@ export function paymentBadgeVariant(status: string): BadgeTone {
   return 'secondary';
 }
 
+export function deliveryBadgeVariant(status: string): BadgeTone {
+  if (status === 'sent') return 'success';
+  if (status === 'failed') return 'destructive';
+  return 'secondary';
+}
+
 export function fulfillmentLabel(status: string, t: (key: string) => string): string {
   return t(fulfillmentStatusKeys[status] ?? status);
 }
 
 export function paymentLabel(status: string, t: (key: string) => string): string {
   return t(paymentStatusKeys[status] ?? status);
+}
+
+export function deliveryLabel(status: string, t: (key: string) => string): string {
+  return t(deliveryStatusKeys[status] ?? status);
 }

@@ -39,4 +39,23 @@ describe('order email templates', () => {
     const { text } = renderOrderEmail({ locale: 'en', type: 'order_received', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' });
     expect(text).not.toContain('Discount');
   });
+
+  it('renders a subtotal/delivery/discount/total breakdown when fields are present', () => {
+    const { text, html } = renderOrderEmail({ locale: 'en', type: 'payment_confirmed', orderNumber: 'RO-1', totalMinor: 16500, subtotalMinor: 10000, deliveryFeeMinor: 7500, discountMinor: 1000, orderUrl: 'https://example.com/o/1' });
+    expect(text).toMatch(/Subtotal:\s*EGP\s*100/);
+    expect(text).toMatch(/Delivery:\s*EGP\s*75/);
+    expect(text).toMatch(/Discount:\s*−?EGP\s*10/);
+    expect(text).toMatch(/Total:\s*EGP\s*165/);
+    expect(html).toContain('<li>Subtotal:');
+    expect(html).toContain('<li>Delivery:');
+    expect(html).toContain('<li>Discount:');
+    expect(html).toContain('<li>Total:');
+  });
+
+  it('omits the discount line in the breakdown when there is no discount', () => {
+    const { text } = renderOrderEmail({ locale: 'en', type: 'payment_confirmed', orderNumber: 'RO-1', totalMinor: 17500, subtotalMinor: 10000, deliveryFeeMinor: 7500, orderUrl: 'https://example.com/o/1' });
+    expect(text).toMatch(/Subtotal:\s*EGP\s*100/);
+    expect(text).toMatch(/Delivery:\s*EGP\s*75/);
+    expect(text).not.toContain('Discount');
+  });
 });
