@@ -3,11 +3,14 @@ import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getRequiredServerEnv } from '@/lib/server-env';
 import { sendOrderNotification } from '@/features/notifications/notification-service';
 import { verifyPaymobCallback } from '@/features/payment/paymob-hmac';
+import { getPublicOrigin } from '@/lib/origin';
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as Record<string, unknown> & { hmac?: string; obj?: Record<string, unknown> };
   const transaction = (payload.obj ?? payload) as Record<string, any>;
-  const callback = { ...transaction, hmac: payload.hmac ?? transaction.hmac };
+  // Paymob delivers the HMAC as a query parameter on the callback URL (?hmac=), not in the body.
+  const queryHmac = new URL(request.url).searchParams.get('hmac') ?? undefined;
+  const callback = { ...transaction, hmac: payload.hmac ?? transaction.hmac ?? queryHmac };
   if (!verifyPaymobCallback(callback, getRequiredServerEnv('PAYMOB_HMAC_SECRET'))) return NextResponse.json({ error: 'Invalid callback signature' }, { status: 401 });
 
   const orderReference = String(transaction.merchant_order_id ?? transaction.order?.merchant_order_id ?? transaction.order?.id ?? '');
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
     await supabase.from('order_events').insert({ order_id: order.id, event_type: success ? 'payment_confirmed' : 'payment_failed', from_status: order.payment_status, to_status: success ? 'paid' : 'payment_failed', metadata: { providerReference } });
     if (success) {
       const { data: delivery } = await supabase.from('notification_deliveries').insert({ order_id: order.id, type: 'payment_confirmed', recipient: order.customer_email, locale: order.locale, status: 'pending', attempts: 1 }).select('id').single();
-      const email = await sendOrderNotification({ locale: order.locale === 'ar' ? 'ar' : 'en', type: 'payment_confirmed', orderNumber: order.display_number, totalMinor: order.total_minor, recipientEmail: order.customer_email, orderUrl: `${new URL(request.url).origin}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}` });
+      const email = await sendOrderNotification({ locale: order.locale === 'ar' ? 'ar' : 'en', type: 'payment_confirmed', orderNumber: order.display_number, totalMinor: order.total_minor, recipientEmail: order.customer_email, orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}` });
       if (delivery?.id) await supabase.from('notification_deliveries').update({ status: email.accepted ? 'sent' : 'failed', last_error: email.accepted ? null : 'Gmail delivery failed', sent_at: email.accepted ? new Date().toISOString() : null }).eq('id', delivery.id);
     }
     return NextResponse.json({ received: true });
