@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useI18n } from '@/features/i18n/I18nProvider';
 import type { BlogPostInput } from '@/features/blog/types';
 
-export function BlogForm({ post, id }: { post: BlogPostInput; id?: string }) {
+export function BlogForm({ post, id, authors = [] }: { post: BlogPostInput; id?: string; authors?: { id: string; nameEn: string }[] }) {
   const router = useRouter();
   const { t } = useI18n();
   const [slug, setSlug] = useState(post.slug);
   const [type, setType] = useState<BlogPostInput['type']>(post.type);
   const [cityCode, setCityCode] = useState(post.cityCode ?? '');
+  const [authorId, setAuthorId] = useState(post.authorId ?? '');
   const [titleEn, setTitleEn] = useState(post.titleEn);
   const [titleAr, setTitleAr] = useState(post.titleAr ?? '');
   const [titleFr, setTitleFr] = useState(post.titleFr ?? '');
@@ -36,6 +37,7 @@ export function BlogForm({ post, id }: { post: BlogPostInput; id?: string }) {
     const body: BlogPostInput = {
       slug, type,
       cityCode: type === 'city' ? cityCode || null : null,
+      authorId: authorId || null,
       titleEn, titleAr: titleAr || undefined, titleFr: titleFr || undefined,
       excerptEn: excerptEn || undefined, excerptAr: excerptAr || undefined, excerptFr: excerptFr || undefined,
       contentEn, contentAr: contentAr || undefined, contentFr: contentFr || undefined,
@@ -52,6 +54,7 @@ export function BlogForm({ post, id }: { post: BlogPostInput; id?: string }) {
     <div className="grid gap-2"><label className="text-sm font-medium">{t('slugLabel')}</label><Input value={slug} onChange={(e) => setSlug(e.target.value)} required /></div>
     <div className="grid gap-2"><label className="text-sm font-medium">{t('blogPostType')}</label><Select value={type} onValueChange={(v) => setType(v as BlogPostInput['type'])}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="post">{t('blogTypePost')}</SelectItem><SelectItem value="city">{t('blogTypeCity')}</SelectItem></SelectContent></Select></div>
     {type === 'city' ? <div className="grid gap-2"><label className="text-sm font-medium">{t('cityCodeLabel')}</label><Input value={cityCode} onChange={(e) => setCityCode(e.target.value)} placeholder="greater-cairo" /></div> : null}
+    <div className="grid gap-2"><label className="text-sm font-medium">{t('authorLabel')}</label><Select value={authorId} onValueChange={setAuthorId}><SelectTrigger className="w-64"><SelectValue placeholder={t('authorNone')} /></SelectTrigger><SelectContent><SelectItem value="">{t('authorNone')}</SelectItem>{authors.map((author) => <SelectItem key={author.id} value={author.id}>{author.nameEn}</SelectItem>)}</SelectContent></Select></div>
     <div className="grid gap-2"><label className="text-sm font-medium">{t('titleEn')}</label><Input value={titleEn} onChange={(e) => setTitleEn(e.target.value)} required /></div>
     <div className="grid gap-2"><label className="text-sm font-medium">{t('titleAr')}</label><Input value={titleAr} onChange={(e) => setTitleAr(e.target.value)} dir="rtl" /></div>
     <div className="grid gap-2"><label className="text-sm font-medium">{t('titleFr')}</label><Input value={titleFr} onChange={(e) => setTitleFr(e.target.value)} /></div>

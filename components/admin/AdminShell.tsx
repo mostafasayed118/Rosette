@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: '/admin/delivery', key: 'deliveryRules' },
   { href: '/admin/promos', key: 'promos' },
   { href: '/admin/blog', key: 'blogTitle' },
+  { href: '/admin/authors', key: 'authors' },
   { href: '/admin/notifications', key: 'notifications' },
 ] as const;
 
