@@ -399,8 +399,8 @@ The `role="alert"` on error keeps the login page's hydration-fixed status-messag
 
 - [ ] **Step 7: Retire the swapped legacy classes**
 
-In `app/globals.css`, delete: `.button`, `.button:hover`, `.button:focus-visible`, `.modal`, `.modal-backdrop`, `.modal-heading` (if present), `.field`, `.field > span`, `.field input/select/textarea` + focus rules, `.field textarea`, `.field-error`, `.status-message` + `.status-error` + `.status-success` + `.status-message p`, and the `.request-note`/`.added-note`/`.choice` rules **only if no longer used** (they are used by checkout/product pages — those retire in Task 4; keep them here).
-Run `grep -rn "className=\"[^\"]*button\|class=\"button\|status-message\|className=\"field\|className=\"modal" app features components --include="*.tsx" | grep -v "ui/"` first and keep any class still referenced.
+In `app/globals.css`, delete **only** the `.field*` rules (`.field`, `.field > span`, `.field input/select/textarea` + focus rules, `.field textarea`, `.field-error`, `.field select`/`.field input` pill overrides inside the `.catalog-toolbar` rule) and the `.modal*` rules (`.modal`, `.modal-backdrop`, `.modal-heading` if present).
+**Keep** `.button`/`.button:hover`/`.button:focus-visible`, `.status-message` + `.status-error` + `.status-success` + `.status-message p`, `.request-note`, `.added-note`, `.choice*` — raw `className="button"` (on `<a>`/`<Link>`/`<button>` elements) and `className="status-message"` usages exist across the storefront and admin until Tasks 4–5 migrate them; those CSS rules retire in Task 6's final sweep. `grep -rn 'className="status-message\|className="button\|className={`button' app features components --include="*.tsx"` to confirm.
 
 - [ ] **Step 8: Verify**
 
@@ -419,7 +419,7 @@ git commit -m "feat: adopt shadcn components, swap Button/Field/Modal/StatusMess
 ### Task 3: Storefront layout — header, home, shop, catalog
 
 **Files:**
-- Modify: `components/layout/SiteHeader.tsx` (utilities + theme toggle), `components/layout/SiteFooter.tsx`, `components/layout/LanguageToggle.tsx`, `app/page.tsx`, `app/shop/page.tsx`, `features/catalog/ProductCard.tsx`, `features/catalog/CatalogGrid.tsx`, `features/catalog/CatalogToolbar.tsx`, `app/globals.css` (retire migrated classes)
+- Modify: `components/layout/SiteHeader.tsx` (utilities + theme toggle), `components/layout/SiteFooter.tsx`, `components/layout/LanguageToggle.tsx`, `app/page.tsx`, `app/shop/page.tsx`, `features/catalog/ProductCard.tsx`, `features/catalog/CatalogGrid.tsx`, `features/catalog/CatalogToolbar.tsx`, `components/ui/ProductVisual.tsx` (add additive `className` prop only), `features/destination/DestinationGate.tsx` (`.text-button` → utilities), `app/globals.css` (retire migrated classes)
 
 **Interfaces:**
 - Consumes: `useTheme()` (Task 1), `Button`/`Card`/`Badge`/`Input`/`Select` (Task 2).
@@ -478,6 +478,8 @@ Convert markup per this table (page-level classes on the root `<div>` of each pa
 
 - [ ] **Step 3: Migrate ProductCard to Card + Badge**
 
+First add an additive `className?: string` prop to `ProductVisual` (it does not have one today) and thread it onto the wrapper div: `className={\`product-visual product-visual-photo ${compact ? 'product-visual-compact' : ''} ${className ?? ''}\`}` (fallback branch likewise). The legacy classes stay until Task 4 restyles the internals.
+
 `features/catalog/ProductCard.tsx` — keep the exact same props and accessible content; wrap in `<Card className="group overflow-hidden">`, image area `<CardContent className="p-0">` with `ProductVisual`, copy in `<CardContent className="pt-4">`:
 ```tsx
 <Card className="group overflow-hidden transition-transform hover:-translate-y-1">
@@ -498,10 +500,11 @@ Convert markup per this table (page-level classes on the root `<div>` of each pa
 
 - [ ] **Step 4: Migrate home, shop, catalog toolbar, footer, language toggle**
 
-- `app/page.tsx` (hero + destination card + editorial strip): `Card` for the destination card, `Button` for CTA, `Input` for the phone field — same labels/ids, utility layout per the table.
+- `app/page.tsx` (hero + destination card + editorial strip): `Card` for the destination card, `Button` for the CTA, `Input` for the phone field — same labels/ids, utility layout per the table. The home CTA `<Link className="button">` becomes `<Button asChild><Link>…</Link></Button>` (the `.button` CSS rule stays in globals until Task 6 for the remaining raw usages).
 - `app/shop/page.tsx` + `CatalogGrid`: utility grid per table; keep filter state logic untouched.
 - `CatalogToolbar.tsx`: `Input` (search) + `Select` (category/sort) with pill styling (`rounded-full`), `aria-label`s preserved.
 - `SiteFooter.tsx` + `LanguageToggle.tsx`: utility layout per table; the footer photo attribution stays.
+- `DestinationGate.tsx`: `.text-button` → `text-sm text-muted-foreground underline underline-offset-4` (or `Button variant="ghost"` where it reads as an action).
 
 - [ ] **Step 5: Retire the migrated classes from globals.css**
 
@@ -530,7 +533,7 @@ git commit -m "feat: migrate storefront header/home/shop to tailwind utilities +
 ### Task 4: Storefront pages — product detail, cart, checkout, order, track, login, chat
 
 **Files:**
-- Modify: `components/ui/ProductVisual.tsx`, `features/product/ProductDetail.tsx`, `features/cart/CartLineItem.tsx`, `features/cart/CartSummary.tsx`, `features/cart/CartPageContent.tsx`, `app/cart/page.tsx`, `app/checkout/page.tsx`, `features/checkout/CheckoutForm.tsx`, `app/orders/[id]/page.tsx`, `features/order/OrderPageContent.tsx`, `features/order/OrderTimeline.tsx`, `app/track/page.tsx`, `app/login/page.tsx`, `features/chat/ChatWidget.tsx`, `app/globals.css` (retire remaining storefront classes)
+- Modify: `components/ui/ProductVisual.tsx`, `features/product/ProductDetail.tsx`, `features/cart/CartLineItem.tsx`, `features/cart/CartSummary.tsx`, `features/cart/CartPageContent.tsx`, `app/cart/page.tsx`, `app/checkout/page.tsx`, `features/checkout/CheckoutForm.tsx`, `app/orders/[id]/page.tsx`, `features/order/OrderPageContent.tsx`, `features/order/OrderTimeline.tsx`, `app/track/page.tsx`, `app/login/page.tsx`, `app/not-found.tsx`, `components/support/WhatsAppButton.tsx`, `features/chat/ChatWidget.tsx`, `app/globals.css` (retire remaining storefront classes)
 
 **Interfaces:**
 - Consumes: `Input`/`Textarea`/`Select`/`Checkbox`/`RadioGroup`/`Card`/`Badge` (Task 2), `Field`/`Button`/`StatusMessage` (Tasks 2), utility patterns from Task 3.
@@ -553,8 +556,8 @@ git commit -m "feat: migrate storefront header/home/shop to tailwind utilities +
 
 - [ ] **Step 3: Migrate cart + checkout**
 
-- `CartLineItem.tsx`: `.cart-line` → `grid grid-cols-[130px_1fr_auto] gap-4 border-b py-4 max-md:grid-cols-[90px_1fr]`; `.quantity-control` → `grid justify-items-end gap-1.5 text-xs text-muted-foreground` with `Input type="number"` (keep `aria-label`); copy h3 → `font-display text-2xl`.
-- `CartSummary.tsx`/`CartPageContent.tsx`: `.cart-aside` → `sticky top-4 self-start rounded-2xl border bg-card p-6 shadow-sm max-md:static`; `.cart-summary` rows → `flex justify-between gap-4 py-2`; `.summary-total` → `mt-3 border-t pt-4 font-bold text-primary`; `.demo-disclosure` → `text-xs text-muted-foreground`.
+- `CartLineItem.tsx`: `.cart-line` → `grid grid-cols-[130px_1fr_auto] gap-4 border-b py-4 max-md:grid-cols-[90px_1fr]`; `.quantity-control` → `grid justify-items-end gap-1.5 text-xs text-muted-foreground` with `Input type="number"` (keep `aria-label`); copy h3 → `font-display text-2xl`; `.text-button` remove → `text-sm text-destructive underline underline-offset-4`.
+- `CartSummary.tsx`/`CartPageContent.tsx`: `.cart-aside` → `sticky top-4 self-start rounded-2xl border bg-card p-6 shadow-sm max-md:static`; `.cart-summary` rows → `flex justify-between gap-4 py-2`; `.summary-total` → `mt-3 border-t pt-4 font-bold text-primary`; `.demo-disclosure` → `text-xs text-muted-foreground`; the `!ready` raw `<div className="status-message">` → `<StatusMessage title={t('openingBag')} />`; empty-state and checkout `<Link className="button">` → `<Button asChild><Link>…</Link></Button>`.
 - `CheckoutForm.tsx`: `.checkout-form` → `grid max-w-[60rem] gap-6 pt-8`; `.form-section` → `grid gap-4 border-b py-6`; `.form-grid` → `grid grid-cols-2 gap-4 max-md:grid-cols-1`; `.span-two` → `col-span-2 max-md:col-span-1`; `.auth-card` → `mx-auto grid max-w-[34rem] gap-5 rounded-2xl border bg-card p-8 shadow-sm` (login too).
 - Keep every `name`/`id`/`aria-label` — validation and tests depend on them.
 
@@ -562,7 +565,9 @@ git commit -m "feat: migrate storefront header/home/shop to tailwind utilities +
 
 - `OrderPageContent.tsx`: `.order-layout` → `grid grid-cols-[minmax(0,1fr)_minmax(260px,0.6fr)] gap-20 py-12 max-md:grid-cols-1`; `.order-card` → `self-start rounded-2xl border bg-card p-6 shadow-sm`; `.order-item` → `flex justify-between gap-4 border-b py-3 text-sm`; h1 → `font-display text-[clamp(3rem,6vw,6rem)] leading-[.9] tracking-[-.06em] text-primary`.
 - `OrderTimeline.tsx`: `.order-timeline` → `my-8 grid list-none p-0`; `.timeline-step` → `flex min-h-12 items-center gap-3 text-muted-foreground`; dot → `h-3.5 w-3.5 rounded-full border-2 border-border bg-background`; `.complete` → `font-bold text-primary` with `border-primary bg-primary` dot.
-- `app/track/page.tsx` + `app/login/page.tsx`: `.center-state` → `mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start`; h1 → `max-w-[12ch]`; login `.status-message` stays `StatusMessage` (already swapped in Task 2); any `.text-button`/`.back-link` on login → `text-sm text-primary underline underline-offset-4`.
+- `app/track/page.tsx` + `app/login/page.tsx`: `.center-state` → `mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start`; h1 → `max-w-[12ch]`; **convert every raw `className="status-message…"`** (login's auth-not-configured + error divs, track's lookup-failed + 4 info articles + items + timeline articles) to the `StatusMessage` component (login/errors with `tone="error"`) or `Card`-based rows — the `role="alert"` on the error tone preserves the login hydration-fixed behavior; track's submit `<button className="button">` → `<Button type="submit">`; any `.text-button`/`.back-link` on login → `text-sm text-primary underline underline-offset-4`.
+- `app/not-found.tsx`: `.center-state` → `mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start`; `.eyebrow` → `text-xs font-bold uppercase tracking-[.16em] text-sage`; h1 → `font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[.95]`; `<Link className="button">` → `<Button asChild><Link>…</Link></Button>`.
+- `components/support/WhatsAppButton.tsx`: `<a className="button button-secondary">` → `<Button variant="secondary" asChild><a href={href} target="_blank" rel="noreferrer">…</a></Button>` (the `.button-secondary` class has no CSS rule today — this fixes a latent unstyled state).
 - `.request-note` (checkout) → `mb-4 rounded-xl bg-accent p-3 text-sm text-primary`.
 
 - [ ] **Step 5: Migrate the chat widget**
@@ -691,10 +696,11 @@ The sign-out form moves into the page header area: render `<form action={signOut
 
 - [ ] **Step 4: Migrate the remaining admin pages**
 
-- Orders (`app/admin/orders/page.tsx`), products list, inventory: card-styled tables → shadcn `Table` inside `Card` (`<Card><Table>…`), status cells → `Badge variant="secondary"` / rose `Badge`, action links → `Button variant="ghost" size="sm"` with `asChild`.
-- Order detail (`app/admin/orders/[id]/page.tsx`): keep both `<main>` returns inside `AdminShell`; timeline → `OrderTimeline` utilities from Task 4; info cards → `Card`.
-- Product form (`components/admin/ProductForm.tsx`, new + edit pages): `.field` → `Field` (already swapped), `.form-grid`/`.span-two` → utility grid, image URL + tone fields as `Input` type color/text, submit → `Button`, cancel → `Button variant="outline"`.
-- Delivery rules + add-city modal (`app/admin/delivery/page.tsx`): `Modal` already swapped (Task 2); form rows → utility grid.
+- Orders (`app/admin/orders/page.tsx`), products list, inventory: card-styled tables → shadcn `Table` inside `Card` (`<Card><Table>…`), status cells → `Badge variant="secondary"` / rose `Badge`, action links → `Button variant="ghost" size="sm"` with `asChild`; every `<article className="status-message">` row and the raw `<p className="status-message">` empty-state → `TableRow`/`StatusMessage`.
+- Order detail (`app/admin/orders/[id]/page.tsx`): keep both `<main>` returns inside `AdminShell`; timeline → `OrderTimeline` utilities from Task 4; info cards → `Card`; `<a className="button">` WhatsApp link → `Button variant="outline" asChild`.
+- Product form (`components/admin/ProductForm.tsx`, new + edit pages): `.field` → `Field` (already swapped), `.form-grid`/`.span-two` → utility grid, image URL + tone fields as `Input` type color/text, submit → `Button`, cancel → `Button variant="outline"`, raw error `<div className="status-message" role="alert">` → `StatusMessage tone="error"`.
+- Delivery rules + add-city modal (`app/admin/delivery/page.tsx`): `Modal` already swapped (Task 2); form rows → utility grid; city `<article className="status-message">` rows → `Card` rows.
+- Raw buttons: `DeliveryRuleForm.tsx`, `OrderListToolbar.tsx`, `SetQuantityForm.tsx`, `OrderActions.tsx` (`<button className="button">`) → `<Button type="submit">` / `<Button size="sm">`; `OrderActions.tsx` + `AddCityForm.tsx` raw `status-message` errors → `StatusMessage tone="error"`. Dashboard/product-list `<Link className="button">` → `Button asChild`.
 
 - [ ] **Step 5: Retire the admin legacy classes**
 
@@ -797,6 +803,7 @@ Update `.superpowers/sdd/2026-08-18-shadcn-adoption/progress.md` with completion
 
 - **Spec coverage:** §1 Foundation → Task 1; §2 Component inventory → Task 2; §3 Layout layer → Tasks 3–5 (mapping table); §4 Page coverage → Tasks 3–5; §5 Verification (theme test, dark tokens, screenshots light/dark EN/AR, admin auth check) → Tasks 3, 5, 6. No gaps.
 - **Deviations from spec (flagged):** `sonner` is added per the spec inventory but no page wires toasts yet (available on demand); `--color-sage` extends the spec's mapping so the legacy green accent survives the `--color-accent` remap.
+- **Pre-flight scan rulings (recorded in the SDD ledger):** (1) `.button`/`.status-message` CSS rules are NOT retired in Task 2 — raw `className="button"`/`className="status-message"` usages persist through Tasks 4–5; they retire in Task 6's final sweep. (2) `ProductVisual` gains an additive `className` prop in Task 3 (it has none today). (3) `app/not-found.tsx` + `components/support/WhatsAppButton.tsx` added to Task 4's files. (4) Raw button/status-message conversions are spelled out per task (T3 home CTA, T4 cart/checkout/order/track/login/not-found/WhatsApp, T5 admin forms/actions).
 - **Type/name consistency:** `useTheme()`/`setTheme`/`ThemeProvider` match across Task 1, 3; `AppSidebar({ items })` matches Task 5; `Button`/`Field`/`Modal`/`StatusMessage` keep their exact public APIs in Task 2 so no call-site churn; `ProductVisual` props unchanged through Task 4.
 - **CRLF:** `globals.css` and `*.tsx` are CRLF — use `str_replace` with exact strings from the files (the fresh-florist session's regex scripts failed on `\n` vs `\r\n`).
 - **Known env-guard:** `tests/lib/server-env.test.ts` fails by design (requires env vars); never "fix" it.
