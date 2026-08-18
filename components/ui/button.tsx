@@ -25,8 +25,11 @@ const buttonVariants = cva(
   },
 );
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {}
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+}
 
-export function Button({ className, variant, size, type = 'button', ...props }: ButtonProps) {
-  return <button type={type} className={cn(buttonVariants({ variant, size }), className)} {...props} />;
+export function Button({ className, variant, size, type, asChild = false, ...props }: ButtonProps) {
+  const Comp = asChild ? Slot.Root : 'button';
+  return <Comp type={type ?? (asChild ? undefined : 'button')} className={cn(buttonVariants({ variant, size }), className)} {...props} />;
 }

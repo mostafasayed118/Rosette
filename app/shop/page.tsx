@@ -15,5 +15,5 @@ export default async function ShopPage({ searchParams }: { searchParams: SearchP
   for (const [key, value] of Object.entries(raw)) if (typeof value === 'string') params.set(key, value);
   const query = parseCatalogQuery(params);
   const result = await getCatalogRepository().list(query);
-  return <div className="page-shell"><SiteHeader /><main className="content-frame"><LocalizedPageHeading eyebrow="collectionEyebrow" title="collectionTitle" lede="collectionLede" action="changeDestination" actionHref="/" /><CatalogToolbar /><CatalogGrid products={result.products} /></main><SiteFooter /></div>;
+  return <div className="flex min-h-screen flex-col"><SiteHeader /><main className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4"><LocalizedPageHeading eyebrow="collectionEyebrow" title="collectionTitle" lede="collectionLede" action="changeDestination" actionHref="/" /><CatalogToolbar /><CatalogGrid products={result.products} /></main><SiteFooter /></div>;
 }

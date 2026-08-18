@@ -8,6 +8,6 @@ import type { Product } from './types';
 
 export function CatalogGrid({ products }: { products: Product[] }) {
   const { t } = useI18n();
-  if (products.length === 0) return <StatusMessage title={t('emptyTitle')}>{t('emptyHint')} <Link className="inline-link" href="/shop">{t('resetCollection')}</Link>.</StatusMessage>;
-  return <div className="product-grid">{products.map((product) => <ProductCard key={product.slug} product={product} />)}</div>;
+  if (products.length === 0) return <StatusMessage title={t('emptyTitle')}>{t('emptyHint')} <Link className="text-primary underline underline-offset-4" href="/shop">{t('resetCollection')}</Link>.</StatusMessage>;
+  return <div className="grid grid-cols-4 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">{products.map((product) => <ProductCard key={product.slug} product={product} />)}</div>;
 }
