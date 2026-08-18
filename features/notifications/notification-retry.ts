@@ -14,6 +14,12 @@ export type RetrySummary = { retried: number; sent: number; failed: number; skip
 type DeliveryRow = { id: string; order_id: string; type: string; recipient: string; locale: string; attempts: number; status: string; created_at: string };
 type OrderRow = { display_number: string; total_minor: number; public_token: string | null };
 
+export function isStuckRow(row: { status: string; attempts: number; created_at: string }, now: Date): boolean {
+  if (row.status === 'failed') return row.attempts < MAX_ATTEMPTS;
+  if (row.status === 'pending') return row.created_at <= new Date(now.getTime() - STALE_PENDING_MS).toISOString();
+  return false;
+}
+
 export async function retryStuckNotifications(
   client: RetryClient,
   deps: { sendNotification?: typeof sendOrderNotification; now?: () => Date; orderUrlBase?: string } = {},
@@ -25,13 +31,8 @@ export async function retryStuckNotifications(
 
   const { data } = await client.from('notification_deliveries').select('id,order_id,type,recipient,locale,attempts,status,created_at').in('status', ['failed', 'pending']);
   const rows = (data ?? []) as DeliveryRow[];
-  const staleCutoff = new Date(now().getTime() - STALE_PENDING_MS).toISOString();
 
-  const candidates = rows.filter((row) => {
-    if (row.status === 'failed') return row.attempts < MAX_ATTEMPTS;
-    if (row.status === 'pending') return row.created_at <= staleCutoff;
-    return false;
-  });
+  const candidates = rows.filter((row) => isStuckRow(row, now()));
   summary.skipped += rows.length - candidates.length;
 
   for (const row of candidates) {
