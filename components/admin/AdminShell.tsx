@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: '/admin/inventory', key: 'inventory' },
   { href: '/admin/delivery', key: 'deliveryRules' },
   { href: '/admin/promos', key: 'promos' },
+  { href: '/admin/blog', key: 'blogTitle' },
   { href: '/admin/notifications', key: 'notifications' },
 ] as const;
 
