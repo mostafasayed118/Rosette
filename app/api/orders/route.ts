@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     if (!body.destination || !body.checkout || (body.locale !== 'ar' && body.locale !== 'en' && body.locale !== 'fr')) return NextResponse.json({ error: 'Incomplete checkout details' }, { status: 400 });
 
     const result = await getOrderRepository().createPending({ cart: body.cart as never, destination: body.destination as never, checkout: body.checkout as never, locale: body.locale });
-    if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 });
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.error === 'invalid_promo' ? 400 : 409 });
     const order = result.value;
     const paymobConfigured = Boolean(getOptionalServerEnv('PAYMOB_API_KEY') && getOptionalServerEnv('PAYMOB_PUBLIC_KEY') && getOptionalServerEnv('PAYMOB_INTEGRATION_ID') && getOptionalServerEnv('PAYMOB_HMAC_SECRET'));
     if (!paymobConfigured) return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: order.paymentStatus, checkoutUrl: null });

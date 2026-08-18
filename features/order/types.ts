@@ -12,7 +12,7 @@ export type CheckoutOrderInput = Omit<CreateOrderInput, 'recipient' | 'sender' |
 export type CreatePendingOrderInput = { cart: Cart; destination: Destination; checkout: CheckoutInput; locale: 'en' | 'ar' | 'fr' };
 export type PendingOrder = { id: string; displayNumber: string; totalMinor: number; paymentStatus: 'pending'; fulfillmentStatus: 'confirmed'; publicToken?: string; checkoutUrl?: string };
 export type OrderVerification = { phone?: string; email?: string; publicToken?: string };
-export type OrderCreateError = 'empty_cart' | 'unavailable' | 'invalid';
+export type OrderCreateError = 'empty_cart' | 'unavailable' | 'invalid' | 'invalid_promo';
 export interface OrderRepository {
   createPending(input: CreatePendingOrderInput): Promise<Result<PendingOrder, OrderCreateError>>;
   getPublicOrder(id: string, verification: OrderVerification): Promise<Order | null>;

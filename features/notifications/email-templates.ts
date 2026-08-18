@@ -18,8 +18,10 @@ export function renderOrderEmail(input: OrderNotificationInput) {
   const order = escapeHtml(input.orderNumber);
   const url = escapeHtml(input.orderUrl);
   const total = new Intl.NumberFormat(intlLocales[input.locale], { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(input.totalMinor / 100);
+  const discount = input.discountMinor ? new Intl.NumberFormat(intlLocales[input.locale], { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(input.discountMinor / 100) : null;
+  const discountLine = discount ? (isArabic ? ` الخصم −${escapeHtml(discount)}` : isFrench ? ` Remise −${escapeHtml(discount)}` : ` Discount −${escapeHtml(discount)}`) : '';
   const title = isArabic ? 'تحديث طلبك' : isFrench ? 'Mise à jour de votre commande' : 'Your order update';
-  const body = isArabic ? `رقم طلبك هو ${order}. إجمالي الطلب ${escapeHtml(total)}.` : isFrench ? `Votre numéro de commande est ${order}. Le total de la commande est ${escapeHtml(total)}.` : `Your order number is ${order}. The order total is ${escapeHtml(total)}.`;
+  const body = isArabic ? `رقم طلبك هو ${order}. إجمالي الطلب ${escapeHtml(total)}.${discountLine}` : isFrench ? `Votre numéro de commande est ${order}. Le total de la commande est ${escapeHtml(total)}.${discountLine}` : `Your order number is ${order}. The order total is ${escapeHtml(total)}.${discountLine}`;
   const link = isArabic ? 'عرض الطلب' : isFrench ? 'Voir la commande' : 'View order';
   const direction = isArabic ? 'rtl' : 'ltr';
   return {

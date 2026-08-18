@@ -23,4 +23,14 @@ describe('order email templates', () => {
     expect(email.html).toContain('Mise à jour de votre commande');
     expect(email.html).toContain('Votre numéro de commande est RO-1.');
   });
+
+  it('includes the discount line when discountMinor is set', () => {
+    const { text } = renderOrderEmail({ locale: 'en', type: 'order_received', orderNumber: 'RO-1', totalMinor: 9000, discountMinor: 1000, orderUrl: 'https://example.com/o/1' });
+    expect(text).toMatch(/Discount −EGP\s*10/);
+  });
+
+  it('omits the discount line when absent', () => {
+    const { text } = renderOrderEmail({ locale: 'en', type: 'order_received', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' });
+    expect(text).not.toContain('Discount');
+  });
 });

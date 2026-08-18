@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { calculateCartTotals } from '@/features/cart/pricing';
+import { applyPromoToOrderTotals, validatePromo } from '@/features/promo/apply';
+import { fetchPromo } from '@/features/promo/repository';
 import { applyDeliveryRule, fetchDeliveryRule } from './delivery-rules';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import type { CartLine } from '@/features/cart/types';
@@ -43,7 +45,19 @@ export const supabaseOrderRepository: OrderRepository = {
       const rule = await fetchDeliveryRule(supabase, input.destination.cityCode);
       const { feeMinor, belowMinimum } = applyDeliveryRule(rule, subtotal);
       if (belowMinimum) return { ok: false, error: 'invalid' };
-      const totals = calculateCartTotals(safeLines, feeMinor);
+      let totals = calculateCartTotals(safeLines, feeMinor);
+      let discountMinor = 0;
+      let promoCode: string | null = null;
+      const requestedPromo = input.checkout.promoCode?.trim();
+      if (requestedPromo) {
+        const promo = await fetchPromo(supabase, requestedPromo);
+        const promoError = promo ? validatePromo(promo, totals.subtotal, new Date()) : 'inactive';
+        if (!promo || promoError) return { ok: false, error: 'invalid_promo' };
+        const withDiscount = applyPromoToOrderTotals({ subtotalMinor: totals.subtotal, deliveryFeeMinor: totals.deliveryFee }, promo);
+        totals = { subtotal: withDiscount.subtotalMinor, deliveryFee: withDiscount.deliveryFeeMinor, total: withDiscount.totalMinor };
+        discountMinor = withDiscount.discountMinor;
+        promoCode = promo.code;
+      }
       const number = displayNumber();
       const publicToken = randomUUID();
       const { data: order, error } = await supabase.from('orders').insert({
@@ -60,11 +74,14 @@ export const supabaseOrderRepository: OrderRepository = {
         locale: input.locale,
         subtotal_minor: totals.subtotal,
         delivery_fee_minor: totals.deliveryFee,
+        discount_minor: discountMinor,
+        promo_code: promoCode,
         total_minor: totals.total,
         payment_status: 'pending',
         fulfillment_status: 'confirmed',
       }).select('id,display_number,public_token,total_minor').single();
       if (error || !order) return { ok: false, error: 'unavailable' };
+      if (promoCode) await supabase.rpc('increment_promo_usage', { p_code: promoCode });
 
       const { error: itemError } = await supabase.from('order_items').insert(safeLines.map((line) => ({
         order_id: order.id,
