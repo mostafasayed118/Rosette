@@ -3,13 +3,12 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { StatusMessage } from '@/components/ui/status-message';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { toMinor } from '@/features/admin/money';
 import type { PromoInput } from '@/features/admin/promo-actions';
-
-function toMinor(egp: string): number {
-  const parsed = Number.parseFloat(egp);
-  return Number.isFinite(parsed) ? Math.round(parsed * 100) : 0;
-}
 
 const empty = { code: '', type: 'percent' as 'percent' | 'fixed', percent: '10', value: '', minimum: '', startsAt: '', expiresAt: '', maxUses: '0', active: true };
 
@@ -43,17 +42,19 @@ export function AddPromoForm() {
     setForm(empty);
   }
 
-  return <form className="checkout-form" onSubmit={submit} noValidate>
-    {error ? <div className="status-message" role="alert"><strong>{error}</strong></div> : null}
-    <section className="form-section"><p className="eyebrow">{t('addPromo')}</p><div className="form-grid">
-      <label className="field"><span>{t('promoCode')}</span><input type="text" value={form.code} onChange={(e) => patch({ code: e.target.value })} placeholder="ROSE10" required /></label>
-      <label className="field"><span>{t('promoType')}</span><select value={form.type} onChange={(e) => patch({ type: e.target.value as 'percent' | 'fixed' })}><option value="percent">{t('percentOff')}</option><option value="fixed">{t('amountEgp')}</option></select></label>
-      {form.type === 'percent' ? <label className="field"><span>{t('percentOff')}</span><input type="number" min="0" max="100" value={form.percent} onChange={(e) => patch({ percent: e.target.value })} required /></label> : <label className="field"><span>{t('amountEgp')}</span><input type="number" min="0" step="0.01" value={form.value} onChange={(e) => patch({ value: e.target.value })} required /></label>}
-      <label className="field"><span>{t('minimumOrderEgp')}</span><input type="number" min="0" step="0.01" value={form.minimum} onChange={(e) => patch({ minimum: e.target.value })} /></label>
-      <label className="field"><span>{t('starts')}</span><input type="date" value={form.startsAt} onChange={(e) => patch({ startsAt: e.target.value })} /></label>
-      <label className="field"><span>{t('expires')}</span><input type="date" value={form.expiresAt} onChange={(e) => patch({ expiresAt: e.target.value })} /></label>
-      <label className="field"><span>{t('maxUses')}</span><input type="number" min="0" value={form.maxUses} onChange={(e) => patch({ maxUses: e.target.value })} /></label>
-      <label className="choice span-two"><input type="checkbox" checked={form.active} onChange={(e) => patch({ active: e.target.checked })} /><span>{t('active')}</span></label>
+  return <form className="grid max-w-[60rem] gap-6" onSubmit={submit} noValidate>
+    {error ? <StatusMessage title={error} tone="error" /> : null}
+    <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('addPromo')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+      <Field id="promo-code" label={t('promoCode')} value={form.code} onChange={(e) => patch({ code: e.target.value })} placeholder="ROSE10" required />
+      <div className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('promoType')}</span><Select value={form.type} onValueChange={(v) => patch({ type: v as 'percent' | 'fixed' })}><SelectTrigger id="promo-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="percent">{t('percentOff')}</SelectItem><SelectItem value="fixed">{t('amountEgp')}</SelectItem></SelectContent></Select></div>
+      {form.type === 'percent'
+        ? <Field id="percent-off" label={t('percentOff')} type="number" min={0} max={100} value={form.percent} onChange={(e) => patch({ percent: e.target.value })} required />
+        : <Field id="amount-egp" label={t('amountEgp')} type="number" min={0} step="0.01" value={form.value} onChange={(e) => patch({ value: e.target.value })} required />}
+      <Field id="minimum-order" label={t('minimumOrderEgp')} type="number" min={0} step="0.01" value={form.minimum} onChange={(e) => patch({ minimum: e.target.value })} />
+      <Field id="starts-at" label={t('starts')} type="date" value={form.startsAt} onChange={(e) => patch({ startsAt: e.target.value })} />
+      <Field id="expires-at" label={t('expires')} type="date" value={form.expiresAt} onChange={(e) => patch({ expiresAt: e.target.value })} />
+      <Field id="max-uses" label={t('maxUses')} type="number" min={0} value={form.maxUses} onChange={(e) => patch({ maxUses: e.target.value })} />
+      <label className="col-span-2 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 max-md:col-span-1 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"><input type="checkbox" checked={form.active} onChange={(e) => patch({ active: e.target.checked })} className="accent-primary" /><span>{t('active')}</span></label>
     </div></section>
     <Button type="submit" disabled={saving}>{saving ? t('saving') : t('addPromo')}</Button>
   </form>;

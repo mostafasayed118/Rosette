@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { AddPromoForm } from '@/components/admin/AddPromoForm';
 import { PromoForm } from '@/components/admin/PromoForm';
@@ -7,6 +9,7 @@ import type { PromoInput } from '@/features/admin/promo-actions';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getServerT } from '@/features/i18n/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
+import { minorToEgp } from '@/features/admin/money';
 
 type PromoRow = { code: string; type: 'percent' | 'fixed'; percent_off: number | null; value_minor: number | null; minimum_order_minor: number; starts_at: string | null; expires_at: string | null; max_uses: number; used_count: number; active: boolean };
 
@@ -17,19 +20,22 @@ export default async function AdminPromosPage() {
   const { data } = await getAdminSupabase().from('promo_codes').select('*').order('created_at', { ascending: false });
   const rows = (data ?? []) as PromoRow[];
   return <AdminShell>
-    <p className="eyebrow">{t('promoOperations')}</p>
-    <h1>{t('promos')}</h1>
+    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('promoOperations')}</p>
+    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('promos')}</h1>
     <AddPromoForm />
-    <div className="admin-table">
+    <div className="mt-6 grid gap-4">
       {rows.map((row) => {
         const promo: PromoInput = { code: row.code, type: row.type, percentOff: row.percent_off, valueMinor: row.value_minor, minimumOrderMinor: row.minimum_order_minor, startsAt: row.starts_at, expiresAt: row.expires_at, maxUses: row.max_uses, active: row.active };
-        return <article className="status-message" key={row.code}>
-          <strong>{row.code}</strong>
-          <span>{row.type === 'percent' ? `${row.percent_off}%` : `${(row.value_minor ?? 0) / 100} EGP`} · {t('minimumOrderEgp')} {(row.minimum_order_minor / 100).toFixed(2)} · {row.used_count}/{row.max_uses === 0 ? '∞' : row.max_uses} {t('uses')} · {row.active ? t('active') : t('inactive')}</span>
+        return <Card key={row.code}><CardContent className="grid gap-3">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <strong>{row.code}</strong>
+            <Badge variant={row.active ? 'default' : 'secondary'}>{row.active ? t('active') : t('inactive')}</Badge>
+            <span className="text-sm text-muted-foreground">{row.type === 'percent' ? `${row.percent_off}%` : `${minorToEgp(row.value_minor ?? 0)} EGP`} · {t('minimumOrderEgp')} {minorToEgp(row.minimum_order_minor)} · {row.used_count}/{row.max_uses === 0 ? '∞' : row.max_uses} {t('uses')}</span>
+          </div>
           <PromoForm promo={promo} />
-        </article>;
+        </CardContent></Card>;
       })}
     </div>
-    <p><Link href="/admin">{t('backToDashboard')}</Link></p>
+    <p className="mt-6"><Link className="text-sm text-primary underline underline-offset-4" href="/admin">{t('backToDashboard')}</Link></p>
   </AdminShell>;
 }
