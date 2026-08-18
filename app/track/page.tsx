@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { StatusMessage } from '@/components/ui/status-message';
 import { getServerT } from '@/features/i18n/server';
 import { pickLocalized } from '@/features/i18n/pick';
@@ -17,7 +18,6 @@ const PAYMENT_KEYS: Record<string, string> = {
   payment_failed: 'statusPaymentFailed', cancelled: 'statusCancelled', refunded: 'statusRefunded',
 };
 
-const inputClass = 'h-11 w-full rounded-[10px] border border-border bg-background px-3.5 text-foreground';
 const infoCardClass = 'rounded-2xl border bg-card p-5 shadow-sm';
 
 export default async function TrackPage({ searchParams }: { searchParams: Promise<{ number?: string; email?: string }> }) {
@@ -33,8 +33,8 @@ export default async function TrackPage({ searchParams }: { searchParams: Promis
     <p className="max-w-[42rem] text-[1.1rem] text-muted-foreground">{t('trackLede')}</p>
     <form className="grid max-w-[60rem] gap-6 pt-8" action="/track" method="get">
       <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
-        <label className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('orderNumber')}</span><input className={inputClass} type="text" name="number" defaultValue={number ?? ''} required /></label>
-        <label className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('email')}</span><input className={inputClass} type="email" name="email" defaultValue={email ?? ''} required /></label>
+        <label className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('orderNumber')}</span><Input type="text" name="number" defaultValue={number ?? ''} required /></label>
+        <label className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('email')}</span><Input type="email" name="email" defaultValue={email ?? ''} required /></label>
       </div>
       <Button type="submit">{t('trackOrder')}</Button>
     </form>
