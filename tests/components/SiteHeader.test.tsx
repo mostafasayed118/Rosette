@@ -1,6 +1,12 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SiteHeader } from '@/components/layout/SiteHeader';
+
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ locale: 'en', city: 'greater-cairo' }),
+  usePathname: () => '/en/greater-cairo',
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
 import { CartProvider } from '@/features/cart/CartProvider';
 import { renderWithProviders } from '../test-utils';
 

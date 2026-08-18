@@ -1,23 +1,19 @@
 import { fireEvent, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-
+import { describe, expect, it, vi } from 'vitest';
 import { DestinationGate } from '@/features/destination/DestinationGate';
 import { renderWithProviders } from '../test-utils';
 
+const { push } = vi.hoisted(() => ({ push: vi.fn() }));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push }),
+}));
+
 describe('DestinationGate', () => {
-  it('selects Alexandria and persists the chosen destination', () => {
-    const onSelected = vi.fn();
-    renderWithProviders(<DestinationGate onSelected={onSelected} />);
-
-    fireEvent.change(screen.getByLabelText(/city/i), {
-      target: { value: 'alexandria' },
-    });
+  it('navigates to the localized city URL on selection', () => {
+    renderWithProviders(<DestinationGate locale="en" />);
+    fireEvent.change(screen.getByLabelText(/city/i), { target: { value: 'alexandria' } });
     fireEvent.click(screen.getByRole('button', { name: /continue/i }));
-
-    expect(onSelected).toHaveBeenCalledWith({
-      countryCode: 'EG',
-      cityCode: 'alexandria',
-    });
-    expect(window.localStorage.getItem('rosette.destination.v1')).toContain('alexandria');
+    expect(push).toHaveBeenCalledWith('/en/alexandria');
   });
 });

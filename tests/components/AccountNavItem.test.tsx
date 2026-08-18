@@ -6,6 +6,10 @@ vi.mock('@/lib/supabase/browser', () => ({
   getBrowserSupabase: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ locale: 'en', city: 'greater-cairo' }),
+}));
+
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { AccountNavItem } from '@/components/layout/AccountNavItem';
 
@@ -18,13 +22,13 @@ describe('AccountNavItem', () => {
     mockGetBrowserSupabase.mockReturnValue({ auth: { getUser: async () => ({ data: { user: null } }) } } as never);
     renderWithProviders(<AccountNavItem />);
     expect(await screen.findByText('Sign in')).toBeTruthy();
-    expect(screen.getByText('Sign in').closest('a')).toHaveAttribute('href', '/account/login');
+    expect(screen.getByText('Sign in').closest('a')).toHaveAttribute('href', '/en/greater-cairo/account/login');
   });
 
   it('shows "Account" when signed in', async () => {
     mockGetBrowserSupabase.mockReturnValue({ auth: { getUser: async () => ({ data: { user: { id: 'u1' } } }) } } as never);
     renderWithProviders(<AccountNavItem />);
     expect(await screen.findByText('Account')).toBeTruthy();
-    expect(screen.getByText('Account').closest('a')).toHaveAttribute('href', '/account');
+    expect(screen.getByText('Account').closest('a')).toHaveAttribute('href', '/en/greater-cairo/account');
   });
 });
