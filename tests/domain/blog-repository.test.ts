@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createBlogPost, deleteBlogPost, listAllBlogPosts, updateBlogPost } from '@/features/admin/blog-admin';
+import { createAuthor, createBlogPost, deleteAuthor, deleteBlogPost, listAllBlogPosts, listAuthors, updateAuthor, updateBlogPost } from '@/features/admin/blog-admin';
+import { localBlogRepository } from '@/features/blog/local-repository';
 import { supabaseBlogRepository } from '@/features/blog/supabase-repository';
 
 vi.mock('@/lib/supabase/server', () => ({ getServerSupabase: vi.fn() }));
@@ -9,12 +10,18 @@ const mockGetSupabase = vi.mocked(getServerSupabase);
 beforeEach(() => vi.clearAllMocks());
 
 const row = {
-  id: 'p1', slug: 'hello-roses', type: 'post', city_code: null,
+  id: 'p1', slug: 'hello-roses', type: 'post', city_code: null, author_id: 'a1',
   title_en: 'Hello roses', title_ar: 'مرحبا بالورد', title_fr: null,
   excerpt_en: 'An excerpt', excerpt_ar: null, excerpt_fr: null,
   category: 'care', published: true, published_at: '2026-08-10T00:00:00.000Z',
   updated_at: '2026-08-10T00:00:00.000Z', created_at: '2026-08-10T00:00:00.000Z',
   content_en: '<p>Body</p>', content_ar: null, content_fr: null,
+};
+
+const authorRow = {
+  id: 'a1', slug: 'nour-hassan', name_en: 'Nour Hassan', name_ar: 'نور حسن', name_fr: null,
+  role_en: 'Founder & head florist', role_ar: null, role_fr: null,
+  bio_en: 'Nour founded Rosette.', bio_ar: null, bio_fr: null, avatar_url: null,
 };
 
 describe('blog storefront repository', () => {
@@ -32,7 +39,7 @@ describe('blog storefront repository', () => {
     expect(eqCalls).toContainEqual(['published', true]);
     expect(eqCalls).toContainEqual(['type', 'post']);
     expect(eqCalls).toContainEqual(['city_code', 'greater-cairo']);
-    expect(posts[0]).toMatchObject({ id: 'p1', slug: 'hello-roses', titleEn: 'Hello roses', titleAr: 'مرحبا بالورد' });
+    expect(posts[0]).toMatchObject({ id: 'p1', slug: 'hello-roses', titleEn: 'Hello roses', titleAr: 'مرحبا بالورد', authorId: 'a1' });
   });
 
   it('returns a published post by slug', async () => {
@@ -53,6 +60,43 @@ describe('blog storefront repository', () => {
     const builder = { select: () => builder, eq: () => builder, order: async () => ({ data: [], error: null }), maybeSingle: async () => ({ data: null, error: null }) };
     mockGetSupabase.mockResolvedValue({ from: () => builder } as never);
     expect(await supabaseBlogRepository.getBySlug('missing')).toBeNull();
+  });
+
+  it('lists authors from supabase', async () => {
+    const builder = { order: async () => ({ data: [authorRow], error: null }) };
+    mockGetSupabase.mockResolvedValue({ from: () => ({ select: () => builder }) } as never);
+    const authors = await supabaseBlogRepository.listAuthors();
+    expect(authors[0]).toMatchObject({ id: 'a1', slug: 'nour-hassan', nameEn: 'Nour Hassan', roleEn: 'Founder & head florist' });
+  });
+
+  it('returns a single author from supabase', async () => {
+    const builder = { eq: () => ({ maybeSingle: async () => ({ data: authorRow, error: null }) }) };
+    mockGetSupabase.mockResolvedValue({ from: () => ({ select: () => builder }) } as never);
+    const author = await supabaseBlogRepository.getAuthor('a1');
+    expect(author?.bioEn).toBe('Nour founded Rosette.');
+  });
+
+  it('returns null when an author is missing', async () => {
+    const builder = { eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) };
+    mockGetSupabase.mockResolvedValue({ from: () => ({ select: () => builder }) } as never);
+    expect(await supabaseBlogRepository.getAuthor('missing')).toBeNull();
+  });
+});
+
+describe('blog local repository', () => {
+  it('lists authors and finds one by id', async () => {
+    const authors = await localBlogRepository.listAuthors();
+    expect(authors.length).toBeGreaterThan(0);
+    expect((await localBlogRepository.getAuthor(authors[0]!.id))?.nameEn).toBe(authors[0]!.nameEn);
+  });
+
+  it('returns null for a missing local author', async () => {
+    expect(await localBlogRepository.getAuthor('nope')).toBeNull();
+  });
+
+  it('summaries carry authorId', async () => {
+    const posts = await localBlogRepository.listPublished({});
+    expect(posts[0]?.authorId).toBeTruthy();
   });
 });
 
@@ -124,6 +168,36 @@ describe('blog admin CRUD', () => {
   it('lists all posts for the admin', async () => {
     const client = { from: () => ({ select: () => ({ order: async () => ({ data: [row], error: null }) }) }) };
     const posts = await listAllBlogPosts(client);
-    expect(posts[0]).toMatchObject({ id: 'p1', slug: 'hello-roses' });
+    expect(posts[0]).toMatchObject({ id: 'p1', slug: 'hello-roses', authorId: 'a1' });
+  });
+
+  const authorInput = { slug: 'nour-hassan', nameEn: 'Nour Hassan', roleEn: 'Founder & head florist' };
+
+  it('creates an author', async () => {
+    const { client, calls } = fakeClient();
+    const result = await createAuthor(client, authorInput);
+    expect(result).toEqual({ id: 'new-id' });
+    const insert = calls.find((c) => c.op === 'insert');
+    expect((insert!.payload as Record<string, unknown>).name_en).toBe('Nour Hassan');
+  });
+
+  it('updates an author', async () => {
+    const { client, calls } = fakeClient();
+    await updateAuthor(client, 'a1', { ...authorInput, roleEn: 'Head florist' });
+    const update = calls.find((c) => c.op === 'update');
+    expect((update!.payload as Record<string, unknown>).role_en).toBe('Head florist');
+    expect(update!.id).toBe('a1');
+  });
+
+  it('deletes an author', async () => {
+    const { client, calls } = fakeClient();
+    expect(await deleteAuthor(client, 'a1')).toBe(true);
+    expect(calls).toContainEqual({ op: 'delete', id: 'a1' });
+  });
+
+  it('lists authors for the admin', async () => {
+    const client = { from: () => ({ select: () => ({ order: async () => ({ data: [authorRow], error: null }) }) }) };
+    const authors = await listAuthors(client);
+    expect(authors[0]).toMatchObject({ id: 'a1', slug: 'nour-hassan' });
   });
 });

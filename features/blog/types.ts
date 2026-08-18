@@ -1,10 +1,40 @@
 export type BlogPostType = 'post' | 'city';
 
+export type Author = {
+  id: string;
+  slug: string;
+  nameEn: string;
+  nameAr?: string;
+  nameFr?: string;
+  roleEn?: string;
+  roleAr?: string;
+  roleFr?: string;
+  bioEn?: string;
+  bioAr?: string;
+  bioFr?: string;
+  avatarUrl?: string;
+};
+
+export type AuthorInput = {
+  slug: string;
+  nameEn: string;
+  nameAr?: string;
+  nameFr?: string;
+  roleEn?: string;
+  roleAr?: string;
+  roleFr?: string;
+  bioEn?: string;
+  bioAr?: string;
+  bioFr?: string;
+  avatarUrl?: string;
+};
+
 export type BlogPost = {
   id: string;
   slug: string;
   type: BlogPostType;
   cityCode: string | null;
+  authorId: string | null;
   titleEn: string;
   titleAr?: string;
   titleFr?: string;
@@ -26,6 +56,7 @@ export type BlogPostSummary = {
   slug: string;
   type: BlogPostType;
   cityCode: string | null;
+  authorId: string | null;
   titleEn: string;
   titleAr?: string;
   titleFr?: string;
@@ -41,6 +72,7 @@ export type BlogPostInput = {
   slug: string;
   type: BlogPostType;
   cityCode?: string | null;
+  authorId?: string | null;
   titleEn: string;
   titleAr?: string;
   titleFr?: string;
@@ -54,9 +86,9 @@ export type BlogPostInput = {
   published: boolean;
 };
 
-export type BlogListQuery = { type?: BlogPostType; cityCode?: string };
-
-export interface BlogRepository {
+export type BlogListQuery = { type?: BlogPostType; cityCode?: string };export interface BlogRepository {
   listPublished(query?: BlogListQuery): Promise<BlogPostSummary[]>;
   getBySlug(slug: string): Promise<BlogPost | null>;
+  listAuthors(): Promise<Author[]>;
+  getAuthor(id: string): Promise<Author | null>;
 }

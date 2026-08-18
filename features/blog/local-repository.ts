@@ -1,5 +1,5 @@
-import { localPosts } from './data';
-import type { BlogListQuery, BlogPost, BlogRepository, BlogPostSummary } from './types';
+import { localAuthors, localPosts } from './data';
+import type { Author, BlogListQuery, BlogPost, BlogRepository, BlogPostSummary } from './types';
 
 function toSummary(post: BlogPost): BlogPostSummary {
   return {
@@ -7,6 +7,7 @@ function toSummary(post: BlogPost): BlogPostSummary {
     slug: post.slug,
     type: post.type,
     cityCode: post.cityCode,
+    authorId: post.authorId,
     titleEn: post.titleEn,
     titleAr: post.titleAr,
     titleFr: post.titleFr,
@@ -30,5 +31,11 @@ export const localBlogRepository: BlogRepository = {
   },
   async getBySlug(slug: string) {
     return localPosts.find((post) => post.slug === slug && post.published) ?? null;
+  },
+  async listAuthors() {
+    return localAuthors;
+  },
+  async getAuthor(id: string) {
+    return localAuthors.find((author) => author.id === id) ?? null;
   },
 };
