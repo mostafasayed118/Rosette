@@ -7,7 +7,7 @@ import type { AdminIdentity } from './authorization';
 
 export type UpdateStatusResult = 'updated' | 'missing_order' | 'invalid_or_unauthorized' | 'failure';
 
-type OrderRow = { id: string; display_number: string; total_minor: number; public_token: string; customer_email: string | null; locale: 'en' | 'ar' | 'fr'; fulfillment_status: FulfillmentStatus };
+type OrderRow = { id: string; display_number: string; total_minor: number; subtotal_minor: number; delivery_fee_minor: number; discount_minor: number | null; public_token: string; customer_email: string | null; locale: 'en' | 'ar' | 'fr'; fulfillment_status: FulfillmentStatus };
 
 type OrderActionsClient = { from: (table: string) => any };
 
@@ -17,7 +17,7 @@ const MILESTONE_NOTIFICATIONS: Partial<Record<FulfillmentStatus, NotificationTyp
   delivered: 'delivered',
 };
 
-const orderSelect = 'id,display_number,total_minor,public_token,customer_email,locale,fulfillment_status';
+const orderSelect = 'id,display_number,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,public_token,customer_email,locale,fulfillment_status';
 
 export async function updateFulfillmentStatus(
   client: OrderActionsClient,
@@ -45,6 +45,9 @@ export async function updateFulfillmentStatus(
       locale: order.locale,
       orderNumber: order.display_number,
       totalMinor: order.total_minor,
+      subtotalMinor: order.subtotal_minor,
+      deliveryFeeMinor: order.delivery_fee_minor,
+      discountMinor: order.discount_minor ?? undefined,
       orderUrl: `${input.orderUrlBase}/orders/${input.orderId}?token=${encodeURIComponent(order.public_token)}`,
     }, sendNotification);
   }

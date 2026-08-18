@@ -16,7 +16,7 @@ const localOrderRepository: OrderRepository = {
       simulatePaymentFailure: false,
     });
     if (!result.ok) return { ok: false, error: result.error === 'empty_cart' ? 'empty_cart' : 'invalid' };
-    return { ok: true, value: { id: result.value.id, displayNumber: result.value.displayNumber, totalMinor: result.value.totals.total, paymentStatus: 'pending', fulfillmentStatus: 'confirmed' } };
+    return { ok: true, value: { id: result.value.id, displayNumber: result.value.displayNumber, totalMinor: result.value.totals.total, subtotalMinor: result.value.totals.subtotal, deliveryFeeMinor: result.value.totals.deliveryFee, discountMinor: 0, paymentStatus: 'pending', fulfillmentStatus: 'confirmed' } };
   },
   async getPublicOrder(id, verification) {
     const { getLocalOrder } = await import('./local-repository');

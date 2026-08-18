@@ -57,6 +57,14 @@ describe('deliverOrderNotification', () => {
     expect(updated!.payload).toMatchObject({ status: 'failed', attempts: 1, last_error: 'smtp_failed' });
   });
 
+  it('passes the breakdown fields through to the mailer', async () => {
+    const { client } = fakeClient();
+    let sent: unknown = null;
+    const capture = async (payload: unknown) => { sent = payload; return { accepted: true as const }; };
+    await deliverOrderNotification(client, { ...input, subtotalMinor: 10000, deliveryFeeMinor: 7500, discountMinor: 1000 }, capture as never);
+    expect(sent).toMatchObject({ subtotalMinor: 10000, deliveryFeeMinor: 7500, discountMinor: 1000, totalMinor: 12300 });
+  });
+
   it('skips sending entirely when there is no recipient', async () => {
     const { client, calls } = fakeClient();
     const result = await deliverOrderNotification(client, { ...input, recipient: '' }, sendOk);

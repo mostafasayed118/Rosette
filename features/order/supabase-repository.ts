@@ -102,7 +102,7 @@ export const supabaseOrderRepository: OrderRepository = {
         await supabase.from('orders').delete().eq('id', order.id);
         return { ok: false, error: reservationError.message.includes('INSUFFICIENT_STOCK') ? 'invalid' : 'unavailable' };
       }
-      return { ok: true, value: { id: order.id, displayNumber: order.display_number, totalMinor: order.total_minor, publicToken: order.public_token, paymentStatus: 'pending', fulfillmentStatus: 'confirmed' } };
+      return { ok: true, value: { id: order.id, displayNumber: order.display_number, totalMinor: order.total_minor, subtotalMinor: totals.subtotal, deliveryFeeMinor: totals.deliveryFee, discountMinor, publicToken: order.public_token, paymentStatus: 'pending', fulfillmentStatus: 'confirmed' } };
     } catch {
       return { ok: false, error: 'unavailable' };
     }

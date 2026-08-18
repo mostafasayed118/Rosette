@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
   try {
     const supabase = getAdminSupabase();
-    const { data: order } = await supabase.from('orders').select('id,total_minor,payment_status,display_number,public_token,customer_email,locale').eq('display_number', orderReference).maybeSingle();
+    const { data: order } = await supabase.from('orders').select('id,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,payment_status,display_number,public_token,customer_email,locale').eq('display_number', orderReference).maybeSingle();
     if (!order) return NextResponse.json({ received: true });
     if (order.total_minor !== amountMinor) return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
 
@@ -41,6 +41,9 @@ export async function POST(request: Request) {
         locale: order.locale === 'ar' || order.locale === 'fr' ? order.locale : 'en',
         orderNumber: order.display_number,
         totalMinor: order.total_minor,
+        subtotalMinor: order.subtotal_minor,
+        deliveryFeeMinor: order.delivery_fee_minor,
+        discountMinor: order.discount_minor ?? undefined,
         orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}`,
       });
     }

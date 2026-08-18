@@ -12,21 +12,36 @@ const subjects = {
 
 const intlLocales = { en: 'en-EG', ar: 'ar-EG', fr: 'fr-FR' } as const;
 
+const copy = {
+  en: { title: 'Your order update', intro: (order: string) => `Your order number is ${order}.`, subtotal: 'Subtotal', delivery: 'Delivery', discount: 'Discount', total: 'Total', view: 'View order' },
+  ar: { title: 'تحديث طلبك', intro: (order: string) => `رقم طلبك هو ${order}.`, subtotal: 'المجموع الفرعي', delivery: 'التوصيل', discount: 'الخصم', total: 'الإجمالي', view: 'عرض الطلب' },
+  fr: { title: 'Mise à jour de votre commande', intro: (order: string) => `Votre numéro de commande est ${order}.`, subtotal: 'Sous-total', delivery: 'Livraison', discount: 'Remise', total: 'Total', view: 'Voir la commande' },
+} as const;
+
 export function renderOrderEmail(input: OrderNotificationInput) {
   const isArabic = input.locale === 'ar';
-  const isFrench = input.locale === 'fr';
+  const money = (minor: number) => new Intl.NumberFormat(intlLocales[input.locale], { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(minor / 100);
+  const c = copy[input.locale];
   const order = escapeHtml(input.orderNumber);
   const url = escapeHtml(input.orderUrl);
-  const total = new Intl.NumberFormat(intlLocales[input.locale], { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(input.totalMinor / 100);
-  const discount = input.discountMinor ? new Intl.NumberFormat(intlLocales[input.locale], { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(input.discountMinor / 100) : null;
-  const discountLine = discount ? (isArabic ? ` الخصم −${escapeHtml(discount)}` : isFrench ? ` Remise −${escapeHtml(discount)}` : ` Discount −${escapeHtml(discount)}`) : '';
-  const title = isArabic ? 'تحديث طلبك' : isFrench ? 'Mise à jour de votre commande' : 'Your order update';
-  const body = isArabic ? `رقم طلبك هو ${order}. إجمالي الطلب ${escapeHtml(total)}.${discountLine}` : isFrench ? `Votre numéro de commande est ${order}. Le total de la commande est ${escapeHtml(total)}.${discountLine}` : `Your order number is ${order}. The order total is ${escapeHtml(total)}.${discountLine}`;
-  const link = isArabic ? 'عرض الطلب' : isFrench ? 'Voir la commande' : 'View order';
   const direction = isArabic ? 'rtl' : 'ltr';
-  return {
-    subject: subjects[input.locale][input.type],
-    text: `${title}\n${body}\n${input.orderUrl}`,
-    html: `<!doctype html><html lang="${input.locale}" dir="${direction}"><body style="font-family:Arial,sans-serif;text-align:${isArabic ? 'right' : 'left'}"><h1>${title}</h1><p>${body}</p><p><a href="${url}">${link}</a></p></body></html>`,
-  };
+
+  const hasBreakdown = input.subtotalMinor !== undefined && input.deliveryFeeMinor !== undefined;
+  const lines: string[] = [];
+  if (hasBreakdown) {
+    lines.push(`${c.subtotal}: ${money(input.subtotalMinor!)}`);
+    lines.push(`${c.delivery}: ${money(input.deliveryFeeMinor!)}`);
+    if (input.discountMinor) lines.push(`${c.discount}: −${money(input.discountMinor)}`);
+    lines.push(`${c.total}: ${money(input.totalMinor)}`);
+  } else {
+    const discountSuffix = input.discountMinor ? ` · ${c.discount} −${money(input.discountMinor)}` : '';
+    lines.push(`${c.total}: ${money(input.totalMinor)}${discountSuffix}`);
+  }
+
+  const intro = c.intro(order);
+  const text = `${c.title}\n${intro}\n${lines.join('\n')}\n${input.orderUrl}`;
+  const htmlLines = lines.map((line) => `<li>${line}</li>`).join('');
+  const html = `<!doctype html><html lang="${input.locale}" dir="${direction}"><body style="font-family:Arial,sans-serif;text-align:${isArabic ? 'right' : 'left'}"><h1>${c.title}</h1><p>${intro}</p><ul>${htmlLines}</ul><p><a href="${url}">${c.view}</a></p></body></html>`;
+
+  return { subject: subjects[input.locale][input.type], text, html };
 }
