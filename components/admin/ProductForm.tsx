@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
+import { StatusMessage } from '@/components/ui/status-message';
 import { CATEGORIES, OCCASIONS, type SaveProductInput } from '@/features/admin/catalog-validation';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
@@ -14,6 +15,9 @@ type AddOnEntry = SaveProductInput['addOns'][number];
 
 const emptyVariant = (): VariantEntry => ({ nameEn: '', nameAr: '', priceDeltaMinor: 0, active: true, quantity: 0 });
 const emptyAddOn = (): AddOnEntry => ({ id: '', nameEn: '', nameAr: '', priceMinor: 0 });
+
+const selectClass = 'h-11 w-full rounded-[10px] border border-border bg-background px-3.5 text-foreground';
+const fieldLabelClass = 'grid gap-1.5';
 
 function toMinor(egp: string): number {
   const parsed = Number.parseFloat(egp);
@@ -59,51 +63,51 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
     router.refresh();
   }
 
-  return <form className="checkout-form" onSubmit={submit} noValidate>
-    {error ? <div className="status-message" role="alert"><strong>{error}</strong></div> : null}
+  return <form className="grid max-w-[60rem] gap-6 pt-6" onSubmit={submit} noValidate>
+    {error ? <StatusMessage title={error} tone="error" /> : null}
 
-    <section className="form-section"><p className="eyebrow">{t('identity')}</p><div className="form-grid">
+    <section className="grid gap-4 border-b py-6"><p className="eyebrow">{t('identity')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
       <Field id="nameEn" label={t('nameEn')} value={product.nameEn} onChange={(e) => patch({ nameEn: e.target.value })} required />
       <Field id="nameAr" label={t('nameAr')} value={product.nameAr} onChange={(e) => patch({ nameAr: e.target.value })} required />
-      <Field id="descriptionEn" label={t('descriptionEn')} className="span-two" value={product.descriptionEn} onChange={(e) => patch({ descriptionEn: e.target.value })} />
-      <Field id="descriptionAr" label={t('descriptionAr')} className="span-two" value={product.descriptionAr} onChange={(e) => patch({ descriptionAr: e.target.value })} />
+      <Field id="descriptionEn" label={t('descriptionEn')} className="col-span-2 max-md:col-span-1" value={product.descriptionEn} onChange={(e) => patch({ descriptionEn: e.target.value })} />
+      <Field id="descriptionAr" label={t('descriptionAr')} className="col-span-2 max-md:col-span-1" value={product.descriptionAr} onChange={(e) => patch({ descriptionAr: e.target.value })} />
     </div></section>
 
-    <section className="form-section"><p className="eyebrow">{t('catalogOperations')}</p><div className="form-grid">
-      <label className="field"><span>{t('category')}</span><select value={product.category} onChange={(e) => patch({ category: e.target.value })}>{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></label>
-      <label className="field"><span>{t('priceEgp')}</span><input type="number" min="0" step="0.01" value={minorToEgp(product.priceMinor)} onChange={(e) => patch({ priceMinor: toMinor(e.target.value) })} required /></label>
-      <label className="field"><span>{t('toneHex')}</span><input type="text" pattern="#[0-9a-fA-F]{6}" value={product.tone} onChange={(e) => patch({ tone: e.target.value })} required /></label>
-      <label className="field"><span>{t('deliveryCopy')}</span><input type="text" value={product.delivery} onChange={(e) => patch({ delivery: e.target.value })} required /></label>
-      <Field id="imageUrl" label={t('imageUrl')} className="span-two" type="url" value={product.imageUrl} onChange={(e) => patch({ imageUrl: e.target.value })} placeholder="https://…" />
-      <fieldset className="span-two"><legend>{t('occasionsLabel')}</legend>{OCCASIONS.map((o) => <label className="choice" key={o}><input type="checkbox" checked={product.occasions.includes(o)} onChange={(e) => patch({ occasions: e.target.checked ? [...product.occasions, o] : product.occasions.filter((x) => x !== o) })} /><span>{o}</span></label>)}</fieldset>
-      <label className="choice span-two"><input type="checkbox" checked={product.active} onChange={(e) => patch({ active: e.target.checked })} /><span>{t('activeVisible')}</span></label>
+    <section className="grid gap-4 border-b py-6"><p className="eyebrow">{t('catalogOperations')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+      <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('category')}</span><select className={selectClass} value={product.category} onChange={(e) => patch({ category: e.target.value })}>{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></label>
+      <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('priceEgp')}</span><input className={selectClass} type="number" min="0" step="0.01" value={minorToEgp(product.priceMinor)} onChange={(e) => patch({ priceMinor: toMinor(e.target.value) })} required /></label>
+      <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('toneHex')}</span><input className={selectClass} type="text" pattern="#[0-9a-fA-F]{6}" value={product.tone} onChange={(e) => patch({ tone: e.target.value })} required /></label>
+      <label className={fieldLabelClass}><span className="text-sm font-bold text-foreground">{t('deliveryCopy')}</span><input className={selectClass} type="text" value={product.delivery} onChange={(e) => patch({ delivery: e.target.value })} required /></label>
+      <Field id="imageUrl" label={t('imageUrl')} className="col-span-2 max-md:col-span-1" type="url" value={product.imageUrl} onChange={(e) => patch({ imageUrl: e.target.value })} placeholder="https://…" />
+      <fieldset className="col-span-2 grid gap-2.5 border-0 p-0 max-md:col-span-1"><legend className="mb-1.5 font-bold">{t('occasionsLabel')}</legend><div className="flex flex-wrap gap-2.5">{OCCASIONS.map((o) => <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3" key={o}><input type="checkbox" checked={product.occasions.includes(o)} onChange={(e) => patch({ occasions: e.target.checked ? [...product.occasions, o] : product.occasions.filter((x) => x !== o) })} className="accent-primary" /><span>{o}</span></label>)}</div></fieldset>
+      <label className="col-span-2 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 max-md:col-span-1"><input type="checkbox" checked={product.active} onChange={(e) => patch({ active: e.target.checked })} className="accent-primary" /><span>{t('activeVisible')}</span></label>
     </div></section>
 
-    <section className="form-section"><p className="eyebrow">{t('variantsStock')}</p>
+    <section className="grid gap-4 border-b py-6"><p className="eyebrow">{t('variantsStock')}</p>
       {product.variants.map((variant, index) => (
-        <div className="form-grid" key={variant.id ?? `new-${index}`}>
+        <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1" key={variant.id ?? `new-${index}`}>
           <Field id={`variant-en-${index}`} label={t('variantEn')} value={variant.nameEn} onChange={(e) => updateVariant(index, { nameEn: e.target.value })} required />
           <Field id={`variant-ar-${index}`} label={t('variantAr')} value={variant.nameAr} onChange={(e) => updateVariant(index, { nameAr: e.target.value })} />
           <Field id={`variant-delta-${index}`} label={t('priceDeltaEgp')} type="number" step="0.01" value={minorToEgp(variant.priceDeltaMinor)} onChange={(e) => updateVariant(index, { priceDeltaMinor: toMinor(e.target.value) })} />
           <Field id={`variant-qty-${index}`} label={t('stockLabel')} type="number" min="0" value={String(variant.quantity)} onChange={(e) => updateVariant(index, { quantity: Math.max(0, Number.parseInt(e.target.value || '0', 10)) })} />
-          <label className="choice"><input type="checkbox" checked={variant.active} onChange={(e) => updateVariant(index, { active: e.target.checked })} /><span>{t('active')}</span></label>
-          {!variant.id ? <Button type="button" onClick={() => setProduct((current) => ({ ...current, variants: current.variants.filter((_, i) => i !== index) }))}>{t('remove')}</Button> : null}
+          <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4"><input type="checkbox" checked={variant.active} onChange={(e) => updateVariant(index, { active: e.target.checked })} className="accent-primary" /><span>{t('active')}</span></label>
+          {!variant.id ? <Button type="button" variant="outline" onClick={() => setProduct((current) => ({ ...current, variants: current.variants.filter((_, i) => i !== index) }))}>{t('remove')}</Button> : null}
         </div>
       ))}
-      <Button type="button" onClick={() => patch({ variants: [...product.variants, emptyVariant()] })}>{t('addVariant')}</Button>
+      <Button type="button" variant="outline" onClick={() => patch({ variants: [...product.variants, emptyVariant()] })}>{t('addVariant')}</Button>
     </section>
 
-    <section className="form-section"><p className="eyebrow">{t('addOnsLabel')}</p>
+    <section className="grid gap-4 border-b py-6"><p className="eyebrow">{t('addOnsLabel')}</p>
       {product.addOns.map((addOn, index) => (
-        <div className="form-grid" key={index}>
+        <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1" key={index}>
           <Field id={`addon-id-${index}`} label={t('keyId')} value={addOn.id} onChange={(e) => updateAddOn(index, { id: e.target.value })} required />
           <Field id={`addon-en-${index}`} label={t('nameEn')} value={addOn.nameEn} onChange={(e) => updateAddOn(index, { nameEn: e.target.value })} required />
           <Field id={`addon-ar-${index}`} label={t('nameAr')} value={addOn.nameAr} onChange={(e) => updateAddOn(index, { nameAr: e.target.value })} />
           <Field id={`addon-price-${index}`} label={t('priceEgp')} type="number" step="0.01" value={minorToEgp(addOn.priceMinor)} onChange={(e) => updateAddOn(index, { priceMinor: toMinor(e.target.value) })} />
-          <Button type="button" onClick={() => setProduct((current) => ({ ...current, addOns: current.addOns.filter((_, i) => i !== index) }))}>{t('remove')}</Button>
+          <Button type="button" variant="outline" onClick={() => setProduct((current) => ({ ...current, addOns: current.addOns.filter((_, i) => i !== index) }))}>{t('remove')}</Button>
         </div>
       ))}
-      <Button type="button" onClick={() => patch({ addOns: [...product.addOns, emptyAddOn()] })}>{t('addAddOn')}</Button>
+      <Button type="button" variant="outline" onClick={() => patch({ addOns: [...product.addOns, emptyAddOn()] })}>{t('addAddOn')}</Button>
     </section>
 
     <Button type="submit" disabled={saving}>{saving ? t('saving') : initial ? t('saveProduct') : t('createProduct')}</Button>

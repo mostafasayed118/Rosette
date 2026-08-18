@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
 export function SetQuantityForm({ variantId, current }: { variantId: string; current: number }) {
@@ -25,9 +26,9 @@ export function SetQuantityForm({ variantId, current }: { variantId: string; cur
     router.refresh();
   }
 
-  return <form className="quantity-control" onSubmit={submit}>
-    <input type="number" min="0" value={value} onChange={(e) => setValue(e.target.value)} aria-label={t('setQuantity')} />
-    <button className="button" type="submit" disabled={saving}>{saving ? t('saving') : t('set')}</button>
-    {error ? <small className="field-error">{error}</small> : null}
+  return <form className="flex items-end justify-end gap-2" onSubmit={submit}>
+    <input className="h-10 w-20 rounded-[10px] border border-border bg-background px-3 text-foreground" type="number" min="0" value={value} onChange={(e) => setValue(e.target.value)} aria-label={t('setQuantity')} />
+    <Button size="sm" type="submit" disabled={saving}>{saving ? t('saving') : t('set')}</Button>
+    {error ? <small className="text-sm text-destructive">{error}</small> : null}
   </form>;
 }

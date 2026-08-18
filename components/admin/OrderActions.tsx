@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { StatusMessage } from '@/components/ui/status-message';
 import type { FulfillmentStatus } from '@/features/commerce/order-state';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
@@ -34,5 +36,5 @@ export function OrderActions({ orderId, transitions }: { orderId: string; transi
     router.refresh();
   }
 
-  return <div className="order-actions">{error ? <p className="status-message" role="alert"><strong>{error}</strong></p> : null}{transitions.map((status) => <button key={status} className="button" disabled={pending !== null} onClick={() => void move(status)}>{pending === status ? t('updating') : t(labelKeys[status])}</button>)}</div>;
+  return <div className="grid gap-3">{error ? <StatusMessage title={error} tone="error" /> : null}<div className="flex flex-wrap gap-2.5">{transitions.map((status) => <Button key={status} size="sm" variant="outline" disabled={pending !== null} onClick={() => void move(status)}>{pending === status ? t('updating') : t(labelKeys[status])}</Button>)}</div></div>;
 }

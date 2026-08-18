@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { SetQuantityForm } from '@/components/admin/SetQuantityForm';
 import { getCurrentAdmin } from '@/features/auth/server';
@@ -10,5 +12,17 @@ export default async function AdminInventoryPage() {
   if (!admin) redirect('/login');
   const { t } = await getServerT();
   const { data } = await getAdminSupabase().from('inventory').select('variant_id,quantity,reserved_quantity,updated_at').order('updated_at', { ascending: false });
-  return <AdminShell><p className="eyebrow">{t('stockOperations')}</p><h1>{t('inventory')}</h1><div className="admin-table">{(data ?? []).map((row) => <article className="status-message" key={row.variant_id}><strong>{row.variant_id}</strong><span>{Math.max(0, row.quantity - row.reserved_quantity)} {t('available')} · {row.reserved_quantity} {t('reserved')}</span><SetQuantityForm variantId={row.variant_id} current={row.quantity} /></article>)}</div></AdminShell>;
+  const rows = (data ?? []) as Array<{ variant_id: string; quantity: number; reserved_quantity: number }>;
+  return <AdminShell>
+    <p className="eyebrow">{t('stockOperations')}</p>
+    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('inventory')}</h1>
+    <Card className="mt-6"><Table><TableHeader><TableRow><TableHead>{t('variant')}</TableHead><TableHead>{t('available')}</TableHead><TableHead>{t('reserved')}</TableHead><TableHead className="text-end">{t('setQuantity')}</TableHead></TableRow></TableHeader><TableBody>{rows.map((row) => (
+      <TableRow key={row.variant_id}>
+        <TableCell className="font-medium">{row.variant_id}</TableCell>
+        <TableCell>{Math.max(0, row.quantity - row.reserved_quantity)}</TableCell>
+        <TableCell>{row.reserved_quantity}</TableCell>
+        <TableCell className="text-end"><SetQuantityForm variantId={row.variant_id} current={row.quantity} /></TableCell>
+      </TableRow>
+    ))}</TableBody></Table></Card>
+  </AdminShell>;
 }

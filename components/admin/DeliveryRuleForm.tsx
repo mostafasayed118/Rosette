@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
 export type DeliveryRuleInitial = { feeMinor: number; minimumOrderMinor: number; cutoffHour: number; active: boolean };
@@ -16,6 +17,7 @@ function minorToEgp(minor: number): string {
 }
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
+const inputClass = 'h-10 w-24 rounded-[10px] border border-border bg-background px-3 text-foreground';
 
 export function DeliveryRuleForm({ cityCode, initial }: { cityCode: string; initial: DeliveryRuleInitial }) {
   const router = useRouter();
@@ -44,12 +46,12 @@ export function DeliveryRuleForm({ cityCode, initial }: { cityCode: string; init
     router.refresh();
   }
 
-  return <form className="quantity-control" onSubmit={submit}>
-    <input type="number" min="0" step="0.01" value={fee} onChange={(e) => setFee(e.target.value)} aria-label={t('feeEgp')} />
-    <input type="number" min="0" step="0.01" value={minimum} onChange={(e) => setMinimum(e.target.value)} aria-label={t('minimumOrderEgp')} />
-    <select value={cutoff} onChange={(e) => setCutoff(e.target.value)} aria-label={t('cutoffHour')}>{HOURS.map((h) => <option key={h} value={h}>{h}:00</option>)}</select>
-    <label className="choice"><input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /><span>{t('active')}</span></label>
-    <button className="button" type="submit" disabled={saving}>{saving ? t('saving') : t('save')}</button>
-    {error ? <small className="field-error">{error}</small> : null}
+  return <form className="grid items-end gap-2" onSubmit={submit}>
+    <input className={inputClass} type="number" min="0" step="0.01" value={fee} onChange={(e) => setFee(e.target.value)} aria-label={t('feeEgp')} />
+    <input className={inputClass} type="number" min="0" step="0.01" value={minimum} onChange={(e) => setMinimum(e.target.value)} aria-label={t('minimumOrderEgp')} />
+    <select className={inputClass} value={cutoff} onChange={(e) => setCutoff(e.target.value)} aria-label={t('cutoffHour')}>{HOURS.map((h) => <option key={h} value={h}>{h}:00</option>)}</select>
+    <label className="flex items-center gap-2"><input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} className="accent-primary" /><span className="text-sm">{t('active')}</span></label>
+    <Button size="sm" type="submit" disabled={saving}>{saving ? t('saving') : t('save')}</Button>
+    {error ? <small className="text-sm text-destructive">{error}</small> : null}
   </form>;
 }

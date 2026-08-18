@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { OrderListToolbar } from '@/components/admin/OrderListToolbar';
 import { buildOrderListQuery } from '@/features/admin/order-list-query';
@@ -29,15 +32,16 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 
   return <AdminShell>
     <p className="eyebrow">{t('customerOrders')}</p>
-    <h1>{t('orders')}</h1>
+    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('orders')}</h1>
     <OrderListToolbar />
-    <div className="admin-table">
-      {rows.length === 0 ? <p className="status-message">{t('noOrdersMatch')}</p> : rows.map((order) => (
-        <article className="status-message" key={order.id}>
-          <Link href={`/admin/orders/${order.id}`}><strong>{order.display_number}</strong></Link>
-          <span>{order.recipient_name} · {order.customer_email} · {formatMoney(order.total_minor, locale)} · {order.payment_status} · {order.fulfillment_status}</span>
-        </article>
-      ))}
-    </div>
+    {rows.length === 0 ? <p className="text-muted-foreground">{t('noOrdersMatch')}</p> : <Card><Table><TableHeader><TableRow><TableHead>{t('orders')}</TableHead><TableHead>{t('recipient')}</TableHead><TableHead>{t('payment')}</TableHead><TableHead>{t('fulfillment')}</TableHead><TableHead className="text-end">{t('total')}</TableHead></TableRow></TableHeader><TableBody>{rows.map((order) => (
+      <TableRow key={order.id}>
+        <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/orders/${order.id}`}>{order.display_number}</Link></TableCell>
+        <TableCell><span className="block">{order.recipient_name}</span><span className="block text-sm text-muted-foreground">{order.customer_email}</span></TableCell>
+        <TableCell><Badge variant="secondary">{order.payment_status}</Badge></TableCell>
+        <TableCell><Badge>{order.fulfillment_status}</Badge></TableCell>
+        <TableCell className="text-end">{formatMoney(order.total_minor, locale)}</TableCell>
+      </TableRow>
+    ))}</TableBody></Table></Card>}
   </AdminShell>;
 }

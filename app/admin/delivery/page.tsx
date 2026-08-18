@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { AddCityForm } from '@/components/admin/AddCityForm';
 import { DeliveryRuleForm, type DeliveryRuleInitial } from '@/components/admin/DeliveryRuleForm';
@@ -18,17 +19,17 @@ export default async function AdminDeliveryPage() {
   const rows = (data ?? []) as CityRow[];
   return <AdminShell>
     <p className="eyebrow">{t('deliveryOperations')}</p>
-    <h1>{t('deliveryRules')}</h1>
+    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('deliveryRules')}</h1>
     <AddCityForm />
-    <div className="admin-table">
+    <div className="mt-6 grid gap-4">
       {rows.map((city) => {
         const rule = city.delivery_rules?.[0];
         const initial: DeliveryRuleInitial = { feeMinor: rule?.fee_minor ?? DEFAULT_FEE_MINOR, minimumOrderMinor: rule?.minimum_order_minor ?? 0, cutoffHour: rule?.cutoff_hour ?? 14, active: rule?.active ?? false };
-        return <article className="status-message" key={city.code}>
+        return <Card key={city.code}><CardContent className="flex flex-wrap items-baseline gap-x-6 gap-y-3">
           <strong>{city.name_en}</strong>
-          <span>{city.name_ar} · {city.code} · {city.same_day ? t('sameDay') : t('nextDay')} · {rule?.active ? t('active') : t('inactive')}</span>
+          <span className="text-sm text-muted-foreground">{city.name_ar} · {city.code} · {city.same_day ? t('sameDay') : t('nextDay')} · {rule?.active ? t('active') : t('inactive')}</span>
           <DeliveryRuleForm cityCode={city.code} initial={initial} />
-        </article>;
+        </CardContent></Card>;
       })}
     </div>
   </AdminShell>;
