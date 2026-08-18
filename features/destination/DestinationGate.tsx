@@ -7,6 +7,7 @@ import { cities, countries } from './data';
 import { writeDestination } from './storage';
 import type { Destination } from './types';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { pickLocalized } from '@/features/i18n/pick';
 
 type DestinationGateProps = { onSelected?: (destination: Destination) => void };
 
@@ -32,7 +33,7 @@ export function DestinationGate({ onSelected }: DestinationGateProps) {
       {requested ? <div className="request-note" role="status">{t('requestSaved')}</div> : null}
       <form className="destination-form" onSubmit={handleSubmit}>
         <label className="field" htmlFor="country"><span>{t('country')}</span><select id="country" value={countryCode} onChange={(event) => setCountryCode(event.target.value)}>{countries.map((country) => <option key={country.code} value={country.code}>{country.name}</option>)}</select></label>
-        <label className="field" htmlFor="city"><span>{t('deliveryCity')}</span><select id="city" value={cityCode} onChange={(event) => setCityCode(event.target.value)} required><option value="">{t('selectCity')}</option>{cities.filter((city) => city.countryCode === countryCode).map((city) => <option key={city.code} value={city.code}>{locale === 'ar' ? city.nameAr : city.name}</option>)}</select></label>
+        <label className="field" htmlFor="city"><span>{t('deliveryCity')}</span><select id="city" value={cityCode} onChange={(event) => setCityCode(event.target.value)} required><option value="">{t('selectCity')}</option>{cities.filter((city) => city.countryCode === countryCode).map((city) => <option key={city.code} value={city.code}>{pickLocalized(locale, { en: city.name, ar: city.nameAr, fr: city.nameFr })}</option>)}</select></label>
         <Button type="submit">{t('continue')} <span aria-hidden="true">↗</span></Button>
       </form>
       <button className="text-button" type="button" onClick={() => setRequested(true)}>{t('unsupported')}</button>
