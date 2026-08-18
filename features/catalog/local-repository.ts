@@ -1,15 +1,24 @@
+import { ratingBySlug } from '@/features/reviews/aggregate';
+import { demoReviews } from '@/features/reviews/demo-data';
 import { getCity } from '@/features/destination/data';
 import { filterProducts, sortProducts } from './catalog-utils';
 import { products } from './data';
 import type { CatalogRepository, CatalogQuery, DeliveryEligibilityInput } from './types';
 
+const ratings = ratingBySlug(demoReviews);
+
+function withRatings(rows: typeof products) {
+  return rows.map((product) => ({ ...product, rating: ratings.get(product.slug) ?? { average: 0, count: 0 } }));
+}
+
 export const localCatalogRepository: CatalogRepository = {
   async list(query: CatalogQuery) {
     const filtered = sortProducts(filterProducts(products, query), query.sort);
-    return { products: filtered, total: filtered.length, query };
+    return { products: withRatings(filtered), total: filtered.length, query };
   },
   async getBySlug(slug) {
-    return products.find((product) => product.slug === slug) ?? null;
+    const product = products.find((product) => product.slug === slug);
+    return product ? withRatings([product])[0] ?? null : null;
   },
   async isDeliverable({ destination, date }: DeliveryEligibilityInput) {
     const city = getCity(destination.cityCode);

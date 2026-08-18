@@ -3,6 +3,7 @@ import { applyDeliveryRule, fetchDeliveryRule } from '@/features/order/delivery-
 import { getServerSupabase } from '@/lib/supabase/server';
 import { filterProducts, sortProducts } from './catalog-utils';
 import { mapSupabaseProduct } from './row-mappers';
+import { ratingBySlug, type ReviewRatingRow } from '@/features/reviews/aggregate';
 import type { CatalogRepository, CatalogQuery, DeliveryEligibilityInput } from './types';
 import type { Product } from './types';
 
@@ -15,7 +16,16 @@ async function readProducts(): Promise<Product[]> {
   if (!supabase) return [];
   const { data, error } = await supabase.from('products').select(productSelect).eq('active', true);
   if (error) throw new Error(`Catalog query failed: ${error.message}`);
-  return ((data ?? []) as unknown as ProductRow[]).map(mapSupabaseProduct);
+  const products = ((data ?? []) as unknown as ProductRow[]).map(mapSupabaseProduct);
+  const { data: reviewRows } = await supabase.from('product_reviews')
+    .select('rating,status,products(slug)')
+    .eq('status', 'approved');
+  const ratings = ratingBySlug(((reviewRows ?? []) as Array<{ rating: number; status: string; products?: { slug?: string } | null }>).map((row): ReviewRatingRow => ({
+    product_slug: row.products?.slug ?? null,
+    rating: row.rating,
+    status: row.status,
+  })));
+  return products.map((product) => ({ ...product, rating: ratings.get(product.slug) ?? { average: 0, count: 0 } }));
 }
 
 export const supabaseCatalogRepository: CatalogRepository = {
