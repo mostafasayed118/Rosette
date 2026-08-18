@@ -21,8 +21,11 @@ const PAYMENT_KEYS: Record<string, string> = {
 
 const infoCardClass = 'rounded-2xl border bg-card p-5 shadow-sm';
 
-export default async function TrackPage({ searchParams }: { searchParams: Promise<{ number?: string; email?: string }> }) {
+export default async function TrackPage({ params: routeParams, searchParams }: { params: Promise<{ locale: string; city: string }>; searchParams: Promise<{ number?: string; email?: string }> }) {
+  const { locale: localeSegment, city } = await routeParams;
   const { locale, t } = await getServerT();
+  const trackHref = `/${localeSegment}/${city}/track`;
+  const shopHref = `/${localeSegment}/${city}/shop`;
   const params = await searchParams;
   const number = params.number?.trim();
   const email = params.email?.trim();
@@ -32,7 +35,7 @@ export default async function TrackPage({ searchParams }: { searchParams: Promis
     <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('trackOrder')}</p>
     <h1 className="mt-2 mb-4 max-w-[12ch] font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[.95] tracking-[-.02em]">{t('trackTitle')}</h1>
     <p className="max-w-[42rem] text-[1.1rem] text-muted-foreground">{t('trackLede')}</p>
-    <form className="grid max-w-[60rem] gap-6 pt-8" action="/track" method="get">
+    <form className="grid max-w-[60rem] gap-6 pt-8" action={trackHref} method="get">
       <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
         <label className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('orderNumber')}</span><Input type="text" name="number" defaultValue={number ?? ''} required /></label>
         <label className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('email')}</span><Input type="email" name="email" defaultValue={email ?? ''} required /></label>
@@ -57,6 +60,6 @@ export default async function TrackPage({ searchParams }: { searchParams: Promis
       <h2 className="font-display text-2xl">{t('timeline')}</h2>
       <div className="grid gap-3">{order.timeline.map((entry, index) => <div className={infoCardClass} key={index}><strong className="block">{t(FULFILLMENT_KEYS[entry.status] ?? entry.status)}</strong><span className="text-sm text-muted-foreground">{new Date(entry.at).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-EG')}</span></div>)}</div>
     </section> : null}
-    <p className="mt-6"><Link className="text-primary underline underline-offset-4" href="/shop">{t('keepBrowsing')}</Link></p>
+    <p className="mt-6"><Link className="text-primary underline underline-offset-4" href={shopHref}>{t('keepBrowsing')}</Link></p>
   </main>;
 }

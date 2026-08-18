@@ -9,9 +9,10 @@ import { getServerT } from '@/features/i18n/server';
 import { formatMoney } from '@/features/money';
 import { fulfillmentLabel, fulfillmentBadgeVariant } from '@/features/admin/status-labels';
 
-export default async function AccountOrdersPage() {
+export default async function AccountOrdersPage({ params }: { params: Promise<{ locale: string; city: string }> }) {
+  const { locale: routeLocale, city } = await params;
   const customer = await getCurrentCustomer();
-  if (!customer) redirect('/account/login');
+  if (!customer) redirect(`/${routeLocale}/${city}/account/login`);
   const { t, locale } = await getServerT();
   const supabase = await getServerSupabase();
   const orders = supabase ? await listCustomerOrders(supabase, customer.id) : [];
@@ -21,7 +22,7 @@ export default async function AccountOrdersPage() {
       {orders.map((order) => (
         <li key={order.id} className="flex items-center justify-between gap-4 rounded-2xl border bg-card p-4 shadow-sm max-md:flex-col max-md:items-start">
           <div>
-            <Link className="font-bold text-primary underline-offset-4 hover:underline" href={`/account/orders/${order.id}`}>{order.displayNumber}</Link>
+            <Link className="font-bold text-primary underline-offset-4 hover:underline" href={`/${routeLocale}/${city}/account/orders/${order.id}`}>{order.displayNumber}</Link>
             <p className="text-sm text-muted-foreground">{new Date(order.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</p>
           </div>
           <div className="flex items-center gap-3">

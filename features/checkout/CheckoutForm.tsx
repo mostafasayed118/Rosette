@@ -7,7 +7,6 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusMessage } from '@/components/ui/status-message';
-import { readDestination } from '@/features/destination/storage';
 import { defaultDeliveryDate, minDeliveryDate } from '@/features/delivery/dates';
 import { calculateCartTotals } from '@/features/cart/pricing';
 import { useCart } from '@/features/cart/CartProvider';
@@ -15,6 +14,7 @@ import { useDeliveryFee } from '@/features/delivery/useDeliveryFee';
 import { usePromoCode } from '@/features/promo/usePromoCode';
 import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { useStorePath } from '@/features/i18n/use-store-path';
 import { formatMoney } from '@/features/money';
 import { createLocalOrder } from '@/features/order/local-repository';
 import { SignedInNotice } from './SignedInNotice';
@@ -25,11 +25,11 @@ const initialInput: CheckoutInput = { recipientName: '', recipientPhone: '', add
 
 type OrderApiResponse = { orderId?: string; checkoutUrl?: string | null; error?: string };
 
-export function CheckoutForm() {
+export function CheckoutForm({ cityCode }: { cityCode: string }) {
   const { t, locale } = useI18n();
   const router = useRouter();
+  const { href } = useStorePath();
   const { cart, ready, clearCart } = useCart();
-  const cityCode = readDestination()?.cityCode ?? 'alexandria';
   const { feeMinor } = useDeliveryFee(cityCode);
   const deliveryFee = feeMinor ?? estimateDeliveryFeeMinor(cityCode) ?? 1500;
   const liveTotal = calculateCartTotals(cart.lines, cart.lines.length ? deliveryFee : 0).total;
@@ -57,7 +57,7 @@ export function CheckoutForm() {
     }
     setSubmitting(true);
     setMessage('');
-    const destination = readDestination() ?? { countryCode: 'EG', cityCode: 'alexandria' };
+    const destination = { countryCode: 'EG', cityCode };
 
     try {
       if (input.paymentMethod === 'paymob') {
@@ -82,7 +82,7 @@ export function CheckoutForm() {
         return;
       }
       clearCart();
-      router.push(`/orders/${result.value.id}`);
+      router.push(href(`/orders/${result.value.id}`));
     } catch {
       setMessage(t('temporaryError'));
     } finally {

@@ -5,9 +5,10 @@ import { signOutCustomer } from '@/features/account/actions';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getServerT } from '@/features/i18n/server';
 
-export default async function AccountProfilePage() {
+export default async function AccountProfilePage({ params }: { params: Promise<{ locale: string; city: string }> }) {
+  const { locale: routeLocale, city } = await params;
   const customer = await getCurrentCustomer();
-  if (!customer) redirect('/account/login');
+  if (!customer) redirect(`/${routeLocale}/${city}/account/login`);
   const { t } = await getServerT();
   return (
     <section className="grid max-w-[34rem] gap-5 rounded-2xl border bg-card p-8 shadow-sm">

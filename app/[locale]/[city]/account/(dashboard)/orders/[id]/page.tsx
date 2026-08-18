@@ -9,11 +9,11 @@ import { getServerT } from '@/features/i18n/server';
 import { formatMoney } from '@/features/money';
 import { fulfillmentLabel, paymentLabel, fulfillmentBadgeVariant, paymentBadgeVariant } from '@/features/admin/status-labels';
 
-export default async function AccountOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AccountOrderDetailPage({ params }: { params: Promise<{ locale: string; city: string; id: string }> }) {
+  const { locale: routeLocale, city, id } = await params;
   const customer = await getCurrentCustomer();
-  if (!customer) redirect('/account/login');
+  if (!customer) redirect(`/${routeLocale}/${city}/account/login`);
   const { t, locale } = await getServerT();
-  const { id } = await params;
   const supabase = await getServerSupabase();
   const order = supabase ? await getCustomerOrder(supabase, customer.id, id) : null;
   if (!order) notFound();
@@ -21,7 +21,7 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
   return (
     <div className="grid gap-6">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[.16em] text-sage"><Link className="underline underline-offset-4" href="/account/orders">{t('myOrders')}</Link> · {order.displayNumber}</p>
+        <p className="text-xs font-bold uppercase tracking-[.16em] text-sage"><Link className="underline underline-offset-4" href={`/${routeLocale}/${city}/account/orders`}>{t('myOrders')}</Link> · {order.displayNumber}</p>
         <div className="mt-2 flex items-center gap-3">
           <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{order.displayNumber}</h1>
           <Badge variant={fulfillmentBadgeVariant(order.fulfillmentStatus)}>{fulfillmentLabel(order.fulfillmentStatus, t)}</Badge>
@@ -55,7 +55,7 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
         </CardContent></Card>
       ) : null}
 
-      <p className="text-xs text-muted-foreground"><Link className="text-primary underline underline-offset-4" href="/account/orders">{t('backToAccount')}</Link></p>
+      <p className="text-xs text-muted-foreground"><Link className="text-primary underline underline-offset-4" href={`/${routeLocale}/${city}/account/orders`}>{t('backToAccount')}</Link></p>
     </div>
   );
 }

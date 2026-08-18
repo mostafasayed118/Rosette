@@ -18,9 +18,13 @@ describe('RootLayout html attributes', () => {
     expect(resolveHtmlAttributes(undefined, 'dark')).toEqual({ lang: 'en', dir: 'ltr', themeClass: ' dark' });
   });
 
-  it('ignores unknown cookie values', () => {
-    expect(resolveHtmlAttributes('fr', 'blue').lang).toBe('en');
-    expect(resolveHtmlAttributes('fr', 'blue').dir).toBe('ltr');
-    expect(resolveHtmlAttributes('fr', 'blue').themeClass).toBe('');
+  it('maps fr to fr/ltr', () => {
+    expect(resolveHtmlAttributes('fr', undefined)).toEqual({ lang: 'fr', dir: 'ltr', themeClass: '' });
+  });
+
+  it('ignores unknown locale values', () => {
+    expect(resolveHtmlAttributes('xx', 'blue').lang).toBe('en');
+    expect(resolveHtmlAttributes('xx', 'blue').dir).toBe('ltr');
+    expect(resolveHtmlAttributes('xx', 'blue').themeClass).toBe('');
   });
 });

@@ -1,12 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { resolveLocaleRouting } from '@/lib/locale-routing';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const decision = resolveLocaleRouting(request.nextUrl.pathname);
   if (decision.type === 'redirect') {
     return NextResponse.redirect(new URL(decision.to, request.url));
   }
-  const response = NextResponse.next();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-locale', decision.locale);
+  const segments = request.nextUrl.pathname.split('/').filter(Boolean);
+  const city = segments[1];
+  if (city) requestHeaders.set('x-city', city);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.cookies.set('rosette.locale', decision.locale, { path: '/', sameSite: 'lax' });
   return response;
 }

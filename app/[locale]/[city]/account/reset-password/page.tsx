@@ -7,9 +7,11 @@ import { Field } from '@/components/ui/field';
 import { StatusMessage } from '@/components/ui/status-message';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { useStorePath } from '@/features/i18n/use-store-path';
 
 export default function ResetPasswordPage() {
   const { t } = useI18n();
+  const { href } = useStorePath();
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,7 +31,7 @@ export default function ResetPasswordPage() {
       setSubmitting(false);
       return;
     }
-    router.push('/account/login');
+    router.push(href('/account/login'));
     router.refresh();
   }
 

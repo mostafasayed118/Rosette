@@ -2,19 +2,20 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cities, countries } from './data';
-import { writeDestination } from './storage';
-import type { Destination } from './types';
+import type { Locale } from '@/features/i18n/types';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { pickLocalized } from '@/features/i18n/pick';
 
-type DestinationGateProps = { onSelected?: (destination: Destination) => void };
+type DestinationGateProps = { locale: Locale };
 
 const selectClass = 'h-11 w-full rounded-[10px] border border-border bg-background px-3.5 text-foreground';
 
-export function DestinationGate({ onSelected }: DestinationGateProps) {
-  const { locale, t } = useI18n();
+export function DestinationGate({ locale }: DestinationGateProps) {
+  const router = useRouter();
+  const { t } = useI18n();
   const [countryCode, setCountryCode] = useState('EG');
   const [cityCode, setCityCode] = useState('');
   const [requested, setRequested] = useState(false);
@@ -22,9 +23,7 @@ export function DestinationGate({ onSelected }: DestinationGateProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!cityCode) return;
-    const destination = { countryCode, cityCode };
-    writeDestination(destination);
-    onSelected?.(destination);
+    router.push(`/${locale}/${cityCode}`);
   }
 
   return (

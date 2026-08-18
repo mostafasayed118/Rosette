@@ -8,9 +8,11 @@ import { Field } from '@/components/ui/field';
 import { StatusMessage } from '@/components/ui/status-message';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { useStorePath } from '@/features/i18n/use-store-path';
 
 export default function AccountLoginPage() {
   const { t } = useI18n();
+  const { href } = useStorePath();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +32,7 @@ export default function AccountLoginPage() {
       setSubmitting(false);
       return;
     }
-    router.push('/account');
+    router.push(href('/account'));
     router.refresh();
   }
 
@@ -50,9 +52,9 @@ export default function AccountLoginPage() {
           </form>
         )}
         <p className="grid gap-1 text-xs text-muted-foreground">
-          <Link className="text-primary underline underline-offset-4" href="/account/signup">{t('signUp')}</Link>
-          <Link className="text-primary underline underline-offset-4" href="/account/forgot-password">{t('forgotPassword')}</Link>
-          <Link className="text-primary underline underline-offset-4" href="/">{t('backCollection')}</Link>
+          <Link className="text-primary underline underline-offset-4" href={href('/account/signup')}>{t('signUp')}</Link>
+          <Link className="text-primary underline underline-offset-4" href={href('/account/forgot-password')}>{t('forgotPassword')}</Link>
+          <Link className="text-primary underline underline-offset-4" href={href('/')}>{t('backCollection')}</Link>
         </p>
       </section>
     </main>
