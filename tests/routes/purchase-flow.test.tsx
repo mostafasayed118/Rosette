@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { localCatalogRepository } from '@/features/catalog/repository';
+import { localCatalogRepository } from '@/features/catalog/local-repository';
 import { addLine } from '@/features/cart/cart-utils';
-import { createLocalOrder } from '@/features/order/repository';
+import { createLocalOrder } from '@/features/order/local-repository';
 import type { Cart } from '@/features/cart/types';
 
 describe('local purchase flow', () => {

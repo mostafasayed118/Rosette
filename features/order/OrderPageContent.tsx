@@ -7,7 +7,7 @@ import { StatusMessage } from '@/components/ui/status-message';
 import { CartSummary, formatMoney } from '@/features/cart/CartSummary';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { pickLocalized } from '@/features/i18n/pick';
-import { getLocalOrder } from './repository';
+import { getLocalOrder } from './local-repository';
 import { OrderTimeline } from './OrderTimeline';
 import type { Order } from './types';
 

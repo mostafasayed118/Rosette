@@ -16,7 +16,7 @@ import { usePromoCode } from '@/features/promo/usePromoCode';
 import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { formatMoney } from '@/features/money';
-import { createLocalOrder } from '@/features/order/repository';
+import { createLocalOrder } from '@/features/order/local-repository';
 import { validateCheckout } from './validation';
 import type { CheckoutErrors, CheckoutInput } from './types';
 
