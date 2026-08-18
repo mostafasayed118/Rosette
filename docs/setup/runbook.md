@@ -34,7 +34,7 @@ Expected time: 1–2 hours the first time, mostly waiting on account approvals.
 git clone https://github.com/mostafasayed118/Rosette.git
 cd Rosette
 npm install
-npm test        # 53 tests should pass
+npm test        # 301 tests should pass
 npm run lint    # tsc --noEmit, must be clean
 npm run build   # production build must succeed
 npm run dev
@@ -345,7 +345,7 @@ The repo ships `fly.toml` with the non-secret env (`SITE_URL`,
 
 | Symptom | Likely cause / fix |
 | --- | --- |
-| Shop still shows the 8 mock products | `NEXT_PUBLIC_*` vars missing → restart dev server |
+| Shop still shows the 16 mock products | `NEXT_PUBLIC_*` vars missing → restart dev server |
 | Checkout errors `Checkout is temporarily unavailable` | Supabase reachability; check service-role key; city code in the cart not in `cities` → re-run seed |
 | Paymob page opens but no callback arrives | Local origin — use the tunnel (Section 4.2); check `accept.paymob.com/v1/intention` request succeeded |
 | Callback returns 401 / order stays pending | `PAYMOB_HMAC_SECRET` mismatch or amount mismatch — compare fields, restart |

@@ -10,9 +10,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('DestinationGate', () => {
-  it('navigates to the localized city URL on selection', () => {
+  it('navigates to the localized city URL on selection', async () => {
     renderWithProviders(<DestinationGate locale="en" />);
-    fireEvent.change(screen.getByLabelText(/city/i), { target: { value: 'alexandria' } });
+    fireEvent.click(screen.getByLabelText(/city/i));
+    fireEvent.click(await screen.findByRole('option', { name: /alexandria/i }));
     fireEvent.click(screen.getByRole('button', { name: /continue/i }));
     expect(push).toHaveBeenCalledWith('/en/alexandria');
   });
