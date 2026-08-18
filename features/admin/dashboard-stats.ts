@@ -4,7 +4,7 @@ export const LOW_STOCK_THRESHOLD = 3;
 const LOW_STOCK_LIMIT = 10;
 
 export type OrderRow = { payment_status: PaymentStatus; fulfillment_status: FulfillmentStatus; total_minor: number; created_at: string };
-export type InventoryRow = { variant_name_en: string; quantity: number; reserved_quantity: number };
+export type InventoryRow = { variant_id: string; variant_name_en: string; quantity: number; reserved_quantity: number };
 
 const PIPELINE_STATUSES = ['confirmed', 'preparing', 'ready_for_delivery', 'out_for_delivery', 'delivered'] as const;
 export type PipelineStatus = (typeof PIPELINE_STATUSES)[number];
@@ -14,7 +14,7 @@ export type DashboardStats = {
   revenueTodayMinor: number;
   revenueAllTimeMinor: number;
   pipeline: Record<PipelineStatus, number>;
-  lowStock: Array<{ name: string; available: number }>;
+  lowStock: Array<{ variant_id: string; name: string; available: number }>;
 };
 
 function isPaid(order: OrderRow): boolean {
@@ -40,7 +40,7 @@ export function computeDashboardStats(orders: OrderRow[], inventory: InventoryRo
     PIPELINE_STATUSES.map((status: PipelineStatus) => [status, paid.filter((orderRow) => orderRow.fulfillment_status === status).length]),
   ) as Record<PipelineStatus, number>;
   const lowStock = inventory
-    .map((row) => ({ name: row.variant_name_en, available: row.quantity - row.reserved_quantity }))
+    .map((row) => ({ variant_id: row.variant_id, name: row.variant_name_en, available: row.quantity - row.reserved_quantity }))
     .filter((row) => row.available <= LOW_STOCK_THRESHOLD)
     .sort((a, b) => a.available - b.available)
     .slice(0, LOW_STOCK_LIMIT);

@@ -9,7 +9,7 @@ import { getServerT } from '@/features/i18n/server';
 
 const egp = (minor: number) => `${(minor / 100).toFixed(2)} EGP`;
 
-type InventoryRowWithVariant = { quantity: number; reserved_quantity: number; product_variants?: Array<{ name_en: string }> | null };
+type InventoryRowWithVariant = { variant_id: string; quantity: number; reserved_quantity: number; product_variants?: { name_en: string } | null };
 
 export default async function AdminPage() {
   const admin = await getCurrentAdmin();
@@ -17,12 +17,14 @@ export default async function AdminPage() {
   const { t } = await getServerT();
   const [ordersResult, inventoryResult] = await Promise.all([
     getAdminSupabase().from('orders').select('payment_status,fulfillment_status,total_minor,created_at'),
-    getAdminSupabase().from('inventory').select('quantity,reserved_quantity,product_variants(name_en)'),
+    getAdminSupabase().from('inventory').select('variant_id,quantity,reserved_quantity,product_variants(name_en)'),
   ]);
   const stats = computeDashboardStats(
     (ordersResult.data ?? []) as OrderRow[],
-    ((inventoryResult.data ?? []) as InventoryRowWithVariant[]).map((row): InventoryRow => ({
-      variant_name_en: row.product_variants?.[0]?.name_en ?? t('unknownVariant'),
+    // PostgREST embeds the PK-backed to-one `product_variants` as an object, not an array.
+    ((inventoryResult.data ?? []) as unknown as InventoryRowWithVariant[]).map((row): InventoryRow => ({
+      variant_id: row.variant_id,
+      variant_name_en: row.product_variants?.name_en ?? t('unknownVariant'),
       quantity: row.quantity,
       reserved_quantity: row.reserved_quantity,
     })),
@@ -42,7 +44,7 @@ export default async function AdminPage() {
       {pipelineEntries.map(([status, count]) => <article className="status-message" key={status}><Link href={`/admin/orders?fulfillment=${status}`}><strong>{status}</strong></Link><span>{count}</span></article>)}
     </div>
     <h2>{t('lowStockTitle', { count: LOW_STOCK_THRESHOLD })}</h2>
-    {stats.lowStock.length === 0 ? <p>{t('nothingLow')}</p> : <div className="admin-table">{stats.lowStock.map((row) => <article className="status-message" key={row.name}><strong>{row.name}</strong><span>{row.available} {t('available')}</span></article>)}</div>}
+    {stats.lowStock.length === 0 ? <p>{t('nothingLow')}</p> : <div className="admin-table">{stats.lowStock.map((row) => <article className="status-message" key={row.variant_id}><strong>{row.name}</strong><span>{row.available} {t('available')}</span></article>)}</div>}
     <p><Link className="button" href="/admin/inventory">{t('openInventory')}</Link></p>
     <nav className="admin-links"><Link className="button" href="/admin/orders">{t('orders')}</Link><Link className="button" href="/admin/products">{t('products')}</Link><Link className="button" href="/admin/inventory">{t('inventory')}</Link><Link className="button" href="/admin/delivery">{t('deliveryRules')}</Link></nav>
     <form action={signOut}><Button type="submit">{t('signOut')}</Button></form>

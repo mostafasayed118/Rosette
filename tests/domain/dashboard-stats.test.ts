@@ -60,21 +60,31 @@ describe('computeDashboardStats', () => {
     expect(stats.pipeline).toEqual({ confirmed: 1, preparing: 1, ready_for_delivery: 1, out_for_delivery: 1, delivered: 1 });
   });
 
-  it('lists low stock with available ≤ threshold and carries names', () => {
+  it('lists low stock with available ≤ threshold, carrying unique ids and names', () => {
     const inventory: InventoryRow[] = [
-      { variant_name_en: 'Classic', quantity: 5, reserved_quantity: 3 },
-      { variant_name_en: 'Deluxe', quantity: 10, reserved_quantity: 0 },
-      { variant_name_en: 'Bare', quantity: 0, reserved_quantity: 0 },
+      { variant_id: 'v1', variant_name_en: 'Classic', quantity: 5, reserved_quantity: 3 },
+      { variant_id: 'v2', variant_name_en: 'Deluxe', quantity: 10, reserved_quantity: 0 },
+      { variant_id: 'v3', variant_name_en: 'Bare', quantity: 0, reserved_quantity: 0 },
     ];
     const stats = computeDashboardStats([], inventory, today);
     expect(stats.lowStock).toEqual([
-      { name: 'Bare', available: 0 },
-      { name: 'Classic', available: 2 },
+      { variant_id: 'v3', name: 'Bare', available: 0 },
+      { variant_id: 'v1', name: 'Classic', available: 2 },
     ]);
   });
 
+  it('keeps ids unique even when different variants share the same name', () => {
+    const inventory: InventoryRow[] = [
+      { variant_id: 'a', variant_name_en: 'Large', quantity: 1, reserved_quantity: 0 },
+      { variant_id: 'b', variant_name_en: 'Large', quantity: 2, reserved_quantity: 0 },
+      { variant_id: 'c', variant_name_en: 'Large', quantity: 3, reserved_quantity: 0 },
+    ];
+    const stats = computeDashboardStats([], inventory, today);
+    expect(stats.lowStock.map((row) => row.variant_id)).toEqual(['a', 'b', 'c']);
+  });
+
   it('sorts low stock ascending and caps the list at 10', () => {
-    const inventory: InventoryRow[] = Array.from({ length: 15 }, (_, i) => ({ variant_name_en: `V${i}`, quantity: i % 5, reserved_quantity: 0 }));
+    const inventory: InventoryRow[] = Array.from({ length: 15 }, (_, i) => ({ variant_id: `v${i}`, variant_name_en: `V${i}`, quantity: i % 5, reserved_quantity: 0 }));
     const stats = computeDashboardStats([], inventory, today);
     expect(stats.lowStock).toHaveLength(10);
     const available = stats.lowStock.map((row) => row.available);
