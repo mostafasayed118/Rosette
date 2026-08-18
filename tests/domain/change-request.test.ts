@@ -56,6 +56,9 @@ describe('parseChangeRequestDiff', () => {
   it('rejects an item entry with nothing to change', () => {
     expect(parseChangeRequestDiff({ items: [{ id: 'i1' }] })).toEqual({ ok: false, error: 'invalid' });
   });
+  it('allows an empty gift message to clear it', () => {
+    expect(parseChangeRequestDiff({ items: [{ id: 'i1', gift_message: '' }] })).toEqual({ ok: true, diff: { items: [{ id: 'i1', gift_message: '' }] } });
+  });
   it('rejects unknown keys (city is not changeable)', () => {
     expect(parseChangeRequestDiff({ delivery_city_code: 'cai' })).toEqual({ ok: false, error: 'invalid' });
   });

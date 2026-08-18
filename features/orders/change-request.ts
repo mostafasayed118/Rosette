@@ -64,9 +64,9 @@ export function parseChangeRequestDiff(value: unknown): { ok: true; diff: Change
         entry.quantity = raw.quantity;
       }
       if (raw.gift_message !== undefined) {
-        const message = cleanString(raw.gift_message);
-        if (message === null) return { ok: false, error: 'invalid' };
-        entry.gift_message = message;
+        // An empty string is a valid value: it clears the message.
+        if (typeof raw.gift_message !== 'string') return { ok: false, error: 'invalid' };
+        entry.gift_message = raw.gift_message.trim();
       }
       if (entry.quantity === undefined && entry.gift_message === undefined) return { ok: false, error: 'invalid' };
       items.push(entry);
