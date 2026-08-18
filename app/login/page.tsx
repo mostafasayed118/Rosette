@@ -3,8 +3,8 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { Field } from '@/components/ui/Field';
+import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/field';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { useI18n } from '@/features/i18n/I18nProvider';
 

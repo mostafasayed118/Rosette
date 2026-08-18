@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { StatusMessage } from '@/components/ui/StatusMessage';
+import { StatusMessage } from '@/components/ui/status-message';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useDeliveryFee } from '@/features/delivery/useDeliveryFee';
 import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';

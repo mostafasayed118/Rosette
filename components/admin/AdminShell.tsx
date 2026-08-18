@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { signOut } from '@/features/auth/actions';
 import { getServerT } from '@/features/i18n/server';
 

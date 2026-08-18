@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { Field } from '@/components/ui/Field';
+import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/field';
 import { CATEGORIES, OCCASIONS, type SaveProductInput } from '@/features/admin/catalog-validation';
 import { useI18n } from '@/features/i18n/I18nProvider';
 

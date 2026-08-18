@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { StatusMessage } from '@/components/ui/StatusMessage';
+import { StatusMessage } from '@/components/ui/status-message';
 import { CartSummary, formatMoney } from '@/features/cart/CartSummary';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { pickLocalized } from '@/features/i18n/pick';

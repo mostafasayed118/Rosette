@@ -2,8 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { Field } from '@/components/ui/Field';
+import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/field';
 import { readDestination } from '@/features/destination/storage';
 import { calculateCartTotals } from '@/features/cart/pricing';
 import { useCart } from '@/features/cart/CartProvider';

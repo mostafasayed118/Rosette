@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Field } from '@/components/ui/Field';
+import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/field';
 import { ProductVisual } from '@/components/ui/ProductVisual';
 import { useCart } from '@/features/cart/CartProvider';
 import { useI18n } from '@/features/i18n/I18nProvider';

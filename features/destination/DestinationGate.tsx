@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import { cities, countries } from './data';
 import { writeDestination } from './storage';
 import type { Destination } from './types';
