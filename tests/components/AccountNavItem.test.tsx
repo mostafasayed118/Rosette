@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from './test-utils';
+import { renderWithProviders } from '../test-utils';
 
 vi.mock('@/lib/supabase/browser', () => ({
   getBrowserSupabase: vi.fn(),
