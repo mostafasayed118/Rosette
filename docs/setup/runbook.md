@@ -58,10 +58,13 @@ in `.env.local`.
    - **anon public key** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - **service_role secret** → `SUPABASE_SERVICE_ROLE_KEY` (server-only)
 
-### 2.2 Apply the migration
+### 2.2 Apply the migrations
 
-Open the **SQL Editor** in the dashboard and paste the full content of
-`supabase/migrations/001_commerce.sql`, then **Run**. This creates:
+Open the **SQL Editor** in the dashboard and, in numeric order, paste and
+**Run** the full content of each file under `supabase/migrations/`
+(`001_commerce.sql`, `002_promos.sql`, `002_profiles_policy.sql`,
+`003_french_localization.sql`, `004_product_images.sql`,
+`005_customer_accounts.sql`). `001` creates:
 
 - `profiles`, `categories`, `products`, `product_variants`, `cities`,
   `delivery_rules`, `inventory`, `orders`, `order_items`,
@@ -115,6 +118,18 @@ Auth); after creating the user above, sign in there to reach the admin area.
 > Note: `profiles` uses row-level security. Migration `002` adds a
 > `users can read own profile` SELECT policy so the login flow can read the
 > role — do not remove it, or admin pages will redirect back to `/login`.
+
+### 2.5 Customer accounts
+
+1. **Authentication → Providers → Email**: keep Email enabled and turn
+   **off** "Confirm email" so sign-ups are instant — the `handle_new_user`
+   trigger from migration `005` creates the `profiles` row automatically.
+2. **Authentication → SMTP**: for password-reset emails to arrive, configure
+   the SMTP sender with your Gmail app password (Section 3). Until SMTP is
+   set, "Forgot password" requests succeed but no email is delivered.
+3. Shoppers use `/account` (sign up, sign in, profile, order history).
+   Admins still use `/login`; migration `005` also blocks customers from
+   self-promoting their own role to `admin`.
 
 ---
 
