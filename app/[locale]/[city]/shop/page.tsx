@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { CatalogGrid } from '@/features/catalog/CatalogGrid';
@@ -5,10 +6,24 @@ import { LocalizedPageHeading } from '@/features/i18n/LocalizedPageHeading';
 import { CatalogToolbar } from '@/features/catalog/CatalogToolbar';
 import { parseCatalogQuery } from '@/features/catalog/catalog-utils';
 import { getCatalogRepository } from '@/features/catalog/provider';
+import { buildLocalizedPageMetadata } from '@/features/seo/page-metadata';
+import { getServerT } from '@/features/i18n/server';
+import { getOptionalServerEnv } from '@/lib/server-env';
+import { LOCALES } from '@/lib/locale-routing';
+import type { Locale } from '@/features/i18n/types';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+type ShopPageParams = { params: Promise<{ locale: string; city: string }>; searchParams: SearchParams };
 
-export default async function ShopPage({ params, searchParams }: { params: Promise<{ locale: string; city: string }>; searchParams: SearchParams }) {
+export async function generateMetadata({ params }: ShopPageParams): Promise<Metadata> {
+  const { locale, city } = await params;
+  const { t } = await getServerT();
+  const base = (getOptionalServerEnv('SITE_URL') ?? 'https://rosette.fly.dev').replace(/\/$/, '');
+  const resolvedLocale: Locale = (LOCALES as string[]).includes(locale) ? (locale as Locale) : 'en';
+  return buildLocalizedPageMetadata({ locale: resolvedLocale, city, path: '/shop', base, title: t('collectionTitle'), description: t('collectionLede') });
+}
+
+export default async function ShopPage({ params, searchParams }: ShopPageParams) {
   const { locale } = await params;
   const raw = await searchParams;
   const queryParams = new URLSearchParams();

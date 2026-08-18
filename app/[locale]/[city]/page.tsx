@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
@@ -6,6 +7,20 @@ import { ProductVisual } from '@/components/ui/ProductVisual';
 import { getCity } from '@/features/destination/data';
 import { getServerT } from '@/features/i18n/server';
 import { pickLocalized } from '@/features/i18n/pick';
+import { buildLocalizedPageMetadata } from '@/features/seo/page-metadata';
+import { getOptionalServerEnv } from '@/lib/server-env';
+import { LOCALES } from '@/lib/locale-routing';
+import type { Locale } from '@/features/i18n/types';
+
+type HomePageParams = { params: Promise<{ locale: string; city: string }> };
+
+export async function generateMetadata({ params }: HomePageParams): Promise<Metadata> {
+  const { locale, city } = await params;
+  const { t } = await getServerT();
+  const base = (getOptionalServerEnv('SITE_URL') ?? 'https://rosette.fly.dev').replace(/\/$/, '');
+  const resolvedLocale: Locale = (LOCALES as string[]).includes(locale) ? (locale as Locale) : 'en';
+  return buildLocalizedPageMetadata({ locale: resolvedLocale, city, path: '', base, title: t('homeTitle'), description: t('homeLede') });
+}
 
 const HERO_IMAGE_URL = 'https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?w=1400&q=80&auto=format&fit=crop';
 const MINI_IMAGES = [
@@ -14,7 +29,7 @@ const MINI_IMAGES = [
   'https://vwjqtwxqangblapnmtbm.supabase.co/storage/v1/object/public/product-images/quiet-orchid.jpg',
 ];
 
-export default async function HomePage({ params }: { params: Promise<{ locale: string; city: string }> }) {
+export default async function HomePage({ params }: HomePageParams) {
   const { city: cityCode } = await params;
   const { locale, t } = await getServerT();
   const city = getCity(cityCode);
