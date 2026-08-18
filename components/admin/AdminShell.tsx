@@ -8,6 +8,7 @@ import { getServerT } from '@/features/i18n/server';
 const NAV_ITEMS = [
   { href: '/admin', key: 'adminDashboard' },
   { href: '/admin/orders', key: 'orders' },
+  { href: '/admin/cancel-requests', key: 'cancelRequests' },
   { href: '/admin/products', key: 'products' },
   { href: '/admin/inventory', key: 'inventory' },
   { href: '/admin/delivery', key: 'deliveryRules' },
