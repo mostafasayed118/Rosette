@@ -15,6 +15,7 @@ describe('Supabase catalog mapping', () => {
       occasions: ['birthday'],
       price_minor: 12000,
       tone: '#bc6d63',
+      image_url: 'https://example.com/rose.jpg',
       delivery: 'Same-day',
       created_at: '2026-01-02',
       add_ons: [{ id: 'note', name_en: 'Handwritten note', name_ar: 'بطاقة', price_minor: 500 }],
@@ -29,6 +30,7 @@ describe('Supabase catalog mapping', () => {
       nameFr: 'L’Heure des Roses',
       descriptionFr: 'Des roses de jardin douces',
       price: 12000,
+      imageUrl: 'https://example.com/rose.jpg',
       inventory: 12,
       variants: [
         { id: 'classic', name: 'Classic', priceDelta: 0 },

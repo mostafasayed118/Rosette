@@ -12,6 +12,7 @@ type SupabaseProductRow = {
   occasions: string[];
   price_minor: number;
   tone: string;
+  image_url?: string | null;
   delivery: string;
   created_at: string;
   add_ons?: Array<{ id: string; name_en: string; name_ar?: string; name_fr?: string; price_minor: number }>;
@@ -44,6 +45,7 @@ export function mapSupabaseProduct(row: SupabaseProductRow): Product {
     occasions: row.occasions,
     price: row.price_minor,
     tone: row.tone,
+    imageUrl: row.image_url ?? null,
     inventory: available,
     delivery: row.delivery,
     createdAt: row.created_at,
