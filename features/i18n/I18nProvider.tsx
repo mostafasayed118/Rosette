@@ -10,8 +10,14 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('en');
-  const setLocale = (next: Locale) => { setLocaleState(next); if (typeof window !== 'undefined') window.localStorage.setItem(STORAGE_KEY, next); };
-  useEffect(() => { const saved = window.localStorage.getItem(STORAGE_KEY); if (saved === 'ar' || saved === 'en') setLocaleState(saved); }, []);
+  const setLocale = (next: Locale) => {
+    setLocaleState(next);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(STORAGE_KEY, next);
+      document.cookie = `rosette.locale=${next}; path=/; max-age=31536000; samesite=lax`;
+    }
+  };
+  useEffect(() => { const saved = window.localStorage.getItem(STORAGE_KEY); if (saved === 'ar' || saved === 'en' || saved === 'fr') setLocaleState(saved); }, []);
   useEffect(() => { document.documentElement.lang = locale; document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr'; }, [locale]);
   const value = useMemo<I18nContextValue>(() => ({ locale, setLocale, t: (key, values) => { let text = messages[locale][key] ?? messages.en[key] ?? key; for (const [name, value] of Object.entries(values ?? {})) text = text.replaceAll(`{${name}}`, String(value)); return text; } }), [locale]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
