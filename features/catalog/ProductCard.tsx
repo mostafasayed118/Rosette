@@ -28,7 +28,10 @@ export function ProductCard({ product }: { product: Product }) {
               <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t(categoryMessageKeys[product.category] ?? 'category')}</p>
               <h3 className="mt-1 font-display text-2xl leading-tight">{name}</h3>
             </div>
-            <strong className="whitespace-nowrap text-sm font-bold text-primary">{t('from')} {formatMoney(product.price, locale)}</strong>
+            <div className="text-end">
+              <strong className="whitespace-nowrap text-sm font-bold text-primary">{t('from')} {formatMoney(product.price, locale)}</strong>
+              {product.rating && product.rating.count > 0 ? <p className="mt-1 text-xs text-muted-foreground">★ {product.rating.average.toFixed(1)} · {product.rating.count}</p> : null}
+            </div>
           </div>
           <p className="mt-2.5 mb-3 text-sm text-muted-foreground">{description}</p>
           <p className="text-xs text-sage">{delivery}</p>
