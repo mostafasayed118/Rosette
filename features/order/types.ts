@@ -9,7 +9,7 @@ export type OrderError = 'payment_failed' | 'empty_cart';
 export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 export type CheckoutOrderInput = Omit<CreateOrderInput, 'recipient' | 'sender' | 'delivery' | 'paymentMethod'> & { checkout: CheckoutInput };
 
-export type CreatePendingOrderInput = { cart: Cart; destination: Destination; checkout: CheckoutInput; locale: 'en' | 'ar' };
+export type CreatePendingOrderInput = { cart: Cart; destination: Destination; checkout: CheckoutInput; locale: 'en' | 'ar' | 'fr' };
 export type PendingOrder = { id: string; displayNumber: string; totalMinor: number; paymentStatus: 'pending'; fulfillmentStatus: 'confirmed'; publicToken?: string; checkoutUrl?: string };
 export type OrderVerification = { phone?: string; email?: string; publicToken?: string };
 export type OrderCreateError = 'empty_cart' | 'unavailable' | 'invalid';

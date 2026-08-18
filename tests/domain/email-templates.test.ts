@@ -14,4 +14,13 @@ describe('order email templates', () => {
     expect(email.html).toContain('dir="ltr"');
     expect(email.subject).toContain('Payment');
   });
+
+  it('renders French as LTR with a French subject and body', () => {
+    const email = renderOrderEmail({ locale: 'fr', type: 'payment_confirmed', orderNumber: 'RO-1', totalMinor: 12500, orderUrl: 'https://example.com/orders/1' });
+    expect(email.html).toContain('dir="ltr"');
+    expect(email.html).toContain('lang="fr"');
+    expect(email.subject).toBe('Paiement confirmé');
+    expect(email.html).toContain('Mise à jour de votre commande');
+    expect(email.html).toContain('Votre numéro de commande est RO-1.');
+  });
 });

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     const body = await request.json() as { cart?: unknown; destination?: unknown; checkout?: unknown; locale?: unknown };
     const validation = validateOrderRequest(body as { cart?: { lines?: unknown[] }; total?: unknown });
     if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
-    if (!body.destination || !body.checkout || (body.locale !== 'ar' && body.locale !== 'en')) return NextResponse.json({ error: 'Incomplete checkout details' }, { status: 400 });
+    if (!body.destination || !body.checkout || (body.locale !== 'ar' && body.locale !== 'en' && body.locale !== 'fr')) return NextResponse.json({ error: 'Incomplete checkout details' }, { status: 400 });
 
     const result = await getOrderRepository().createPending({ cart: body.cart as never, destination: body.destination as never, checkout: body.checkout as never, locale: body.locale });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 409 });

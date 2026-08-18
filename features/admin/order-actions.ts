@@ -6,7 +6,7 @@ import type { AdminIdentity } from './authorization';
 
 export type UpdateStatusResult = 'updated' | 'missing_order' | 'invalid_or_unauthorized' | 'failure';
 
-type OrderRow = { id: string; display_number: string; total_minor: number; public_token: string; customer_email: string | null; locale: 'en' | 'ar'; fulfillment_status: FulfillmentStatus };
+type OrderRow = { id: string; display_number: string; total_minor: number; public_token: string; customer_email: string | null; locale: 'en' | 'ar' | 'fr'; fulfillment_status: FulfillmentStatus };
 
 type OrderActionsClient = { from: (table: string) => any };
 

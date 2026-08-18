@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     await supabase.from('order_events').insert({ order_id: order.id, event_type: success ? 'payment_confirmed' : 'payment_failed', from_status: order.payment_status, to_status: success ? 'paid' : 'payment_failed', metadata: { providerReference } });
     if (success) {
       const { data: delivery } = await supabase.from('notification_deliveries').insert({ order_id: order.id, type: 'payment_confirmed', recipient: order.customer_email, locale: order.locale, status: 'pending', attempts: 1 }).select('id').single();
-      const email = await sendOrderNotification({ locale: order.locale === 'ar' ? 'ar' : 'en', type: 'payment_confirmed', orderNumber: order.display_number, totalMinor: order.total_minor, recipientEmail: order.customer_email, orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}` });
+      const email = await sendOrderNotification({ locale: order.locale === 'ar' || order.locale === 'fr' ? order.locale : 'en', type: 'payment_confirmed', orderNumber: order.display_number, totalMinor: order.total_minor, recipientEmail: order.customer_email, orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}` });
       if (delivery?.id) await supabase.from('notification_deliveries').update({ status: email.accepted ? 'sent' : 'failed', last_error: email.accepted ? null : 'Gmail delivery failed', sent_at: email.accepted ? new Date().toISOString() : null }).eq('id', delivery.id);
     }
     return NextResponse.json({ received: true });
