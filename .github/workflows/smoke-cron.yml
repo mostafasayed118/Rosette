@@ -1,0 +1,27 @@
+name: Smoke test cron endpoint
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Endpoint URL to test (defaults to the CRON_ENDPOINT secret)"
+        required: false
+        default: ""
+  schedule:
+    # Daily at 06:00 UTC.
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Smoke test the retry endpoint
+        env:
+          SMOKE_URL: ${{ github.event.inputs.url || secrets.CRON_ENDPOINT }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: bash scripts/smoke-cron.sh "${SMOKE_URL}" "${CRON_SECRET}"

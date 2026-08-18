@@ -1,0 +1,26 @@
+name: Retry stuck email notifications
+
+on:
+  schedule:
+    # Every 15 minutes — matches the 15-minute stale-`pending` threshold so a
+    # delivery that was left `pending` by a crash is retried on the next run.
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger notification retry
+        env:
+          CRON_ENDPOINT: ${{ secrets.CRON_ENDPOINT }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          curl --fail --silent --show-error --max-time 120 \
+            --request POST \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            "${CRON_ENDPOINT}"

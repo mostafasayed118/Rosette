@@ -53,18 +53,36 @@ Every send is recorded in `notification_deliveries` (`pending` → `sent`/`faile
 
 ### Retry job
 
-A cron endpoint retries deliveries stuck in `failed` (up to 3 attempts) or
-stale `pending` (older than 15 minutes):
+A cron endpoint retries deliveries stuck in `failed` (up to
+`NOTIFICATION_RETRY_MAX_ATTEMPTS`, default 3) or stale `pending` (older than
+`NOTIFICATION_RETRY_STALE_PENDING_MINUTES`, default 15 minutes). Both values
+are optional positive-integer env vars that fall back to those defaults when
+unset or invalid:
 
 ```text
 POST /api/cron/notifications
 Authorization: Bearer <CRON_SECRET>
 ```
 
-Point any scheduler (Render cron, Fly.io machines, or a GitHub Actions
-`schedule` workflow) at it. The response reports
-`{ retried, sent, failed, skipped }`. Set `CRON_SECRET` in the environment;
-`SITE_URL` must also be set so the retried email links use the public domain.
+The repo ships a GitHub Actions scheduler
+(`.github/workflows/cron-notifications.yml`) that runs every 15 minutes and
+can also be triggered manually. It needs two repository secrets, added under
+**GitHub → Settings → Secrets and variables → Actions**:
+
+- `CRON_ENDPOINT` — the full endpoint URL, e.g.
+  `https://<your-domain>/api/cron/notifications`
+- `CRON_SECRET` — the same random string set in the app environment
+
+Any other scheduler (Render cron, Fly.io machines) can hit the same endpoint
+with the same `Authorization: Bearer <CRON_SECRET>` header. The response
+reports `{ retried, sent, failed, skipped }`. Set `CRON_SECRET` and `SITE_URL`
+in the app environment; `SITE_URL` must be set so retried email links use the
+public domain.
+
+A smoke-test workflow (`.github/workflows/smoke-cron.yml`) checks the endpoint
+daily and on demand: it asserts unauthenticated requests return 401 and an
+authenticated request returns 200 with the summary. Run it manually and pass a
+staging URL via the `url` input to verify a freshly deployed environment.
 
 ## Groq chatbot
 

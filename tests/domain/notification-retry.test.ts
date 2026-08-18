@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_ATTEMPTS, retryStuckNotifications } from '@/features/notifications/notification-retry';
+import { MAX_ATTEMPTS, resolveRetryLimits, retryStuckNotifications, STALE_PENDING_MS } from '@/features/notifications/notification-retry';
 
 type DeliveryRow = { id: string; order_id: string; type: string; recipient: string; locale: string; attempts: number; status: string; created_at: string };
 type OrderRow = { display_number: string; total_minor: number; public_token: string | null };
@@ -99,5 +99,35 @@ describe('retryStuckNotifications', () => {
     const { client } = fakeClient([failedRow()], { o1: { ...order, public_token: 'tok-123' } });
     await retryStuckNotifications(client, { sendNotification: send as never, now, orderUrlBase: 'https://shop.example.com/' });
     expect(sent[0]).toBe('https://shop.example.com/orders/o1?token=tok-123');
+  });
+
+  it('retries a failed row under a custom attempt cap', async () => {
+    const row = failedRow({ attempts: MAX_ATTEMPTS });
+    const { client, calls } = fakeClient([row], { o1: order });
+    const summary = await retryStuckNotifications(client, { sendNotification: sendOk, now, maxAttempts: 5 });
+    expect(summary).toEqual({ retried: 1, sent: 1, failed: 0, skipped: 0 });
+    expect(calls.some((c) => c.table === 'notification_deliveries' && c.op === 'update')).toBe(true);
+  });
+
+  it('retries a recent pending row under a custom stale window', async () => {
+    const row = failedRow({ status: 'pending', attempts: 0, created_at: '2026-08-18T11:50:00.000Z' });
+    const { client } = fakeClient([row], { o1: order });
+    const summary = await retryStuckNotifications(client, { sendNotification: sendOk, now, stalePendingMs: 10 * 60 * 1000 });
+    expect(summary).toEqual({ retried: 1, sent: 1, failed: 0, skipped: 0 });
+  });
+});
+
+describe('resolveRetryLimits', () => {
+  it('returns defaults when the environment is empty', () => {
+    expect(resolveRetryLimits({})).toEqual({ maxAttempts: MAX_ATTEMPTS, stalePendingMs: STALE_PENDING_MS });
+  });
+
+  it('applies valid overrides', () => {
+    expect(resolveRetryLimits({ NOTIFICATION_RETRY_MAX_ATTEMPTS: '5', NOTIFICATION_RETRY_STALE_PENDING_MINUTES: '30' })).toEqual({ maxAttempts: 5, stalePendingMs: 30 * 60 * 1000 });
+  });
+
+  it('ignores non-positive or non-numeric values', () => {
+    expect(resolveRetryLimits({ NOTIFICATION_RETRY_MAX_ATTEMPTS: 'abc', NOTIFICATION_RETRY_STALE_PENDING_MINUTES: '0' })).toEqual({ maxAttempts: MAX_ATTEMPTS, stalePendingMs: STALE_PENDING_MS });
+    expect(resolveRetryLimits({ NOTIFICATION_RETRY_MAX_ATTEMPTS: '-1', NOTIFICATION_RETRY_STALE_PENDING_MINUTES: '12.5' })).toEqual({ maxAttempts: MAX_ATTEMPTS, stalePendingMs: STALE_PENDING_MS });
   });
 });

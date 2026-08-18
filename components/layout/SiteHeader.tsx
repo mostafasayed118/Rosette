@@ -7,9 +7,10 @@ import { useCart } from '@/features/cart/CartProvider';
 import { LanguageToggle } from './LanguageToggle';
 import { AccountNavItem } from './AccountNavItem';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { useStorePath } from '@/features/i18n/use-store-path';
 import { useTheme } from '@/features/theme/ThemeProvider';
 
-type SiteHeaderProps = { cityName?: string; cartCount?: number; onDestinationChange?: () => void };
+type SiteHeaderProps = { cityName?: string; cartCount?: number };
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -20,21 +21,22 @@ function ThemeToggle() {
   );
 }
 
-export function SiteHeader({ cityName, cartCount, onDestinationChange }: SiteHeaderProps) {
+export function SiteHeader({ cityName, cartCount }: SiteHeaderProps) {
   const cart = useCart();
   const { t } = useI18n();
+  const { locale, href } = useStorePath();
   const count = cartCount ?? (cart.ready ? cart.itemCount : 0);
   const bag = (
-    <Link className="flex items-center gap-2" href="/cart">{t('bag')} <span className="grid h-6 min-w-6 place-items-center rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{count}</span></Link>
+    <Link className="flex items-center gap-2" href={href('/cart')}>{t('bag')} <span className="grid h-6 min-w-6 place-items-center rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{count}</span></Link>
   );
   return (
     <header className="mx-auto flex w-[min(calc(100%-3rem),80rem)] items-center justify-between gap-4 py-5">
-      <Link className="font-display text-3xl tracking-tight text-primary" href="/">Rosette</Link>
+      <Link className="font-display text-3xl tracking-tight text-primary" href={href('/')}>Rosette</Link>
       <nav className="hidden items-center gap-5 text-sm md:flex" aria-label="Main navigation">
-        <Link href="/shop">{t('shop')}</Link>
-        <Link href="/track">{t('trackOrder')}</Link>
+        <Link href={href('/shop')}>{t('shop')}</Link>
+        <Link href={href('/track')}>{t('trackOrder')}</Link>
         <AccountNavItem />
-        <button className="bg-transparent p-0 text-sm text-muted-foreground" type="button" onClick={onDestinationChange}>{cityName ? t('deliveringTo', { city: cityName }) : t('chooseDestination')}</button>
+        <Link className="text-sm text-muted-foreground" href={`/${locale}`}>{cityName ? t('deliveringTo', { city: cityName }) : t('chooseDestination')}</Link>
         {bag}
         <LanguageToggle />
         <ThemeToggle />
@@ -48,10 +50,10 @@ export function SiteHeader({ cityName, cartCount, onDestinationChange }: SiteHea
           <SheetContent side="right">
             <SheetHeader><SheetTitle>{t('menu')}</SheetTitle></SheetHeader>
             <nav className="grid gap-1 p-4" aria-label="Mobile navigation">
-              <Link className="rounded-xl px-4 py-3 hover:bg-accent" href="/shop">{t('shop')}</Link>
-              <Link className="rounded-xl px-4 py-3 hover:bg-accent" href="/track">{t('trackOrder')}</Link>
+              <Link className="rounded-xl px-4 py-3 hover:bg-accent" href={href('/shop')}>{t('shop')}</Link>
+              <Link className="rounded-xl px-4 py-3 hover:bg-accent" href={href('/track')}>{t('trackOrder')}</Link>
               <div className="rounded-xl px-4 py-3 hover:bg-accent"><AccountNavItem /></div>
-              <button className="rounded-xl px-4 py-3 text-left hover:bg-accent" type="button" onClick={onDestinationChange}>{cityName ? t('deliveringTo', { city: cityName }) : t('chooseDestination')}</button>
+              <Link className="rounded-xl px-4 py-3 text-left hover:bg-accent" href={`/${locale}`}>{cityName ? t('deliveringTo', { city: cityName }) : t('chooseDestination')}</Link>
               <div className="flex items-center justify-between rounded-xl px-2 py-2"><LanguageToggle /><ThemeToggle /></div>
             </nav>
           </SheetContent>

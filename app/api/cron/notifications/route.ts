@@ -4,14 +4,14 @@ import { getRequiredServerEnv } from '@/lib/server-env';
 import { getPublicOrigin } from '@/lib/origin';
 import { logRouteError } from '@/lib/api';
 import { isCronAuthorized } from '@/lib/cron';
-import { retryStuckNotifications } from '@/features/notifications/notification-retry';
+import { resolveRetryLimits, retryStuckNotifications } from '@/features/notifications/notification-retry';
 
 async function handle(request: Request) {
   try {
     if (!isCronAuthorized(request.headers.get('authorization'), getRequiredServerEnv('CRON_SECRET'))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const summary = await retryStuckNotifications(getAdminSupabase(), { orderUrlBase: getPublicOrigin(request) });
+    const summary = await retryStuckNotifications(getAdminSupabase(), { orderUrlBase: getPublicOrigin(request), ...resolveRetryLimits() });
     return NextResponse.json({ ok: true, summary });
   } catch (error) {
     logRouteError('notification retry', error);

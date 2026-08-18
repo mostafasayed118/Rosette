@@ -240,6 +240,8 @@ cp .env.example .env.local
 | `GROQ_MODEL` | `groq/compound-mini` (default) |
 | `WHATSAPP_BUSINESS_NUMBER` | e.g. `201000000000` |
 | `CRON_SECRET` | a random string shared with your scheduler (e.g. `openssl rand -hex 32`) |
+| `NOTIFICATION_RETRY_MAX_ATTEMPTS` | optional; retry attempt cap (default `3`) |
+| `NOTIFICATION_RETRY_STALE_PENDING_MINUTES` | optional; stale-`pending` window in minutes (default `15`) |
 
 `.env.local` is git-ignored. Keep a second copy for the deployment host and
 never paste these values in chat, issues, or commits.
@@ -300,7 +302,29 @@ commercial store.
    in the repo.
 3. Set the custom domain. After that, callbacks automatically use it
    (`https://shop.example.com/api/webhooks/paymob`) — no code change.
-4. Redeploy, then repeat Section 6 from the public domain with test keys.
+4. Enable the email retry scheduler: add two repository secrets under
+   **GitHub → Settings → Secrets and variables → Actions** —
+   `CRON_ENDPOINT` (the full `https://<your-domain>/api/cron/notifications`
+   URL) and `CRON_SECRET` (the same random string set in this host's env).
+   Then open the **Actions** tab, run the "Retry stuck email notifications"
+   workflow once manually, and confirm it succeeds. Run the "Smoke test cron
+   endpoint" workflow too (pass the deployed URL via the `url` input to check
+   a staging deployment) to confirm the 401 guard and summary response.
+5. Redeploy, then repeat Section 6 from the public domain with test keys.
+
+### Fly.io (with fly.toml)
+
+The repo ships `fly.toml` with the non-secret env (`SITE_URL`,
+`PAYMOB_BASE_URL`, `GROQ_MODEL`) and the HTTP service definition.
+
+1. Run `fly launch` to generate a Dockerfile (keep the committed `fly.toml`).
+2. Set every secret with `fly secrets set` — never in `fly.toml`:
+   `SUPABASE_SERVICE_ROLE_KEY`, `PAYMOB_API_KEY`, `PAYMOB_PUBLIC_KEY`,
+   `PAYMOB_INTEGRATION_ID`, `PAYMOB_HMAC_SECRET`, `GMAIL_USER`,
+   `GMAIL_APP_PASSWORD`, `GMAIL_FROM`, `GROQ_API_KEY`, `CRON_SECRET`, plus the
+   public Supabase pair `NEXT_PUBLIC_SUPABASE_URL` /
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+3. Update `SITE_URL` in `fly.toml` to your real domain, then `fly deploy`.
 
 ---
 
