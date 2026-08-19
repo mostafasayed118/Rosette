@@ -1456,12 +1456,14 @@ git commit -m "feat: account change-request form, status cards, and delta paymen
 
 ```tsx
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChangeRequestReview } from '@/components/admin/ChangeRequestReview';
 import { renderWithProviders } from '../test-utils';
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
+
+beforeEach(() => refresh.mockClear());
 
 describe('ChangeRequestReview', () => {
   it('posts approve and refreshes', async () => {
@@ -1631,7 +1633,7 @@ export default async function AdminChangeRequestsPage({ searchParams }: { search
     let summary: string[] = [];
     if (parsed.ok && order) {
       summary = buildSummary(parsed.diff, order, t);
-      const computed = applyChanges(order, (order.order_items ?? []).map((item: any) => ({ id: String(item.id), unit_price_minor: Number(item.unit_price_minor), quantity: Number(item.quantity), gift_message: String(item.gift_message ?? '') })), parsed.diff);
+      const computed = applyChanges({ subtotal_minor: Number(order.subtotal_minor), delivery_fee_minor: Number(order.delivery_fee_minor), discount_minor: order.discount_minor != null ? Number(order.discount_minor) : null, total_minor: Number(order.total_minor) }, (order.order_items ?? []).map((item: any) => ({ id: String(item.id), unit_price_minor: Number(item.unit_price_minor), quantity: Number(item.quantity), gift_message: String(item.gift_message ?? '') })), parsed.diff);
       if (computed.ok) {
         const sign = computed.deltaMinor > 0 ? '+' : computed.deltaMinor < 0 ? '−' : '';
         deltaLabel = `${formatMoney(order.total_minor, locale)} → ${formatMoney(computed.totalMinor, locale)}${sign ? ` · ${sign}${formatMoney(Math.abs(computed.deltaMinor), locale)}` : ''}`;
@@ -1715,7 +1717,9 @@ changeDelta: 'Écart', // fr
 - [ ] **Step 8: Verify and commit**
 
 Run: `npx vitest run tests/components/ChangeRequestReview.test.tsx tests/domain/i18n-dictionary.test.ts && npm run lint 2>&1 | tail -5`
-Expected: PASS; lint clean. In `mapRow`, `order` is narrowed to `Record<string, any>` so it satisfies `applyChanges`'s order parameter directly; if tsc ever rejects it, pass an explicit `{ subtotal_minor: Number(order.subtotal_minor), delivery_fee_minor: Number(order.delivery_fee_minor), discount_minor: order.discount_minor != null ? Number(order.discount_minor) : null, total_minor: Number(order.total_minor) }` object instead.
+Expected: PASS; lint clean. tsc rejects passing the embedded order (`Record<string, any>`) straight into `applyChanges` — pass the explicit `{ subtotal_minor: Number(order.subtotal_minor), delivery_fee_minor: Number(order.delivery_fee_minor), discount_minor: order.discount_minor != null ? Number(order.discount_minor) : null, total_minor: Number(order.total_minor) }` object instead.
+
+Note on the worktree's `node_modules`: Turbopack rejects a symlink (`points out of the filesystem root`) — bind-mount the main checkout's `node_modules` into the worktree instead (`sudo mount --bind node_modules .worktrees/<name>/node_modules`) so `npm run build` works.
 
 ```bash
 git add components/admin/ChangeRequestReview.tsx app/admin/change-requests/page.tsx components/admin/AdminShell.tsx features/i18n/dictionaries.ts tests/components/ChangeRequestReview.test.tsx
