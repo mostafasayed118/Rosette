@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/admin', key: 'adminDashboard' },
   { href: '/admin/orders', key: 'orders' },
   { href: '/admin/cancel-requests', key: 'cancelRequests' },
+  { href: '/admin/change-requests', key: 'changeRequests' },
   { href: '/admin/reviews', key: 'reviews' },
   { href: '/admin/products', key: 'products' },
   { href: '/admin/inventory', key: 'inventory' },

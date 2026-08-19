@@ -70,4 +70,18 @@ describe('order email templates', () => {
     expect(NOTIFICATION_TYPES.has('cancel_approved')).toBe(true);
     expect(NOTIFICATION_TYPES.has('cancel_rejected')).toBe(true);
   });
+
+  it('renders change-request subjects in all three locales', () => {
+    expect(renderOrderEmail({ locale: 'en', type: 'change_approved', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' }).subject).toBe('Your change request was approved');
+    expect(renderOrderEmail({ locale: 'ar', type: 'change_approved', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' }).subject).toBe('تمت الموافقة على طلب التعديل');
+    expect(renderOrderEmail({ locale: 'fr', type: 'change_approved', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' }).subject).toBe('Votre demande de modification a été approuvée');
+    expect(renderOrderEmail({ locale: 'en', type: 'change_payment_required', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' }).subject).toBe('Pay the difference for your order');
+    expect(renderOrderEmail({ locale: 'en', type: 'change_rejected', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' }).subject).toBe('Change request declined');
+  });
+
+  it('includes change-request types in the retryable notification set', () => {
+    expect(NOTIFICATION_TYPES.has('change_approved')).toBe(true);
+    expect(NOTIFICATION_TYPES.has('change_payment_required')).toBe(true);
+    expect(NOTIFICATION_TYPES.has('change_rejected')).toBe(true);
+  });
 });

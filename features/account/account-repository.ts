@@ -10,7 +10,7 @@ export type CustomerOrderDetail = {
   recipientName: string; deliveryAddress: string; deliveryDate: string; deliveryWindow: string;
   subtotalMinor: number; deliveryFeeMinor: number; totalMinor: number;
   paymentStatus: string; fulfillmentStatus: string;
-  items: Array<{ id: string; nameEn: string; nameAr: string; nameFr: string; unitPriceMinor: number; quantity: number; addOns: Array<{ id: string; name: string; price: number }> }>;
+  items: Array<{ id: string; nameEn: string; nameAr: string; nameFr: string; unitPriceMinor: number; quantity: number; giftMessage: string; addOns: Array<{ id: string; name: string; price: number }> }>;
   events: Array<{ id: string; eventType: string; fromStatus: string | null; toStatus: string | null; createdAt: string }>;
 };
 
@@ -39,6 +39,26 @@ export async function listCustomerOrders(client: AccountClient, userId: string):
   }));
 }
 
+export type CustomerChangeRequest = { id: string; status: string; reason: string | null; deltaMinor: number | null; createdAt: string };
+
+export async function getChangeRequestForOrder(client: AccountClient, userId: string, orderId: string): Promise<CustomerChangeRequest | null> {
+  const { data } = await client.from('order_change_requests')
+    .select('id,status,reason,delta_minor,created_at')
+    .eq('order_id', orderId)
+    .eq('customer_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    id: String(data.id),
+    status: String(data.status),
+    reason: data.reason ? String(data.reason) : null,
+    deltaMinor: data.delta_minor != null ? Number(data.delta_minor) : null,
+    createdAt: String(data.created_at),
+  };
+}
+
 export async function getCustomerOrder(client: AccountClient, userId: string, orderId: string): Promise<CustomerOrderDetail | null> {
   const { data } = await client.from('orders')
     .select('*,order_items(*),order_events(*)')
@@ -55,7 +75,7 @@ export async function getCustomerOrder(client: AccountClient, userId: string, or
     paymentStatus: order.payment_status, fulfillmentStatus: order.fulfillment_status,
     items: (order.order_items ?? []).map((item: any) => ({
       id: item.id, nameEn: item.product_name_en ?? '', nameAr: item.product_name_ar ?? '', nameFr: item.product_name_fr ?? '',
-      unitPriceMinor: item.unit_price_minor, quantity: item.quantity,
+      unitPriceMinor: item.unit_price_minor, quantity: item.quantity, giftMessage: String(item.gift_message ?? ''),
       addOns: Array.isArray(item.add_ons) ? item.add_ons.map((addOn: any) => ({ id: String(addOn.id ?? ''), name: String(addOn.name ?? addOn.name_en ?? ''), price: Number(addOn.price ?? addOn.price_minor ?? 0) })) : [],
     })),
     events: (order.order_events ?? []).map((event: any) => ({

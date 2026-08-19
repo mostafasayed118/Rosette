@@ -2,9 +2,12 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCustomerOrder, getCancelRequestForOrder } from '@/features/account/account-repository';
+import { getCustomerOrder, getCancelRequestForOrder, getChangeRequestForOrder } from '@/features/account/account-repository';
 import { CancelRequestButton } from '@/components/account/CancelRequestButton';
+import { ChangeRequestForm } from '@/components/account/ChangeRequestForm';
+import { PayDifferenceButton } from '@/components/account/PayDifferenceButton';
 import { canRequestCancellation } from '@/features/orders/cancel-request';
+import { canRequestChange } from '@/features/orders/change-request';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { getServerT } from '@/features/i18n/server';
@@ -20,7 +23,9 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
   const order = supabase ? await getCustomerOrder(supabase, customer.id, id) : null;
   if (!order) notFound();
   const cancelRequest = supabase ? await getCancelRequestForOrder(supabase, customer.id, order.id) : null;
+  const changeRequest = supabase ? await getChangeRequestForOrder(supabase, customer.id, order.id) : null;
   const eligibility = canRequestCancellation({ fulfillmentStatus: order.fulfillmentStatus, paymentStatus: order.paymentStatus, hasPendingRequest: cancelRequest?.status === 'pending' });
+  const changeEligibility = canRequestChange({ fulfillmentStatus: order.fulfillmentStatus, paymentStatus: order.paymentStatus, hasPendingRequest: changeRequest?.status === 'pending' || cancelRequest?.status === 'pending' });
 
   return (
     <div className="grid gap-6">
@@ -53,6 +58,13 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
         : cancelRequest?.status === 'approved' ? <Card><CardHeader><CardTitle>{t('cancelRequestApproved')}</CardTitle></CardHeader><CardContent>{cancelRequest.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {cancelRequest.reason}</p> : null}</CardContent></Card>
         : cancelRequest?.status === 'rejected' ? <Card><CardHeader><CardTitle>{t('cancelRequestRejected')}</CardTitle></CardHeader><CardContent>{cancelRequest.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {cancelRequest.reason}</p> : null}</CardContent></Card>
         : eligibility === 'ok' ? <Card><CardHeader><CardTitle>{t('requestCancellation')}</CardTitle></CardHeader><CardContent><CancelRequestButton orderId={order.id} /></CardContent></Card>
+        : null}
+
+      {changeRequest?.status === 'pending' ? <Card><CardHeader><CardTitle>{t('changePending')}</CardTitle></CardHeader><CardContent>{changeRequest.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {changeRequest.reason}</p> : null}</CardContent></Card>
+        : changeRequest?.status === 'approved' ? <Card><CardHeader><CardTitle>{t('changeApproved')}</CardTitle></CardHeader><CardContent className="grid gap-2">{changeRequest.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {changeRequest.reason}</p> : null}<PayDifferenceButton requestId={changeRequest.id} /></CardContent></Card>
+        : changeRequest?.status === 'applied' ? <Card><CardHeader><CardTitle>{t('changeApplied')}</CardTitle></CardHeader><CardContent>{changeRequest.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {changeRequest.reason}</p> : null}</CardContent></Card>
+        : changeRequest?.status === 'rejected' ? <Card><CardHeader><CardTitle>{t('changeRejected')}</CardTitle></CardHeader><CardContent>{changeRequest.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {changeRequest.reason}</p> : null}</CardContent></Card>
+        : changeEligibility === 'ok' ? <Card><CardHeader><CardTitle>{t('requestChange')}</CardTitle></CardHeader><CardContent><ChangeRequestForm orderId={order.id} items={order.items.map((item) => ({ id: item.id, name: item.nameEn, quantity: item.quantity, giftMessage: item.giftMessage }))} /></CardContent></Card>
         : null}
 
       {order.events.length ? (
