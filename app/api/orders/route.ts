@@ -7,6 +7,7 @@ import { getPublicOrigin } from '@/lib/origin';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
+import { markCartConverted } from '@/features/cart/cart-sync';
 import { logRouteError } from '@/lib/api';
 
 export async function POST(request: Request) {
@@ -33,6 +34,8 @@ export async function POST(request: Request) {
       discountMinor: order.discountMinor,
       orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}`,
     });
+    // Best-effort: an order must never fail because a cart could not be marked.
+    await markCartConverted(getAdminSupabase(), { email: checkout.senderEmail });
     const paymobConfigured = Boolean(getOptionalServerEnv('PAYMOB_API_KEY') && getOptionalServerEnv('PAYMOB_PUBLIC_KEY') && getOptionalServerEnv('PAYMOB_INTEGRATION_ID') && getOptionalServerEnv('PAYMOB_HMAC_SECRET'));
     if (!paymobConfigured) return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: order.paymentStatus, checkoutUrl: null });
 
