@@ -40,9 +40,14 @@ create table if not exists public.wishlist_items (
   customer_id uuid not null references public.profiles(id) on delete cascade,
   product_id uuid not null references public.products(id) on delete cascade,
   created_at timestamptz not null default now(),
+  -- Language the customer was browsing when they saved (email language).
+  locale text not null default 'en' check (locale in ('en', 'ar', 'fr')),
   -- Snapshots for the price-drop / back-in-stock cron (minor units / units).
-  last_price_minor integer not null default 0,
-  last_available_stock integer not null default 0,
+  -- Default -1 = "uninitialized": the first cron run records real values and
+  -- never emails (a real price >= 0 is never a drop from -1, and -1 stock is
+  -- never a restock; a genuine restock fires only from a snapshot of 0).
+  last_price_minor integer not null default -1,
+  last_available_stock integer not null default -1,
   unique (customer_id, product_id)
 );
 
@@ -92,9 +97,12 @@ Exposes `{ ready, saved: string[], isSaved(slug), toggle(slug), count }`.
   /api/account/wishlist/merge` with the guest slugs, then clear guest
   storage; state = the returned server slug list. `toggle` optimistically
   updates state, then `POST /api/wishlist/items` (add) or `DELETE
-  /api/wishlist/items/[productId]` (remove); on failure the optimistic change
+  /api/wishlist/items/[slug]` (remove); on failure the optimistic change
   is reverted. The server list is fetched on every sign-in state change
   (sign-in and sign-out both re-sync).
+- Both save routes send the customer's current browsing language (`locale`
+  from the i18n context), stored on the wishlist row — it becomes the
+  language of the price-drop / back-in-stock emails.
 - No double-toggles: `toggle` is a no-op while the previous call for the
   same slug is in flight.
 
@@ -135,16 +143,17 @@ One page for both guest and signed-in:
 
 ## API
 
-- `POST /api/wishlist/items` — body `{ slug }`; `getCurrentCustomer()`
-  → 401 for guests (the client never calls it signed out). The client is
-  slug-only, so the route resolves slug → product id (like the reviews
-  submit route), then service-role inserts with
-  `onConflict('customer_id,product_id').doNothing()` → 200 `{ saved: true }`
-  (idempotent — re-saving is a no-op; unknown slug → 404).
+- `POST /api/wishlist/items` — body `{ slug, locale? }` (`locale` is one of
+  `en|ar|fr`, defaults `en`); `getCurrentCustomer()` → 401 for guests (the
+  client never calls it signed out). The client is slug-only, so the route
+  resolves slug → product id (like the reviews submit route), then
+  service-role inserts with `onConflict('customer_id,product_id').doNothing()`
+  → 200 `{ saved: true }` (idempotent — re-saving is a no-op; unknown slug
+  → 404).
 - `DELETE /api/wishlist/items/[slug]` — `getCurrentCustomer()` → 401;
   resolve slug → id, service-role delete → 200. Missing row → 200 anyway
   (idempotent).
-- `POST /api/account/wishlist/merge` — body `{ slugs: string[] }`;
+- `POST /api/account/wishlist/merge` — body `{ slugs: string[], locale? }`;
   `getCurrentCustomer()` → 401. Resolves slugs to product ids (Supabase
   `products.in('slug', slugs)`), service-role inserts the missing rows
   (`onConflict` ignore), returns `{ slugs: string[] }` — the full server
@@ -189,9 +198,10 @@ The cron loop (service `features/wishlist/wishlist-cron.ts`, tested with a
 fake client + mailer):
 
 1. Load all `wishlist_items` with their product + variants + inventory
-   (`wishlist_items(product_id, last_price_minor, last_available_stock,
-   products(id, price_minor, product_variants(id, price_delta_minor, active,
-   inventory(quantity, reserved_quantity)))`).
+   (`wishlist_items(product_id, locale, last_price_minor,
+   last_available_stock, profiles(email), products(id, price_minor,
+   product_variants(id, price_delta_minor, active, inventory(quantity,
+   reserved_quantity)))`).
 2. For each row, run `evaluateWishlistWatch`; for each fired type, send the
    email (below) to the customer's email (join `profiles`), best-effort per
    item — a send failure never aborts the run.
@@ -200,16 +210,22 @@ fake client + mailer):
    the transition (a product that stays in stock or at the same price never
    re-notifies; going out and back in stock notifies again).
 
-Because the migration defaults both snapshots to `0`, the **first run only
-records snapshots and never emails** (price 0 → current price isn't a drop;
-stock 0 → 0 isn't a back-in-stock) — no mass email on deploy.
+Because the migration defaults both snapshots to `-1` ("uninitialized"),
+the **first run only records snapshots and never emails** — a real price
+(≥ 0) is never a drop from −1, and a −1 stock is never a restock. A genuine
+restock fires only from a snapshot of `0`, i.e. a product the cron previously
+observed out of stock — so a product in stock on day one never triggers a
+back-in-stock email, but a product that later goes out and comes back does.
+No mass email on deploy.
 
 **Email — `features/wishlist/email.ts`:** direct-to-mailer, not the
 order-shaped `notification_deliveries`/retry machinery (those re-render from
 an order row; product emails have no order). `sendWishlistEmail({ to,
 locale, type, productName, priceMinor?, productUrl })` builds subject + text
 + HTML (reusing the `escapeHtml` + money formatting conventions from
-`email-templates.ts`) and sends via `createGmailTransport()`. Subjects:
+`email-templates.ts`) and sends via `createGmailTransport()`. The email
+language is the `locale` stored on the wishlist row at save time (the
+customer's browsing language), falling back to `en`. Subjects:
 `wishlist_price_drop` ("A flower you saved just dropped in price"),
 `wishlist_back_in_stock` ("Back in stock: {product}" / localized). Link back
 to the product page in the storefront.
