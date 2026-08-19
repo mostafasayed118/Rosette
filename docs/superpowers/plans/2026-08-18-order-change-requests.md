@@ -1193,6 +1193,7 @@ describe('ChangeRequestForm', () => {
   it('shows an error when the request fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
     renderWithProviders(<ChangeRequestForm orderId="o1" items={items} />);
+    fireEvent.change(screen.getByLabelText(/delivery date/i), { target: { value: '2026-08-20' } });
     fireEvent.click(screen.getByRole('button', { name: /request a change/i }));
     await waitFor(() => expect(screen.getByText(/could not request the change/i)).toBeInTheDocument());
     vi.unstubAllGlobals();
