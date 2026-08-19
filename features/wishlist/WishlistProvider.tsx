@@ -17,13 +17,14 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    (async () => {
+    const supabase = getBrowserSupabase();
+    if (!supabase) {
+      setSaved(readWishlist());
+      setReady(true);
+      return;
+    }
+    const sync = async () => {
       const guest = readWishlist();
-      const supabase = getBrowserSupabase();
-      if (!supabase) {
-        if (active) { setSaved(guest); setReady(true); }
-        return;
-      }
       const { data: { user } } = await supabase.auth.getUser();
       if (!active) return;
       if (user) {
@@ -33,7 +34,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
           if (response.ok) {
             const body = (await response.json()) as { slugs?: string[] };
             setSaved(body.slugs ?? []);
-            writeWishlist([]);
+            clearWishlistStorage();
           } else {
             setSaved(guest);
           }
@@ -45,8 +46,15 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         setSaved(guest);
       }
       setReady(true);
-    })();
-    return () => { active = false; };
+    };
+    void sync();
+    // The provider lives in the root layout and survives client-side
+    // navigation, so it must re-sync when the auth state changes (sign-in
+    // merges the guest list; sign-out drops back to guest storage).
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') void sync();
+    });
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
   const toggle = useCallback(async (slug: string) => {
