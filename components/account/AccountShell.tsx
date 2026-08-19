@@ -12,6 +12,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const profile = href('/account');
   const orders = href('/account/orders');
+  const wishlist = href('/wishlist');
   const active = (target: string) => (pathname === target || pathname.startsWith(`${target}/`) ? 'text-primary' : 'text-muted-foreground');
   return (
     <div className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4">
@@ -19,6 +20,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
       <nav className="mt-3 flex gap-4 border-b text-sm">
         <Link className={`px-1 pb-2 ${active(profile)}`} href={profile}>{t('profile')}</Link>
         <Link className={`px-1 pb-2 ${active(orders)}`} href={orders}>{t('myOrders')}</Link>
+        <Link className={`px-1 pb-2 ${active(wishlist)}`} href={wishlist}>{t('wishlist')}</Link>
       </nav>
       <div className="pt-8">{children}</div>
     </div>
