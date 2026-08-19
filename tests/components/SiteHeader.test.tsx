@@ -8,18 +8,19 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 import { CartProvider } from '@/features/cart/CartProvider';
+import { WishlistProvider } from '@/features/wishlist/WishlistProvider';
 import { renderWithProviders } from '../test-utils';
 
 describe('SiteHeader', () => {
   it('renders shop, track, and bag links', () => {
-    renderWithProviders(<CartProvider><SiteHeader /></CartProvider>);
+    renderWithProviders(<CartProvider><WishlistProvider><SiteHeader /></WishlistProvider></CartProvider>);
     expect(screen.getAllByRole('link', { name: /shop the collection/i }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: /track order/i }).length).toBeGreaterThan(0);
     expect(screen.getAllByRole('link', { name: /bag/i }).length).toBeGreaterThan(0);
   });
 
   it('opens the mobile menu with navigation and controls', async () => {
-    renderWithProviders(<CartProvider><SiteHeader /></CartProvider>);
+    renderWithProviders(<CartProvider><WishlistProvider><SiteHeader /></WishlistProvider></CartProvider>);
     fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
     const dialog = screen.getByRole('dialog');
