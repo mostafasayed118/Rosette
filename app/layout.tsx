@@ -4,7 +4,6 @@ import { cookies } from 'next/headers';
 import type { ReactNode } from 'react';
 import './globals.css';
 import { CartProvider } from '@/features/cart/CartProvider';
-import { CartSync } from '@/features/cart/CartSync';
 import { WishlistProvider } from '@/features/wishlist/WishlistProvider';
 import { I18nProvider } from '@/features/i18n/I18nProvider';
 import { resolveHtmlAttributes } from '@/features/i18n/server-html';
@@ -26,5 +25,5 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const store = await cookies();
   const locale = await resolveServerLocale();
   const attrs = resolveHtmlAttributes(locale, store.get('rosette.theme')?.value);
-  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${inter.variable} ${cairo.variable}${attrs.themeClass}`}><body><ThemeProvider><I18nProvider><CartProvider><CartSync /><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></body></html>;
+  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${inter.variable} ${cairo.variable}${attrs.themeClass}`}><body><ThemeProvider><I18nProvider><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></body></html>;
 }
