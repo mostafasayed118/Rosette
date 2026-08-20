@@ -4,6 +4,7 @@ import { getRequiredServerEnv } from '@/lib/server-env';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import { verifyPaymobCallback } from '@/features/payment/paymob-hmac';
 import { handleChangePaymentCallback } from '@/features/orders/change-request-service';
+import { activateGiftCardPurchase } from '@/features/gift-cards/service';
 import { getPublicOrigin } from '@/lib/origin';
 import { logRouteError } from '@/lib/api';
 
@@ -20,10 +21,25 @@ export async function POST(request: Request) {
   // The approval flow already refunds synchronously and records the result itself.
   if (transaction.is_refund === true || transaction.is_refunded === true || transaction.has_parent_transaction === true) return NextResponse.json({ received: true });
 
+  const specialReference = String(transaction.order?.special_reference ?? transaction.special_reference ?? '');
+  if (specialReference.startsWith('giftcard:')) {
+    try {
+      await activateGiftCardPurchase(getAdminSupabase(), {
+        specialReference,
+        amountMinor: Number(transaction.amount_cents ?? 0),
+        providerReference: String(transaction.id ?? transaction.order?.id ?? ''),
+        success: transaction.success === true,
+      });
+      return NextResponse.json({ received: true });
+    } catch (error) {
+      logRouteError('gift-card webhook', error);
+      return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+    }
+  }
+
   // Change-request delta payments: Paymob echoes special_reference back in the
   // callback. Match it before the order path — the order path matches
   // display_number and would 400 on these (no merchant_order_id is set).
-  const specialReference = String(transaction.order?.special_reference ?? transaction.special_reference ?? '');
   if (specialReference.startsWith('change:')) {
     await handleChangePaymentCallback(getAdminSupabase(), transaction, { orderUrlBase: getPublicOrigin(request) });
     return NextResponse.json({ received: true });

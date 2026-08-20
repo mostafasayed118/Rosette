@@ -21,7 +21,7 @@ export function buildPaymobIntentionPayload(input: CreatePaymentInput) {
       state: 'Cairo',
       country: 'EG',
     },
-    special_reference: input.orderReference,
+    special_reference: input.specialReference ?? input.orderReference,
     notification_url: input.notificationUrl,
     redirection_url: input.redirectionUrl,
   };
