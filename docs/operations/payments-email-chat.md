@@ -84,6 +84,22 @@ daily and on demand: it asserts unauthenticated requests return 401 and an
 authenticated request returns 200 with the summary. Run it manually and pass a
 staging URL via the `url` input to verify a freshly deployed environment.
 
+### Engagement email preferences
+
+Set `EMAIL_PREFERENCES_SECRET` to a random server-only value. Apply
+`supabase/migrations/015_email_preferences.sql` after the review-engagement and
+abandoned-cart migrations. The preference is keyed by normalized email and
+controls only abandoned-cart and wishlist price/stock emails; payment,
+cancellation, change-request, and fulfillment messages remain transactional
+and are never suppressed.
+
+Engagement emails include a signed unsubscribe link and RFC 8058 one-click
+headers. The link works for guests without authentication. Signed-in customers
+can also manage the same email-wide preference from their account profile.
+Preference lookup failures fail closed for engagement cron sends so a temporary
+database problem cannot accidentally send after an opt-out; wishlist events
+remain eligible for a later retry when that happens.
+
 ## Groq chatbot
 
 Set `GROQ_API_KEY` and optionally `GROQ_MODEL`. The API key is used only by `/api/chat`. The deterministic guard rejects unrelated questions and prompt-injection attempts before a model call. Model output is schema-validated and product slugs are checked against the catalog.

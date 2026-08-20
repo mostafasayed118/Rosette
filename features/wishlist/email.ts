@@ -1,5 +1,7 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
 import { createGmailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
+import { renderEngagementFooter } from '@/features/email-preferences/engagement-footer';
+import type { PreferenceLocale } from '@/features/email-preferences/preferences-service';
 
 export type WishlistEmailType = 'wishlist_price_drop' | 'wishlist_back_in_stock';
 
@@ -17,7 +19,7 @@ const copy: Record<EmailLocale, { drop: (name: string, price: string) => string;
   fr: { drop: (name, price) => `Le produit ${name} que vous avez enregistré vient de baisser à ${price}.`, restock: (name) => `Bonne nouvelle — ${name} est de retour en stock.`, view: 'Voir le produit', from: 'Favoris Rosette' },
 };
 
-export function renderWishlistEmail(input: { locale: EmailLocale; type: WishlistEmailType; productName: string; priceMinor?: number; productUrl: string }) {
+export function renderWishlistEmail(input: { locale: EmailLocale; type: WishlistEmailType; productName: string; priceMinor?: number; productUrl: string; unsubscribeUrl?: string }) {
   const locale = input.locale;
   const name = input.productName;
   const escapedName = escapeHtml(name);
@@ -27,14 +29,22 @@ export function renderWishlistEmail(input: { locale: EmailLocale; type: Wishlist
   const intro = input.type === 'wishlist_price_drop' ? copy[locale].drop(name, price ?? '') : copy[locale].restock(name);
   const subject = subjects[locale][input.type].replace('{name}', name);
   const text = `${subject}\n${intro}\n${input.productUrl}`;
-  const html = `<!doctype html><html lang="${locale}"><body style="font-family:Arial,sans-serif"><h1>${subjects[locale][input.type]}</h1><p>${escapeHtml(intro)}</p><p><a href="${url}">${copy[locale].view}</a></p></body></html>`;
-  return { subject, text, html };
+  const footer = input.unsubscribeUrl ? renderEngagementFooter(locale as PreferenceLocale, input.unsubscribeUrl) : { text: '', html: '' };
+  const html = `<!doctype html><html lang="${locale}"><body style="font-family:Arial,sans-serif"><h1>${subjects[locale][input.type]}</h1><p>${escapeHtml(intro)}</p><p><a href="${url}">${copy[locale].view}</a></p>${footer.html}</body></html>`;
+  return { subject, text: `${text}${footer.text}`, html };
 }
 
 export async function sendWishlistEmail(
-  input: { to: string; locale: EmailLocale; type: WishlistEmailType; productName: string; priceMinor?: number; productUrl: string },
+  input: { to: string; locale: EmailLocale; type: WishlistEmailType; productName: string; priceMinor?: number; productUrl: string; unsubscribeUrl?: string },
   transport: MailTransport = createGmailTransport(),
 ): Promise<void> {
   const { subject, text, html } = renderWishlistEmail(input);
-  await transport.sendMail({ from: `Rosette <rosette-wishlist@localhost>`, to: input.to, subject, text, html });
+  await transport.sendMail({
+    from: `Rosette <rosette-wishlist@localhost>`,
+    to: input.to,
+    subject,
+    text,
+    html,
+    ...(input.unsubscribeUrl ? { headers: { 'List-Unsubscribe': `<${input.unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } } : {}),
+  });
 }
