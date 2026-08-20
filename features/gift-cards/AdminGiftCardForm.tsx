@@ -9,7 +9,7 @@ import { FIXED_GIFT_CARD_AMOUNTS, MIN_CUSTOM_GIFT_CARD_MINOR, MAX_CUSTOM_GIFT_CA
 import type { GiftCardAmountMode } from './types';
 
 export function AdminGiftCardForm() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [mode, setMode] = useState<GiftCardAmountMode>('fixed');
   const [amountMinor, setAmountMinor] = useState<number>(FIXED_GIFT_CARD_AMOUNTS[0]);
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -24,7 +24,7 @@ export function AdminGiftCardForm() {
     event.preventDefault();
     setSaving(true);
     setError('');
-    const response = await fetch('/api/admin/gift-cards', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'issue', input: { mode, amountMinor, senderName, senderEmail, recipientName, recipientEmail, message, locale: 'en' } }) });
+    const response = await fetch('/api/admin/gift-cards', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'issue', input: { mode, amountMinor, senderName, senderEmail, recipientName, recipientEmail, message, locale: locale === 'ar' || locale === 'fr' ? locale : 'en' } }) });
     if (!response.ok) setError(t('giftCardAdminFailed'));
     else { setRecipientEmail(''); setRecipientName(''); setMessage(''); }
     setSaving(false);

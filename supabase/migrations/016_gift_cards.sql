@@ -29,6 +29,7 @@ create table if not exists public.gift_cards (
   recipient_name text,
   recipient_email text,
   buyer_email text,
+  locale text not null default 'en' check (locale in ('en', 'ar', 'fr')),
   status text not null check (status in ('active', 'depleted', 'expired', 'void')),
   expires_at timestamptz not null,
   issued_by uuid references public.profiles(id),
@@ -55,6 +56,8 @@ create unique index if not exists gift_card_holds_active_order_card_idx
   on public.gift_card_holds(gift_card_id, order_id) where status = 'held';
 create index if not exists gift_card_purchases_reference_idx on public.gift_card_purchases(reference);
 create index if not exists gift_cards_status_expiry_idx on public.gift_cards(status, expires_at);
+alter table public.gift_cards add column if not exists locale text not null default 'en' check (locale in ('en', 'ar', 'fr'));
+
 create index if not exists gift_cards_recipient_email_idx on public.gift_cards(recipient_email);
 create index if not exists gift_card_holds_status_expiry_idx on public.gift_card_holds(status, expires_at);
 

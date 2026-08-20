@@ -45,6 +45,43 @@ export async function createGiftCardPurchase(
   }
 }
 
+async function recoverGiftCardActivation(
+  client: GiftCardClient,
+  purchase: Record<string, any>,
+  card: Record<string, any>,
+  providerReference: string,
+  deps: { secret: string; now: Date; deliver: (input: DeliveryInput) => Promise<boolean> },
+): Promise<{ handled: true; status: 'activated' }> {
+  // Backfill the issue ledger row idempotently: a prior attempt may have crashed
+  // between the card insert and the issue-transaction insert.
+  await client.from('gift_card_transactions').upsert(
+    { gift_card_id: String(card.id), type: 'issue', amount_minor: Number(purchase.amount_minor), idempotency_key: `gift-card-issue:${purchase.id}`, metadata: { provider_reference: providerReference } },
+    { onConflict: 'idempotency_key' },
+  );
+  await client.from('gift_card_purchases').update({ status: 'paid', provider_reference: providerReference, updated_at: deps.now.toISOString() }).eq('id', purchase.id);
+
+  // Re-deliver only when the card has never been delivered; a crash between the
+  // card insert and delivery leaves it pending.
+  if (card.delivery_status === 'pending') {
+    const recipients = [...new Set([String(purchase.sender_email).trim().toLowerCase(), String(purchase.recipient_email).trim().toLowerCase()])].filter(Boolean);
+    let code: string | null = null;
+    try {
+      code = decryptGiftCardCode(String(card.code_ciphertext), deps.secret);
+    } catch {
+      code = null;
+    }
+    let failed = code === null ? 1 : 0;
+    if (code !== null) {
+      const expiresAt = String(card.expires_at ?? new Date(deps.now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString());
+      for (const recipient of recipients) if (!(await deps.deliver({ recipient, code, purchase: { ...purchase, expires_at: expiresAt } }))) failed += 1;
+    }
+    const deliveryState = { delivery_status: failed ? 'failed' : 'sent', delivery_attempts: 1, last_delivery_error: failed ? 'smtp_failed' : null };
+    await client.from('gift_card_purchases').update(deliveryState).eq('id', purchase.id);
+    await client.from('gift_cards').update(deliveryState).eq('id', String(card.id));
+  }
+  return { handled: true, status: 'activated' };
+}
+
 export async function activateGiftCardPurchase(
   client: GiftCardClient,
   transaction: { specialReference: string; amountMinor: number; providerReference: string; success: boolean },
@@ -63,18 +100,34 @@ export async function activateGiftCardPurchase(
 
   const now = deps.now ?? new Date();
   const secret = deps.secret ?? getRequiredServerEnv('GIFT_CARD_SECRET');
+
+  const deliver = deps.deliver ?? (async ({ recipient, code: deliveryCode, purchase: deliveryPurchase }: DeliveryInput) => sendGiftCardEmail({ recipient, rendered: renderGiftCardEmail({ locale: deliveryPurchase.locale as 'en' | 'ar' | 'fr', recipientName: String(deliveryPurchase.recipient_name), buyerName: String(deliveryPurchase.sender_name), message: String(deliveryPurchase.message ?? ''), amountMinor: Number(deliveryPurchase.amount_minor), code: deliveryCode, expiresAt: String(deliveryPurchase.expires_at ?? new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString()), recipientCopy: recipient === String(deliveryPurchase.recipient_email).toLowerCase() }) }));
+
+  // Idempotent recovery: a prior attempt may have issued the card but crashed
+  // before marking the purchase paid. Recover it instead of inserting a second
+  // card (which would violate the unique purchase_id constraint).
+  const { data: existingCard } = await client.from('gift_cards').select('id,delivery_status,code_ciphertext,expires_at').eq('purchase_id', purchase.id).maybeSingle();
+  if (existingCard) return recoverGiftCardActivation(client, purchase, existingCard, transaction.providerReference, { secret, now, deliver });
+
   const code = generateGiftCardCode();
   const cardId = randomUUID();
-  const { data: card, error: cardError } = await client.from('gift_cards').insert({ id: cardId, purchase_id: purchase.id, code_hash: hashGiftCardCode(code, secret), code_ciphertext: encryptGiftCardCode(code, secret), code_last4: code.replace(/-/g, '').slice(-4), initial_balance_minor: purchase.amount_minor, balance_minor: purchase.amount_minor, recipient_name: purchase.recipient_name, recipient_email: purchase.recipient_email, buyer_email: purchase.sender_email, status: 'active', expires_at: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString(), delivery_status: 'pending', delivery_attempts: 0, activated_at: now.toISOString() }).select('id').single();
-  if (cardError || !card) return { handled: true, status: 'failed' };
+  const { data: card, error: cardError } = await client.from('gift_cards').insert({ id: cardId, purchase_id: purchase.id, code_hash: hashGiftCardCode(code, secret), code_ciphertext: encryptGiftCardCode(code, secret), code_last4: code.replace(/-/g, '').slice(-4), initial_balance_minor: purchase.amount_minor, balance_minor: purchase.amount_minor, recipient_name: purchase.recipient_name, recipient_email: purchase.recipient_email, buyer_email: purchase.sender_email, status: 'active', locale: purchase.locale ?? 'en', expires_at: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString(), delivery_status: 'pending', delivery_attempts: 0, activated_at: now.toISOString() }).select('id').single();
+  if (cardError || !card) {
+    // A concurrent callback may have inserted the card between our lookup and
+    // this insert. If so, recover instead of stranding the purchase.
+    const { data: raced } = await client.from('gift_cards').select('id,delivery_status,code_ciphertext,expires_at').eq('purchase_id', purchase.id).maybeSingle();
+    if (raced) return recoverGiftCardActivation(client, purchase, raced, transaction.providerReference, { secret, now, deliver });
+    return { handled: true, status: 'failed' };
+  }
   await client.from('gift_card_transactions').insert({ gift_card_id: String(card.id), type: 'issue', amount_minor: purchase.amount_minor, idempotency_key: `gift-card-issue:${purchase.id}`, metadata: { provider_reference: transaction.providerReference } });
   await client.from('gift_card_purchases').update({ status: 'paid', provider_reference: transaction.providerReference, updated_at: now.toISOString() }).eq('id', purchase.id);
 
-  const deliver = deps.deliver ?? (async ({ recipient, code: deliveryCode, purchase: deliveryPurchase }: DeliveryInput) => sendGiftCardEmail({ recipient, rendered: renderGiftCardEmail({ locale: deliveryPurchase.locale as 'en' | 'ar' | 'fr', recipientName: String(deliveryPurchase.recipient_name), buyerName: String(deliveryPurchase.sender_name), message: String(deliveryPurchase.message ?? ''), amountMinor: Number(deliveryPurchase.amount_minor), code: deliveryCode, expiresAt: String(deliveryPurchase.expires_at ?? new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString()), recipientCopy: recipient === String(deliveryPurchase.recipient_email).toLowerCase() }) }));
   const recipients = [...new Set([String(purchase.sender_email).trim().toLowerCase(), String(purchase.recipient_email).trim().toLowerCase()])].filter(Boolean);
   let failed = 0;
   for (const recipient of recipients) if (!(await deliver({ recipient, code, purchase: { ...purchase, expires_at: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString() } }))) failed += 1;
-  await client.from('gift_card_purchases').update({ delivery_status: failed ? 'failed' : 'sent', delivery_attempts: 1, last_delivery_error: failed ? 'smtp_failed' : null }).eq('id', purchase.id);
+  const deliveryState = { delivery_status: failed ? 'failed' : 'sent', delivery_attempts: 1, last_delivery_error: failed ? 'smtp_failed' : null };
+  await client.from('gift_card_purchases').update(deliveryState).eq('id', purchase.id);
+  await client.from('gift_cards').update(deliveryState).eq('id', String(card.id));
   return { handled: true, status: 'activated' };
 }
 

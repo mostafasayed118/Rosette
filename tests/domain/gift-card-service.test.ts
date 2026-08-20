@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { activateGiftCardPurchase, createGiftCardPurchase, restoreGiftCardForCancelledOrder } from '@/features/gift-cards/service';
+import { encryptGiftCardCode } from '@/features/gift-cards/crypto';
 
 const input = {
   mode: 'fixed' as const,
@@ -14,7 +15,7 @@ const input = {
 
 type Call = { table: string; op: string; payload?: Record<string, unknown>; id?: string };
 
-function fakeClient(seed: { purchase?: Record<string, unknown> | null; insertError?: boolean } = {}) {
+function fakeClient(seed: { purchase?: Record<string, unknown> | null; insertError?: boolean; existingCard?: Record<string, unknown> | null } = {}) {
   const calls: Call[] = [];
   let purchase = seed.purchase ?? null;
   const from = (table: string) => ({
@@ -23,7 +24,8 @@ function fakeClient(seed: { purchase?: Record<string, unknown> | null; insertErr
       if (table === 'gift_card_purchases' && !seed.insertError) purchase = payload;
       return { select: () => ({ single: async () => ({ data: { id: payload.id }, error: seed.insertError ? { message: 'insert failed' } : null }) }), error: seed.insertError ? { message: 'insert failed' } : null };
     },
-    select: () => ({ eq: (_column: string, _value: string) => ({ maybeSingle: async () => ({ data: purchase, error: null }) }) }),
+    upsert: (payload: Record<string, unknown>, _options?: unknown) => { calls.push({ table, op: 'upsert', payload }); return { error: null }; },
+    select: () => ({ eq: (column: string, _value: string) => ({ maybeSingle: async () => ({ data: column === 'purchase_id' ? (seed.existingCard ?? null) : purchase, error: null }) }) }),
     update: (payload: Record<string, unknown>) => ({ eq: (_column: string, _value: string) => { calls.push({ table, op: 'update', payload }); if (table === 'gift_card_purchases') purchase = { ...purchase, ...payload }; return { error: null }; } }),
   });
   return { client: { from }, calls };
@@ -75,6 +77,55 @@ describe('activateGiftCardPurchase', () => {
     const result = await activateGiftCardPurchase(client, transaction, { secret: 'test-secret' });
     expect(result).toEqual({ handled: true, status: 'already_processed' });
     expect(calls.find((call) => call.table === 'gift_cards')).toBeUndefined();
+  });
+
+  it('records delivery outcome on the card row as well as the purchase', async () => {
+    const { client, calls } = fakeClient({ purchase });
+    const result = await activateGiftCardPurchase(client, transaction, { secret: 'test-secret', deliver: async () => true });
+    expect(result).toEqual({ handled: true, status: 'activated' });
+    const cardUpdate = calls.find((call) => call.table === 'gift_cards' && call.op === 'update');
+    expect(cardUpdate?.payload).toMatchObject({ delivery_status: 'sent', delivery_attempts: 1, last_delivery_error: null });
+  });
+
+  it('recovers a pending purchase that already has a card without issuing a second one', async () => {
+    const existingCard = { id: 'card-1', purchase_id: 'purchase-1', delivery_status: 'sent', code_ciphertext: 'v1.x.y.z' };
+    const { client, calls } = fakeClient({ purchase, existingCard });
+    const result = await activateGiftCardPurchase(client, transaction, { secret: 'test-secret' });
+    expect(result).toEqual({ handled: true, status: 'activated' });
+    expect(calls.filter((call) => call.table === 'gift_cards' && call.op === 'insert')).toHaveLength(0);
+    expect(calls.find((call) => call.table === 'gift_card_purchases' && call.op === 'update')?.payload).toMatchObject({ status: 'paid' });
+  });
+
+  it('backfills the issue ledger row idempotently when recovering a stranded card', async () => {
+    const existingCard = { id: 'card-1', purchase_id: 'purchase-1', delivery_status: 'sent', code_ciphertext: 'v1.x.y.z' };
+    const { client, calls } = fakeClient({ purchase, existingCard });
+    const result = await activateGiftCardPurchase(client, transaction, { secret: 'test-secret' });
+    expect(result).toEqual({ handled: true, status: 'activated' });
+    expect(calls.find((call) => call.table === 'gift_card_transactions' && call.op === 'upsert')?.payload).toMatchObject({ type: 'issue', idempotency_key: 'gift-card-issue:purchase-1' });
+  });
+
+  it('re-delivers a recovered card only when its delivery is still pending', async () => {
+    const ciphertext = encryptGiftCardCode('ROSE-ABCD-1234', 'test-secret');
+    const existingCard = { id: 'card-1', purchase_id: 'purchase-1', delivery_status: 'pending', code_ciphertext: ciphertext };
+    const { client, calls } = fakeClient({ purchase, existingCard });
+    const deliveries: Array<{ recipient: string; code: string }> = [];
+    const result = await activateGiftCardPurchase(client, transaction, { secret: 'test-secret', deliver: async ({ recipient, code }) => { deliveries.push({ recipient, code }); return true; } });
+    expect(result).toEqual({ handled: true, status: 'activated' });
+    expect(deliveries).toEqual([
+      { recipient: 'maya@example.com', code: 'ROSE-ABCD-1234' },
+      { recipient: 'nour@example.com', code: 'ROSE-ABCD-1234' },
+    ]);
+    expect(calls.find((call) => call.table === 'gift_cards' && call.op === 'update')?.payload).toMatchObject({ delivery_status: 'sent' });
+  });
+
+  it('does not re-deliver a recovered card that was already sent', async () => {
+    const ciphertext = encryptGiftCardCode('ROSE-ABCD-1234', 'test-secret');
+    const existingCard = { id: 'card-1', purchase_id: 'purchase-1', delivery_status: 'sent', code_ciphertext: ciphertext };
+    const { client } = fakeClient({ purchase, existingCard });
+    let delivered = 0;
+    const result = await activateGiftCardPurchase(client, transaction, { secret: 'test-secret', deliver: async () => { delivered += 1; return true; } });
+    expect(result).toEqual({ handled: true, status: 'activated' });
+    expect(delivered).toBe(0);
   });
 });
 

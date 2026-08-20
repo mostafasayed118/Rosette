@@ -57,6 +57,13 @@ describe('gift-card admin actions', () => {
     expect(calls.find((call) => call.table === 'admin_audit_logs')).toBeDefined();
   });
 
+  it('persists the card locale for localized admin delivery', async () => {
+    vi.stubEnv('GIFT_CARD_SECRET', 'test-secret');
+    const { client, calls } = fakeClient();
+    await issueGiftCard(client, admin, { ...input, locale: 'ar' }, { now: new Date('2026-08-20T00:00:00Z') });
+    expect(calls.find((call) => call.table === 'gift_cards' && call.op === 'insert')?.payload).toMatchObject({ locale: 'ar' });
+  });
+
   it('resends by decrypting only inside the delivery dependency', async () => {
     vi.stubEnv('GIFT_CARD_SECRET', 'test-secret');
     const ciphertext = 'v1.invalid.invalid.invalid';
