@@ -1,4 +1,5 @@
 import { canSubmitReview, clampRating, cleanReviewBody, isEligibleOrderPayment } from './review-rules';
+import { isReviewImageUrl, reviewImagePathFromUrl, REVIEW_PHOTO_MAX } from './review-storage';
 import type { AdminIdentity } from '@/features/admin/authorization';
 
 type ReviewClient = { from: (table: string) => any };
@@ -13,12 +14,15 @@ export type SubmitReviewResult =
 
 export async function submitProductReview(
   client: ReviewClient,
-  input: { customerId: string; productSlug: string; rating: unknown; body: unknown },
+  input: { customerId: string; productSlug: string; rating: unknown; body: unknown; photoUrls?: string[] },
 ): Promise<SubmitReviewResult> {
   try {
     const rating = clampRating(input.rating);
     const body = cleanReviewBody(input.body);
     if (rating === 0 || body === null) return { status: 'invalid' };
+
+    const photoUrls = Array.isArray(input.photoUrls) ? input.photoUrls : [];
+    if (photoUrls.length > REVIEW_PHOTO_MAX || photoUrls.some((url) => !isReviewImageUrl(url))) return { status: 'invalid' };
 
     const { data: product } = await client.from('products').select('id').eq('slug', input.productSlug).maybeSingle();
     if (!product) return { status: 'not_found' };
@@ -38,7 +42,7 @@ export async function submitProductReview(
     const eligibility = canSubmitReview({ hasPaidOrderForProduct: true, alreadyReviewed: Boolean(existing) });
     if (eligibility !== 'ok') return { status: eligibility };
 
-    const { error } = await client.from('product_reviews').insert({ product_id: product.id, order_id: eligibleOrder.id, customer_id: input.customerId, rating, body, status: 'pending' }).select('id').single();
+    const { error } = await client.from('product_reviews').insert({ product_id: product.id, order_id: eligibleOrder.id, customer_id: input.customerId, rating, body, status: 'pending', photos: photoUrls }).select('id').single();
     if (error) return { status: 'failure' };
     return { status: 'created' };
   } catch {
@@ -52,14 +56,27 @@ export type ReviewActionResult =
   | { status: 'not_found' }
   | { status: 'failure' };
 
+type ReviewAdminClient = { from: (table: string) => any; storage?: { from: (bucket: string) => any } };
+
 export async function reviewProductReview(
-  client: ReviewClient,
+  client: ReviewAdminClient,
   input: { admin: AdminIdentity; reviewId: string; action: 'approve' | 'reject' },
 ): Promise<ReviewActionResult> {
   try {
     if (input.action === 'reject') {
+      const { data: row } = await client.from('product_reviews').select('photos').eq('id', input.reviewId).maybeSingle();
       const { error } = await client.from('product_reviews').delete().eq('id', input.reviewId);
       if (error) return { status: 'failure' };
+      const photos = (Array.isArray(row?.photos) ? row.photos : []).filter((p: unknown): p is string => typeof p === 'string');
+      const bucket = client.storage?.from('review-images');
+      if (bucket) {
+        for (const url of photos) {
+          const path = reviewImagePathFromUrl(url);
+          if (path) {
+            try { await bucket.remove([path]); } catch { /* best-effort */ }
+          }
+        }
+      }
       return { status: 'rejected' };
     }
     const { error } = await client.from('product_reviews').update({ status: 'approved', reviewed_by: input.admin.userId, reviewed_at: new Date().toISOString() }).eq('id', input.reviewId);

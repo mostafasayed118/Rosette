@@ -1,25 +1,15 @@
-import { getServerSupabase } from '@/lib/supabase/server';
 import { getServerT } from '@/features/i18n/server';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { StarRating } from '@/components/ui/StarRating';
 import { ReviewForm, type ReviewFormState } from './ReviewForm';
-import { ratingBySlug, type ReviewRatingRow } from '@/features/reviews/aggregate';
+import { HelpfulButton } from './HelpfulButton';
+import type { ApprovedReviewData } from '@/features/reviews/get-approved-reviews';
 
-export async function ProductReviews({ productSlug, locale }: { productSlug: string; locale: string }) {
+export async function ProductReviews({ productSlug, locale, data }: { productSlug: string; locale: string; data: ApprovedReviewData | null }) {
   const { t } = await getServerT();
-  const supabase = await getServerSupabase();
-  if (!supabase) return null;
-  const { data: product } = await supabase.from('products').select('id').eq('slug', productSlug).maybeSingle();
-  if (!product) return null;
-
-  const { data: reviewRows } = await supabase.from('product_reviews')
-    .select('id,rating,body,created_at,profiles(display_name)')
-    .eq('product_id', product.id)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false });
-  const reviews = (reviewRows ?? []) as Array<{ id: string; rating: number; body: string; created_at: string; profiles?: { display_name?: string | null } | null }>;
-  const aggregate = ratingBySlug(reviews.map((row): ReviewRatingRow => ({ product_slug: productSlug, rating: row.rating, status: 'approved' }))).get(productSlug);
+  if (!data || !data.productId) return null;
+  const { reviews, aggregate } = data;
   const breakdown = [5, 4, 3, 2, 1].map((star) => ({ star, count: reviews.filter((row) => row.rating === star).length }));
 
   let formState: ReviewFormState = 'anonymous';
@@ -31,8 +21,8 @@ export async function ProductReviews({ productSlug, locale }: { productSlug: str
       .eq('payment_status', 'paid')
       .limit(10);
     const rows = (orders ?? []) as Array<{ id: string; order_items?: Array<{ product_slug?: string | null; product_id?: string | null }> }>;
-    const eligibleOrder = rows.find((order) => (order.order_items ?? []).some((item) => item.product_slug === productSlug || item.product_id === product.id));
-    const { data: existing } = eligibleOrder ? await getAdminSupabase().from('product_reviews').select('id').eq('order_id', eligibleOrder.id).eq('product_id', product.id).maybeSingle() : { data: null };
+    const eligibleOrder = rows.find((order) => (order.order_items ?? []).some((item) => item.product_slug === productSlug || item.product_id === data.productId));
+    const { data: existing } = eligibleOrder ? await getAdminSupabase().from('product_reviews').select('id').eq('order_id', eligibleOrder.id).eq('product_id', data.productId).maybeSingle() : { data: null };
     formState = !eligibleOrder ? 'not-verified' : existing ? 'already-reviewed' : 'can-review';
   }
 
@@ -57,9 +47,10 @@ export async function ProductReviews({ productSlug, locale }: { productSlug: str
           <div className="grid content-start gap-4">
             {reviews.map((review) => (
               <article key={review.id} className="border-b pb-4">
-                <div className="flex items-center gap-2"><StarRating value={review.rating} />{review.profiles?.display_name ?? t('verifiedCustomer')}</div>
+                <div className="flex items-center gap-2"><StarRating value={review.rating} />{review.displayName ?? t('verifiedCustomer')}</div>
                 <p className="mt-1 text-sm">{review.body}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</p>
+                <HelpfulButton reviewId={review.id} />
               </article>
             ))}
           </div>

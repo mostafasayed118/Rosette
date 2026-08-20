@@ -15,6 +15,7 @@ type ReviewRow = {
   id: string;
   rating: number;
   body: string;
+  photos: string[];
   createdAt: string;
   reviewedAt: string | null;
   reviewedByName: string | null;
@@ -29,7 +30,7 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
   const showApproved = params.status === 'approved';
 
   const supabase = getAdminSupabase();
-  const select = 'id,rating,body,status,created_at,reviewed_at,reviewed_by,customer_id,products(name_en)';
+  const select = 'id,rating,body,photos,status,created_at,reviewed_at,reviewed_by,customer_id,products(name_en)';
   const [{ data: pendingRows }, { data: approvedRows }] = await Promise.all([
     supabase.from('product_reviews').select(select).eq('status', 'pending').order('created_at', { ascending: false }).limit(100),
     supabase.from('product_reviews').select(select).eq('status', 'approved').order('reviewed_at', { ascending: false }).limit(100),
@@ -43,6 +44,7 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
     id: String(row.id),
     rating: Number(row.rating),
     body: String(row.body),
+    photos: Array.isArray(row.photos) ? row.photos.filter((p: unknown): p is string => typeof p === 'string') : [],
     createdAt: String(row.created_at),
     reviewedAt: row.reviewed_at ? String(row.reviewed_at) : null,
     reviewedByName: row.reviewed_by ? profileNames.get(String(row.reviewed_by)) ?? null : null,
@@ -71,7 +73,7 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
       <TableRow key={review.id}>
         <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/products/${review.product?.id ?? ''}`}>{review.product?.name_en ?? '—'}</Link><span className="block text-sm text-muted-foreground">{date(review.createdAt)}</span></TableCell>
         <TableCell><StarRating value={review.rating} /></TableCell>
-        <TableCell className="max-w-md"><p className="line-clamp-3 text-sm">{review.body}</p>{review.reviewedAt ? <span className="block text-xs text-muted-foreground">{date(review.reviewedAt)}</span> : null}</TableCell>
+        <TableCell className="max-w-md"><p className="line-clamp-3 text-sm">{review.body}</p>{review.photos.length > 0 ? <span className="mt-1 flex flex-wrap gap-1">{review.photos.slice(0, 3).map((url) => <img key={url} src={url} alt="" className="h-10 w-10 rounded object-cover" />)}</span> : null}{review.reviewedAt ? <span className="block text-xs text-muted-foreground">{date(review.reviewedAt)}</span> : null}</TableCell>
         {showApproved ? <TableCell>{review.reviewedByName ?? '—'}</TableCell> : <TableCell className="text-end"><ReviewQueueActions reviewId={review.id} /></TableCell>}
       </TableRow>
     ))}</TableBody></Table></div></Card>}
