@@ -8,6 +8,7 @@ import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import { markCartConverted } from '@/features/cart/cart-sync';
+import { resolvePaymentMethodAvailability } from '@/features/checkout/payment-mode';
 import { logRouteError } from '@/lib/api';
 
 export async function POST(request: Request) {
@@ -16,6 +17,10 @@ export async function POST(request: Request) {
     const validation = validateOrderRequest(body as { cart?: { lines?: unknown[] }; total?: unknown });
     if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
     if (!body.destination || !body.checkout || (body.locale !== 'ar' && body.locale !== 'en' && body.locale !== 'fr')) return NextResponse.json({ error: 'Incomplete checkout details' }, { status: 400 });
+
+    const checkoutPayment = (body.checkout as { paymentMethod?: string }).paymentMethod;
+    const paymentPath = resolvePaymentMethodAvailability((checkoutPayment as 'paymob' | 'pay-on-delivery' | 'demo-card') ?? 'pay-on-delivery');
+    if (!paymentPath.allowed) return NextResponse.json({ error: 'Payment method unavailable' }, { status: 409 });
 
     const customer = await getCurrentCustomer();
     const result = await getOrderRepository().createPending({ cart: body.cart as never, destination: body.destination as never, checkout: body.checkout as never, locale: body.locale, customerId: customer?.id ?? null });
