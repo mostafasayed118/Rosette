@@ -12,6 +12,37 @@ type GiftCardRpcClient = { rpc?: (name: string, args: Record<string, unknown>) =
 type GiftCardIntentionInput = { amountMinor: number; orderReference: string; specialReference: string; customer: PaymentCustomer; notificationUrl: string; redirectionUrl: string };
 type GiftCardIntentionCreator = (input: GiftCardIntentionInput) => Promise<{ providerReference: string; checkoutUrl: string }>;
 type DeliveryInput = { recipient: string; code: string; purchase: Record<string, unknown> };
+type DeliveryStatus = 'sent' | 'failed';
+
+async function claimGiftCardDelivery(client: GiftCardClient, cardId: string, now: Date): Promise<string | null> {
+  if (!client.rpc) return null;
+  const claimToken = randomUUID();
+  try {
+    const { data, error } = await client.rpc('claim_gift_card_delivery', {
+      p_card_id: cardId,
+      p_claim_token: claimToken,
+      p_now: now.toISOString(),
+    });
+    return error || data !== true ? null : claimToken;
+  } catch {
+    return null;
+  }
+}
+
+async function completeGiftCardDelivery(client: GiftCardClient, cardId: string, claimToken: string, status: DeliveryStatus, errorMessage: string | null): Promise<boolean> {
+  if (!client.rpc) return false;
+  try {
+    const { data, error } = await client.rpc('complete_gift_card_delivery', {
+      p_card_id: cardId,
+      p_claim_token: claimToken,
+      p_status: status,
+      p_error: errorMessage,
+    });
+    return !error && data === true;
+  } catch {
+    return false;
+  }
+}
 
 function defaultCreateIntention(input: GiftCardIntentionInput) {
   return createPaymobIntention({ ...input, integrationId: Number(getRequiredServerEnv('PAYMOB_INTEGRATION_ID')) });
@@ -63,6 +94,9 @@ async function recoverGiftCardActivation(
   // Re-deliver only when the card has never been delivered; a crash between the
   // card insert and delivery leaves it pending.
   if (card.delivery_status === 'pending') {
+    const claimToken = await claimGiftCardDelivery(client, String(card.id), deps.now);
+    if (!claimToken) return { handled: true, status: 'activated' };
+
     const recipients = [...new Set([String(purchase.sender_email).trim().toLowerCase(), String(purchase.recipient_email).trim().toLowerCase()])].filter(Boolean);
     let code: string | null = null;
     try {
@@ -75,9 +109,13 @@ async function recoverGiftCardActivation(
       const expiresAt = String(card.expires_at ?? new Date(deps.now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString());
       for (const recipient of recipients) if (!(await deps.deliver({ recipient, code, purchase: { ...purchase, expires_at: expiresAt } }))) failed += 1;
     }
-    const deliveryState = { delivery_status: failed ? 'failed' : 'sent', delivery_attempts: 1, last_delivery_error: failed ? 'smtp_failed' : null };
-    await client.from('gift_card_purchases').update(deliveryState).eq('id', purchase.id);
-    await client.from('gift_cards').update(deliveryState).eq('id', String(card.id));
+    const deliveryStatus: DeliveryStatus = failed ? 'failed' : 'sent';
+    const deliveryError = failed ? 'smtp_failed' : null;
+    const completed = await completeGiftCardDelivery(client, String(card.id), claimToken, deliveryStatus, deliveryError);
+    if (completed) {
+      const deliveryState = { delivery_status: deliveryStatus, delivery_attempts: Number(card.delivery_attempts ?? 0) + 1, last_delivery_error: deliveryError };
+      await client.from('gift_card_purchases').update(deliveryState).eq('id', purchase.id);
+    }
   }
   return { handled: true, status: 'activated' };
 }
@@ -122,12 +160,19 @@ export async function activateGiftCardPurchase(
   await client.from('gift_card_transactions').insert({ gift_card_id: String(card.id), type: 'issue', amount_minor: purchase.amount_minor, idempotency_key: `gift-card-issue:${purchase.id}`, metadata: { provider_reference: transaction.providerReference } });
   await client.from('gift_card_purchases').update({ status: 'paid', provider_reference: transaction.providerReference, updated_at: now.toISOString() }).eq('id', purchase.id);
 
+  const claimToken = await claimGiftCardDelivery(client, String(card.id), now);
+  if (!claimToken) return { handled: true, status: 'activated' };
+
   const recipients = [...new Set([String(purchase.sender_email).trim().toLowerCase(), String(purchase.recipient_email).trim().toLowerCase()])].filter(Boolean);
   let failed = 0;
   for (const recipient of recipients) if (!(await deliver({ recipient, code, purchase: { ...purchase, expires_at: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString() } }))) failed += 1;
-  const deliveryState = { delivery_status: failed ? 'failed' : 'sent', delivery_attempts: 1, last_delivery_error: failed ? 'smtp_failed' : null };
-  await client.from('gift_card_purchases').update(deliveryState).eq('id', purchase.id);
-  await client.from('gift_cards').update(deliveryState).eq('id', String(card.id));
+  const deliveryStatus: DeliveryStatus = failed ? 'failed' : 'sent';
+  const deliveryError = failed ? 'smtp_failed' : null;
+  const completed = await completeGiftCardDelivery(client, String(card.id), claimToken, deliveryStatus, deliveryError);
+  if (completed) {
+    const deliveryState = { delivery_status: deliveryStatus, delivery_attempts: 1, last_delivery_error: deliveryError };
+    await client.from('gift_card_purchases').update(deliveryState).eq('id', purchase.id);
+  }
   return { handled: true, status: 'activated' };
 }
 

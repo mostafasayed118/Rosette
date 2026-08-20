@@ -36,6 +36,8 @@ create table if not exists public.gift_cards (
   delivery_status text not null default 'pending' check (delivery_status in ('pending', 'sent', 'failed')),
   delivery_attempts integer not null default 0 check (delivery_attempts >= 0),
   last_delivery_error text,
+  delivery_claim_token text,
+  delivery_claimed_at timestamptz,
   activated_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -80,10 +82,63 @@ alter table public.orders add column if not exists gift_card_id uuid references 
 alter table public.orders add column if not exists gift_card_hold_id uuid references public.gift_card_holds(id);
 alter table public.orders add column if not exists gift_card_code_last4 text;
 
+alter table public.gift_cards add column if not exists delivery_claim_token text;
+alter table public.gift_cards add column if not exists delivery_claimed_at timestamptz;
+
 alter table public.gift_card_purchases enable row level security;
 alter table public.gift_cards enable row level security;
 alter table public.gift_card_holds enable row level security;
 alter table public.gift_card_transactions enable row level security;
+
+create or replace function public.claim_gift_card_delivery(
+  p_card_id uuid,
+  p_claim_token text,
+  p_now timestamptz default now(),
+  p_stale_after_seconds integer default 600
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_claim_token is null or p_claim_token = '' then return false; end if;
+  update public.gift_cards
+     set delivery_claim_token = p_claim_token,
+         delivery_claimed_at = p_now,
+         updated_at = p_now
+   where id = p_card_id
+     and delivery_status = 'pending'
+     and (delivery_claim_token is null or delivery_claimed_at <= p_now - (greatest(p_stale_after_seconds, 0) * interval '1 second'));
+  return found;
+end;
+$$;
+
+create or replace function public.complete_gift_card_delivery(
+  p_card_id uuid,
+  p_claim_token text,
+  p_status text,
+  p_error text default null
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_status not in ('sent', 'failed') then return false; end if;
+  update public.gift_cards
+     set delivery_status = p_status,
+         delivery_attempts = delivery_attempts + 1,
+         last_delivery_error = p_error,
+         delivery_claim_token = null,
+         delivery_claimed_at = null,
+         updated_at = now()
+   where id = p_card_id
+     and delivery_claim_token = p_claim_token;
+  return found;
+end;
+$$;
 
 create or replace function public.reserve_gift_card(
   p_code_hash text,
