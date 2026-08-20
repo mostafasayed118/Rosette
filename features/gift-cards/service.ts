@@ -7,6 +7,7 @@ import type { GiftCardPurchaseInput, GiftCardQuote } from './types';
 import { validateGiftCardPurchaseInput } from './validation';
 
 export type GiftCardClient = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => any };
+type GiftCardRpcClient = { rpc?: (name: string, args: Record<string, unknown>) => any };
 type GiftCardIntentionInput = { amountMinor: number; orderReference: string; specialReference: string; customer: PaymentCustomer; notificationUrl: string; redirectionUrl: string };
 type GiftCardIntentionCreator = (input: GiftCardIntentionInput) => Promise<{ providerReference: string; checkoutUrl: string }>;
 type DeliveryInput = { recipient: string; code: string; purchase: Record<string, unknown> };
@@ -104,6 +105,33 @@ export async function holdGiftCardForOrder(client: GiftCardClient, input: { code
     return { ok: true, holdId: String(data) };
   } catch {
     return { ok: false, error: 'invalid_gift_card' };
+  }
+}
+
+export async function settleGiftCardOrderPayment(
+  client: GiftCardRpcClient,
+  order: { id: string; gift_card_hold_id?: string | null },
+  input: { success: boolean; providerReference: string },
+): Promise<{ ok: true } | { ok: false; error: 'gift_card_settlement_failed' }> {
+  if (!order.gift_card_hold_id) return { ok: true };
+  if (!client.rpc) return { ok: false, error: 'gift_card_settlement_failed' };
+  const name = input.success ? 'redeem_gift_card_hold' : 'release_gift_card_hold';
+  const { error } = await client.rpc(name, { p_hold_id: order.gift_card_hold_id, p_idempotency_key: `gift-card-${input.success ? 'redeem' : 'release'}:${input.providerReference}` });
+  return error ? { ok: false, error: 'gift_card_settlement_failed' } : { ok: true };
+}
+
+export async function restoreGiftCardForCancelledOrder(
+  client: GiftCardRpcClient,
+  input: { orderId: string; giftCardId?: string | null; amountMinor?: number },
+): Promise<'restored' | 'already_restored' | 'not_applicable' | 'failure'> {
+  if (!input.giftCardId || !input.amountMinor || input.amountMinor <= 0) return 'not_applicable';
+  if (!client.rpc) return 'failure';
+  try {
+    const { error } = await client.rpc('refund_gift_card_redemption', { p_gift_card_id: input.giftCardId, p_order_id: input.orderId, p_amount_minor: input.amountMinor, p_idempotency_key: `gift-card-refund:${input.orderId}` });
+    if (error) return 'failure';
+    return 'restored';
+  } catch {
+    return 'failure';
   }
 }
 

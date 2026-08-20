@@ -91,6 +91,7 @@ const requestWithOrder = (overrides: Record<string, unknown> = {}) => ({
 
 function reviewClient(request: unknown) {
   const calls: Array<{ table: string; op: string; payload?: unknown }> = [];
+  const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
   // The service looks up the request with select(...).eq('id', requestId).maybeSingle().
   const client = {
     from: (table: string) => ({
@@ -98,8 +99,9 @@ function reviewClient(request: unknown) {
       update: (payload: unknown) => ({ eq: (_col: string, id: string) => { calls.push({ table, op: 'update', payload }); return { error: null }; } }),
       insert: (payload: unknown) => { calls.push({ table, op: 'insert', payload }); return { error: null }; },
     }),
+    rpc: async (name: string, args: Record<string, unknown>) => { rpcCalls.push({ name, args }); return { data: true, error: null }; },
   };
-  return { client, calls };
+  return { client, calls, rpcCalls };
 }
 
 const refund = vi.fn().mockResolvedValue({ ok: true, refundTransactionId: 'refund-1' });
@@ -122,6 +124,14 @@ describe('reviewCancellationRequest', () => {
     expect(calls).toContainEqual(expect.objectContaining({ table: 'order_cancel_requests', op: 'update', payload: expect.objectContaining({ status: 'approved', reviewed_by: 'a1' }) }));
     expect(calls).toContainEqual(expect.objectContaining({ table: 'admin_audit_logs', op: 'insert' }));
     expect(deliver).toHaveBeenCalled();
+  });
+
+  it('restores the gift-card portion and refunds only the Paymob remainder', async () => {
+    const { client, rpcCalls } = reviewClient(requestWithOrder({ orders: { ...requestWithOrder().orders, total_minor: 25000, gift_card_id: 'card-1', gift_card_minor: 75000, payments: [{ ...paidPayment, amount_minor: 25000 }] } }));
+    const result = await reviewCancellationRequest(client, { admin, requestId: 'req-1', action: 'approve', orderUrlBase: 'https://example.com' }, { deliver, refund });
+    expect(result).toEqual({ status: 'approved' });
+    expect(rpcCalls).toEqual([{ name: 'refund_gift_card_redemption', args: { p_gift_card_id: 'card-1', p_order_id: 'o1', p_amount_minor: 75000, p_idempotency_key: 'gift-card-refund:o1' } }]);
+    expect(refund).toHaveBeenCalledWith({ transactionId: 'txn-1', amountMinor: 25000 });
   });
 
   it('blocks approval when the Paymob refund fails, leaving the order paid and the request pending', async () => {

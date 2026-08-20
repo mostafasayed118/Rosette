@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activateGiftCardPurchase, createGiftCardPurchase } from '@/features/gift-cards/service';
+import { activateGiftCardPurchase, createGiftCardPurchase, restoreGiftCardForCancelledOrder } from '@/features/gift-cards/service';
 
 const input = {
   mode: 'fixed' as const,
@@ -75,5 +75,14 @@ describe('activateGiftCardPurchase', () => {
     const result = await activateGiftCardPurchase(client, transaction, { secret: 'test-secret' });
     expect(result).toEqual({ handled: true, status: 'already_processed' });
     expect(calls.find((call) => call.table === 'gift_cards')).toBeUndefined();
+  });
+});
+
+describe('gift-card cancellation restoration', () => {
+  it('restores a redeemed balance through one idempotent RPC', async () => {
+    const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
+    const client = { rpc: async (name: string, args: Record<string, unknown>) => { calls.push({ name, args }); return { data: true, error: null }; } };
+    expect(await restoreGiftCardForCancelledOrder(client, { orderId: 'order-1', giftCardId: 'card-1', amountMinor: 75000 })).toBe('restored');
+    expect(calls).toEqual([{ name: 'refund_gift_card_redemption', args: { p_gift_card_id: 'card-1', p_order_id: 'order-1', p_amount_minor: 75000, p_idempotency_key: 'gift-card-refund:order-1' } }]);
   });
 });
