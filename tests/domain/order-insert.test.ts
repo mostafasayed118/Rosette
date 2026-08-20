@@ -16,4 +16,10 @@ describe('buildOrderInsertRow', () => {
   it('sets customer_id to null when absent', () => {
     expect(buildOrderInsertRow(base).customer_id).toBeNull();
   });
+
+  it('stores only masked gift-card references and amounts', () => {
+    const row = buildOrderInsertRow({ ...base, giftCardMinor: 75000, giftCardId: 'card-1', giftCardHoldId: 'hold-1', giftCardCodeLast4: 'ZZZZ' });
+    expect(row).toMatchObject({ gift_card_minor: 75000, gift_card_id: 'card-1', gift_card_hold_id: 'hold-1', gift_card_code_last4: 'ZZZZ' });
+    expect(JSON.stringify(row)).not.toContain('ROSE-');
+  });
 });

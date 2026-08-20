@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Boxes, Home, Mail, Package, ShoppingCart, Ticket, Truck, type LucideIcon } from 'lucide-react';
+import { Boxes, Gift, Home, Mail, Package, ShoppingCart, Ticket, Truck, type LucideIcon } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 
 const ICONS: Record<string, LucideIcon> = {
@@ -11,6 +11,7 @@ const ICONS: Record<string, LucideIcon> = {
   '/admin/inventory': Boxes,
   '/admin/delivery': Truck,
   '/admin/promos': Ticket,
+  '/admin/gift-cards': Gift,
   '/admin/notifications': Mail,
 };
 

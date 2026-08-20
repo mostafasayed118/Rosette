@@ -4,17 +4,19 @@ import { deliverOrderNotification } from '@/features/notifications/notification-
 import type { AdminIdentity } from '@/features/admin/authorization';
 import { canTransitionFulfillment, type FulfillmentStatus } from '@/features/commerce/order-state';
 import { refundPaymobTransaction } from '@/features/payment/paymob-refund';
+import { restoreGiftCardForCancelledOrder } from '@/features/gift-cards/service';
 import type { PaymobRefundResult } from '@/features/payment/paymob-refund';
 
-type CancelClient = { from: (table: string) => any };
+type CancelClient = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => any };
 
-const orderSelect = 'id,display_number,fulfillment_status,payment_status,customer_id,customer_email,locale,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,public_token';
+const orderSelect = 'id,display_number,fulfillment_status,payment_status,customer_id,customer_email,locale,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,public_token,gift_card_id,gift_card_minor,gift_card_hold_id';
 
 type OrderRow = {
   id: string; display_number: string; fulfillment_status: string; payment_status: string;
   customer_id: string | null; customer_email: string | null; locale: 'en' | 'ar' | 'fr';
   total_minor: number; subtotal_minor: number; delivery_fee_minor: number; discount_minor: number | null;
   public_token: string | null;
+  gift_card_id?: string | null; gift_card_minor?: number | null; gift_card_hold_id?: string | null;
   payments?: Array<{ id: string; provider_reference: string | null; amount_minor: number; status: string }>;
 };
 
@@ -123,10 +125,13 @@ export async function reviewCancellationRequest(
 
     if (!canTransitionFulfillment(order.fulfillment_status as FulfillmentStatus, 'cancelled')) return { status: 'not_cancellable' };
 
+    const giftCardRestore = await restoreGiftCardForCancelledOrder(client, { orderId: order.id, giftCardId: order.gift_card_id, amountMinor: order.gift_card_minor ?? undefined });
+    if (giftCardRestore === 'failure') return { status: 'refund_failed' };
+
     // Block-approval: a paid order is only approved once Paymob has actually refunded the
     // money. On any refund problem the request stays pending and the order stays paid so
     // the admin can retry — the DB never claims a refund that did not happen.
-    if (order.payment_status === 'paid') {
+    if (order.payment_status === 'paid' && order.total_minor > 0) {
       const payment = (order.payments ?? []).find((row) => row.status === 'paid' || row.status === 'refunded');
       if (!payment?.provider_reference) return { status: 'refund_failed' };
       if (payment.status === 'paid') {

@@ -4,6 +4,7 @@ import { getRequiredServerEnv } from '@/lib/server-env';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import { verifyPaymobCallback } from '@/features/payment/paymob-hmac';
 import { handleChangePaymentCallback } from '@/features/orders/change-request-service';
+import { activateGiftCardPurchase, settleGiftCardOrderPayment } from '@/features/gift-cards/service';
 import { getPublicOrigin } from '@/lib/origin';
 import { logRouteError } from '@/lib/api';
 
@@ -20,10 +21,25 @@ export async function POST(request: Request) {
   // The approval flow already refunds synchronously and records the result itself.
   if (transaction.is_refund === true || transaction.is_refunded === true || transaction.has_parent_transaction === true) return NextResponse.json({ received: true });
 
+  const specialReference = String(transaction.order?.special_reference ?? transaction.special_reference ?? '');
+  if (specialReference.startsWith('giftcard:')) {
+    try {
+      await activateGiftCardPurchase(getAdminSupabase(), {
+        specialReference,
+        amountMinor: Number(transaction.amount_cents ?? 0),
+        providerReference: String(transaction.id ?? transaction.order?.id ?? ''),
+        success: transaction.success === true,
+      });
+      return NextResponse.json({ received: true });
+    } catch (error) {
+      logRouteError('gift-card webhook', error);
+      return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+    }
+  }
+
   // Change-request delta payments: Paymob echoes special_reference back in the
   // callback. Match it before the order path — the order path matches
   // display_number and would 400 on these (no merchant_order_id is set).
-  const specialReference = String(transaction.order?.special_reference ?? transaction.special_reference ?? '');
   if (specialReference.startsWith('change:')) {
     await handleChangePaymentCallback(getAdminSupabase(), transaction, { orderUrlBase: getPublicOrigin(request) });
     return NextResponse.json({ received: true });
@@ -38,9 +54,11 @@ export async function POST(request: Request) {
 
   try {
     const supabase = getAdminSupabase();
-    const { data: order } = await supabase.from('orders').select('id,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,payment_status,display_number,public_token,customer_email,locale').eq('display_number', orderReference).maybeSingle();
+    const { data: order } = await supabase.from('orders').select('id,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,payment_status,display_number,public_token,customer_email,locale,gift_card_id,gift_card_minor,gift_card_hold_id').eq('display_number', orderReference).maybeSingle();
     if (!order) return NextResponse.json({ received: true });
     if (order.total_minor !== amountMinor) return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
+    const giftCardSettlement = await settleGiftCardOrderPayment(supabase, order, { success, providerReference });
+    if (!giftCardSettlement.ok) throw new Error('Gift-card settlement failed');
 
     const { data: inserted, error: insertError } = await supabase.from('payments').insert({ order_id: order.id, provider: 'paymob', provider_reference: providerReference, idempotency_key: idempotencyKey, amount_minor: amountMinor, currency: String(transaction.currency ?? 'EGP'), status: success ? 'paid' : 'payment_failed', raw_event: payload }).select('id').maybeSingle();
     if (insertError && !insertError.message.toLowerCase().includes('duplicate')) throw insertError;

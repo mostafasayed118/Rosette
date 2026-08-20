@@ -4,6 +4,7 @@ import { applyPromoToOrderTotals, validatePromo } from '@/features/promo/apply';
 import { fetchPromo } from '@/features/promo/repository';
 import { applyDeliveryRule, fetchDeliveryRule } from './delivery-rules';
 import { buildOrderInsertRow } from './order-insert';
+import { holdGiftCardForOrder, quoteGiftCardForOrder } from '@/features/gift-cards/service';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import type { CartLine } from '@/features/cart/types';
 import type { OrderRepository, CreatePendingOrderInput, Order, PendingOrder, Result, OrderCreateError } from './types';
@@ -59,6 +60,18 @@ export const supabaseOrderRepository: OrderRepository = {
         discountMinor = withDiscount.discountMinor;
         promoCode = promo.code;
       }
+      let giftCardMinor = 0;
+      let giftCardId: string | null = null;
+      let giftCardCodeLast4: string | null = null;
+      const giftCardCode = input.checkout.giftCardCode?.trim();
+      if (giftCardCode) {
+        const quote = await quoteGiftCardForOrder(supabase, { code: giftCardCode, orderTotalMinor: totals.total });
+        if (!quote.ok) return { ok: false, error: 'invalid_gift_card' };
+        giftCardMinor = quote.value.amountAppliedMinor;
+        giftCardId = quote.value.giftCardId;
+        giftCardCodeLast4 = quote.value.codeLast4;
+        totals = { ...totals, total: quote.value.remainingTotalMinor };
+      }
       const number = displayNumber();
       const publicToken = randomUUID();
       const { data: order, error } = await supabase.from('orders').insert(buildOrderInsertRow({
@@ -79,10 +92,11 @@ export const supabaseOrderRepository: OrderRepository = {
         discountMinor,
         promoCode,
         totalMinor: totals.total,
+        giftCardMinor,
+        giftCardId,
+        giftCardCodeLast4,
       })).select('id,display_number,public_token,total_minor').single();
       if (error || !order) return { ok: false, error: 'unavailable' };
-      if (promoCode) await supabase.rpc('increment_promo_usage', { p_code: promoCode });
-
       const { error: itemError } = await supabase.from('order_items').insert(safeLines.map((line) => ({
         order_id: order.id,
         product_id: null,
@@ -96,13 +110,23 @@ export const supabaseOrderRepository: OrderRepository = {
         add_ons: line.addOns,
         gift_message: line.message,
       })));
-      if (itemError) return { ok: false, error: 'unavailable' };
+      if (itemError) { await supabase.from('orders').delete().eq('id', order.id); return { ok: false, error: 'unavailable' }; }
+      let giftCardHoldId: string | null = null;
+      if (giftCardCode && giftCardMinor > 0) {
+        const hold = await holdGiftCardForOrder(supabase, { code: giftCardCode, orderId: order.id, amountMinor: giftCardMinor });
+        if (!hold.ok) { await supabase.from('orders').delete().eq('id', order.id); return { ok: false, error: 'invalid_gift_card' }; }
+        giftCardHoldId = hold.holdId;
+        const { error: holdUpdateError } = await supabase.from('orders').update({ gift_card_hold_id: giftCardHoldId }).eq('id', order.id);
+        if (holdUpdateError) { await supabase.rpc('release_gift_card_hold', { p_hold_id: giftCardHoldId, p_idempotency_key: `gift-card-release:${order.id}` }); await supabase.from('orders').delete().eq('id', order.id); return { ok: false, error: 'unavailable' }; }
+      }
       const { error: reservationError } = await supabase.rpc('reserve_order_inventory', { p_order_id: order.id, p_items: safeLines.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })) });
       if (reservationError) {
+        if (giftCardHoldId) await supabase.rpc('release_gift_card_hold', { p_hold_id: giftCardHoldId, p_idempotency_key: `gift-card-release:${order.id}` });
         await supabase.from('orders').delete().eq('id', order.id);
         return { ok: false, error: reservationError.message.includes('INSUFFICIENT_STOCK') ? 'invalid' : 'unavailable' };
       }
-      return { ok: true, value: { id: order.id, displayNumber: order.display_number, totalMinor: order.total_minor, subtotalMinor: totals.subtotal, deliveryFeeMinor: totals.deliveryFee, discountMinor, publicToken: order.public_token, paymentStatus: 'pending', fulfillmentStatus: 'confirmed' } };
+      if (promoCode) await supabase.rpc('increment_promo_usage', { p_code: promoCode });
+      return { ok: true, value: { id: order.id, displayNumber: order.display_number, totalMinor: order.total_minor, subtotalMinor: totals.subtotal, deliveryFeeMinor: totals.deliveryFee, discountMinor, giftCardMinor, giftCardId, giftCardHoldId, giftCardCodeLast4, publicToken: order.public_token, paymentStatus: 'pending', fulfillmentStatus: 'confirmed' } };
     } catch {
       return { ok: false, error: 'unavailable' };
     }
