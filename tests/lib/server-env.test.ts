@@ -1,10 +1,15 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
 
 describe('server environment', () => {
+  beforeEach(() => {
+    // Isolate provider secrets that may be injected by the Codespace/deployment shell.
+    vi.stubEnv('GROQ_API_KEY', '');
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', '');
+  });
+
   afterEach(() => {
-    delete process.env.GROQ_API_KEY;
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    vi.unstubAllEnvs();
   });
 
   it('returns undefined for an optional provider that is not configured', () => {
