@@ -1,6 +1,7 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
-import { createGmailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
+import { createMailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
 import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
+import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 import type { EmailLocale } from '@/features/notifications/email-types';
 
 export type GiftCardEmailInput = {
@@ -36,8 +37,9 @@ export function renderGiftCardEmail(input: GiftCardEmailInput) {
 }
 
 export async function sendGiftCardEmail(input: { recipient: string; rendered: ReturnType<typeof renderGiftCardEmail> }, injectedTransport?: MailTransport) {
+  if (!injectedTransport && isEmailDeliveryDisabled()) return false;
   try {
-    const transport = injectedTransport ?? createGmailTransport();
+    const transport = injectedTransport ?? createMailTransport();
     const from = injectedTransport ? (getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@example.invalid>') : getRequiredServerEnv('GMAIL_FROM');
     await transport.sendMail({ from, to: input.recipient, subject: input.rendered.subject, text: input.rendered.text, html: input.rendered.html });
     return true;

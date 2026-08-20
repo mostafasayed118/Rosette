@@ -1,5 +1,6 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
-import { createGmailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
+import { createMailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
+import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 import { renderEngagementFooter } from '@/features/email-preferences/engagement-footer';
 import type { PreferenceLocale } from '@/features/email-preferences/preferences-service';
 
@@ -36,8 +37,10 @@ export function renderWishlistEmail(input: { locale: EmailLocale; type: Wishlist
 
 export async function sendWishlistEmail(
   input: { to: string; locale: EmailLocale; type: WishlistEmailType; productName: string; priceMinor?: number; productUrl: string; unsubscribeUrl?: string },
-  transport: MailTransport = createGmailTransport(),
+  injectedTransport?: MailTransport,
 ): Promise<void> {
+  if (!injectedTransport && isEmailDeliveryDisabled()) throw new Error('Email delivery disabled');
+  const transport = injectedTransport ?? createMailTransport();
   const { subject, text, html } = renderWishlistEmail(input);
   await transport.sendMail({
     from: `Rosette <rosette-wishlist@localhost>`,

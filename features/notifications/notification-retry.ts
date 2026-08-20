@@ -83,7 +83,10 @@ export async function retryStuckNotifications(
       orderUrl: `${base}/orders/${row.order_id}?token=${encodeURIComponent(orderRow.public_token ?? '')}`,
     });
     summary.retried += 1;
-    if (result.accepted) {
+    if ('skipped' in result && result.skipped) {
+      summary.skipped += 1;
+      await client.from('notification_deliveries').update({ status: 'skipped', last_error: 'delivery_disabled' }).eq('id', row.id);
+    } else if (result.accepted) {
       summary.sent += 1;
       await client.from('notification_deliveries').update({ status: 'sent', sent_at: now().toISOString(), attempts: row.attempts + 1, last_error: null }).eq('id', row.id);
     } else {

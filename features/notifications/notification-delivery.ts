@@ -46,6 +46,11 @@ export async function deliverOrderNotification(
     orderUrl: input.orderUrl,
   });
 
+  if ('skipped' in result && result.skipped) {
+    await client.from('notification_deliveries').update({ status: 'skipped', last_error: 'delivery_disabled' }).eq('id', row.id);
+    return { accepted: false };
+  }
+
   await client
     .from('notification_deliveries')
     .update(result.accepted ? { status: 'sent', sent_at: new Date().toISOString() } : { status: 'failed', attempts: 1, last_error: 'smtp_failed' })

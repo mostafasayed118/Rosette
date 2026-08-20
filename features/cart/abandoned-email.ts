@@ -1,6 +1,7 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
-import { createGmailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
+import { createMailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
 import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
+import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 import { pickLocalized } from '@/features/i18n/pick';
 import { renderEngagementFooter } from '@/features/email-preferences/engagement-footer';
 import type { PreferenceLocale } from '@/features/email-preferences/preferences-service';
@@ -42,8 +43,9 @@ export async function sendAbandonedCartEmail(
   input: { to: string; locale: EmailLocale; items: CartLine[]; restoreUrl: string; unsubscribeUrl?: string },
   injectedTransport?: MailTransport,
 ): Promise<void> {
+  if (!injectedTransport && isEmailDeliveryDisabled()) throw new Error('Email delivery disabled');
   const { subject, text, html } = renderAbandonedCartEmail(input);
-  const transport = injectedTransport ?? createGmailTransport();
+  const transport = injectedTransport ?? createMailTransport();
   const from = injectedTransport ? (getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@rosette.example>') : getRequiredServerEnv('GMAIL_FROM');
   await transport.sendMail({
     from,

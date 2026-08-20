@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { getRequiredServerEnv } from '@/lib/server-env';
+import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 
 export type MailTransport = { sendMail: (message: { from: string; to: string; subject: string; text: string; html: string; headers?: Record<string, string> }) => Promise<unknown> };
 
@@ -8,4 +9,16 @@ export function createGmailTransport(): MailTransport {
     service: 'gmail',
     auth: { user: getRequiredServerEnv('GMAIL_USER'), pass: getRequiredServerEnv('GMAIL_APP_PASSWORD') },
   });
+}
+
+function createDisabledTransport(): MailTransport {
+  return {
+    async sendMail() {
+      return { delivered: false, reason: 'disabled' as const };
+    },
+  };
+}
+
+export function createMailTransport(): MailTransport {
+  return isEmailDeliveryDisabled() ? createDisabledTransport() : createGmailTransport();
 }

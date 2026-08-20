@@ -85,6 +85,15 @@ describe('retryStuckNotifications', () => {
     expect(update!.payload).toMatchObject({ status: 'failed', last_error: 'unknown_type' });
   });
 
+  it('marks a disabled send as skipped instead of retrying again', async () => {
+    const sendSkip = async () => ({ accepted: false as const, retryable: false as const, skipped: true as const });
+    const { client, calls } = fakeClient([failedRow()], { o1: order });
+    const summary = await retryStuckNotifications(client, { sendNotification: sendSkip, now });
+    expect(summary).toEqual({ retried: 1, sent: 0, failed: 0, skipped: 1 });
+    const update = calls.find((c) => c.table === 'notification_deliveries' && c.op === 'update');
+    expect(update!.payload).toMatchObject({ status: 'skipped', last_error: 'delivery_disabled' });
+  });
+
   it('marks a row failed when its order is missing', async () => {
     const { client, calls } = fakeClient([failedRow()], {});
     const summary = await retryStuckNotifications(client, { sendNotification: sendOk, now });

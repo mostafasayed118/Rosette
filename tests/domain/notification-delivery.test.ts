@@ -72,6 +72,15 @@ describe('deliverOrderNotification', () => {
     expect(calls).toEqual([]);
   });
 
+  it('records skipped delivery when email is disabled', async () => {
+    const { client, calls } = fakeClient();
+    const sendSkip = async () => ({ accepted: false as const, retryable: false as const, skipped: true as const });
+    const result = await deliverOrderNotification(client, input, sendSkip);
+    expect(result).toEqual({ accepted: false });
+    const updated = calls.find((c) => c.table === 'notification_deliveries' && c.op === 'update');
+    expect(updated!.payload).toMatchObject({ status: 'skipped', last_error: 'delivery_disabled' });
+  });
+
   it('returns accepted false without sending when the insert fails', async () => {
     const { client, calls } = fakeClient({ failInsert: true });
     const result = await deliverOrderNotification(client, input, sendOk);

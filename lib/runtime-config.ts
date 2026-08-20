@@ -25,6 +25,10 @@ export function getEmailDeliveryMode(): EmailDeliveryMode {
   return allowed(getOptionalServerEnv('EMAIL_DELIVERY_MODE'), EMAIL_MODES, fallback);
 }
 
+export function isEmailDeliveryDisabled(): boolean {
+  return getEmailDeliveryMode() === 'disabled';
+}
+
 export function isPaymobEnabled(): boolean {
   const mode = getPaymentMode();
   if (mode !== 'paymob_test' && mode !== 'paymob_live') return false;
