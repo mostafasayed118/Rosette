@@ -7,8 +7,8 @@ export async function POST(request: Request, context: { params: Promise<{ slug: 
   const customer = await getCurrentCustomer();
   if (!customer) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   const { slug } = await context.params;
-  const body = (await request.json()) as { rating?: unknown; body?: unknown };
-  const result = await submitProductReview(getAdminSupabase(), { customerId: customer.id, productSlug: slug, rating: body.rating, body: body.body });
+  const body = (await request.json()) as { rating?: unknown; body?: unknown; photos?: unknown };
+  const result = await submitProductReview(getAdminSupabase(), { customerId: customer.id, productSlug: slug, rating: body.rating, body: body.body, photoUrls: Array.isArray(body.photos) ? body.photos : [] });
   if (result.status === 'invalid') return NextResponse.json({ error: 'Invalid rating or review body' }, { status: 400 });
   if (result.status === 'not_found') return NextResponse.json({ error: 'Product not found' }, { status: 404 });
   if (result.status === 'not_verified') return NextResponse.json({ error: 'Verified purchase required' }, { status: 403 });

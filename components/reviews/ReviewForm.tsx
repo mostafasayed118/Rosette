@@ -1,20 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Star } from 'lucide-react';
+import { Star, X } from 'lucide-react';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { REVIEW_PHOTO_MAX, REVIEW_PHOTO_MAX_BYTES, REVIEW_PHOTO_TYPES } from '@/features/reviews/review-storage';
 
 export type ReviewFormState = 'anonymous' | 'not-verified' | 'already-reviewed' | 'can-review';
+
+const ACCEPT = (REVIEW_PHOTO_TYPES as readonly string[]).join(',');
+
+function makePreview(file: File): string {
+  return typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : '';
+}
 
 export function ReviewForm({ productSlug, state }: { productSlug: string; state: ReviewFormState }) {
   const { t } = useI18n();
   const [rating, setRating] = useState(0);
   const [body, setBody] = useState('');
+  const [photos, setPhotos] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   if (state === 'anonymous') {
     return <p className="text-sm text-muted-foreground">{t('reviewSignInPrompt')}</p>;
@@ -29,11 +39,34 @@ export function ReviewForm({ productSlug, state }: { productSlug: string; state:
     return <p className="text-sm text-primary" role="status">{t('reviewPending')}</p>;
   }
 
+  function onFiles(files: FileList | null) {
+    const next = files ? Array.from(files).slice(0, REVIEW_PHOTO_MAX) : [];
+    if (files && files.length > REVIEW_PHOTO_MAX) { setPhotoError(t('photoTooMany')); return; }
+    if (next.some((file) => file.size > REVIEW_PHOTO_MAX_BYTES)) { setPhotoError(t('photoTooLarge')); return; }
+    if (next.some((file) => !(REVIEW_PHOTO_TYPES as readonly string[]).includes(file.type))) { setPhotoError(t('photoInvalidType')); return; }
+    setPhotoError(null);
+    setPhotos(next);
+  }
+
+  function removePhoto(index: number) {
+    setPhotos((current) => current.filter((_, i) => i !== index));
+  }
+
   async function submit() {
     if (rating < 1 || !body.trim() || busy) return;
     setBusy(true);
     setError(false);
-    const response = await fetch(`/api/account/products/${productSlug}/reviews`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rating, body: body.trim() }) });
+    setPhotoError(null);
+    let photoUrls: string[] = [];
+    if (photos.length > 0) {
+      const formData = new FormData();
+      photos.forEach((file) => formData.append('photos', file));
+      const uploadResponse = await fetch('/api/account/review-photos', { method: 'POST', body: formData });
+      if (!uploadResponse.ok) { setBusy(false); setPhotoError(t('photoUploadFailed')); return; }
+      const uploadData = await uploadResponse.json();
+      photoUrls = Array.isArray(uploadData.urls) ? uploadData.urls : [];
+    }
+    const response = await fetch(`/api/account/products/${productSlug}/reviews`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rating, body: body.trim(), photos: photoUrls }) });
     setBusy(false);
     if (!response.ok) { setError(true); return; }
     setPending(true);
@@ -49,6 +82,19 @@ export function ReviewForm({ productSlug, state }: { productSlug: string; state:
         ))}
       </div>
       <Textarea value={body} onChange={(event) => setBody(event.target.value)} rows={3} maxLength={400} placeholder={t('reviewPlaceholder')} />
+      <input ref={fileInput} type="file" accept={ACCEPT} multiple className="hidden" aria-label={t('addPhotos')} onChange={(event) => onFiles(event.target.files)} />
+      <button type="button" onClick={() => fileInput.current?.click()} className="text-sm text-primary underline underline-offset-4">{t('addPhotos')}</button>
+      {photos.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {photos.map((file, index) => (
+            <div key={`${file.name}-${index}`} className="relative">
+              <img src={makePreview(file)} alt={file.name} className="h-16 w-16 rounded object-cover" />
+              <button type="button" onClick={() => removePhoto(index)} aria-label={t('removePhoto')} className="absolute -right-1 -top-1 rounded-full bg-muted p-0.5"><X size={12} aria-hidden="true" /></button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {photoError ? <p className="text-sm text-destructive">{photoError}</p> : null}
       <div>
         <Button type="button" onClick={submit} disabled={busy || rating < 1 || !body.trim()}>{t('submitReview')}</Button>
       </div>

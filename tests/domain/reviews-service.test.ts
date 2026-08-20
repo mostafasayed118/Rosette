@@ -84,6 +84,27 @@ describe('submitProductReview', () => {
     const result = await submitProductReview(client, { customerId: 'c1', productSlug: 'rose-hour', rating: 4, body: 'ok' });
     expect(result).toEqual({ status: 'failure' });
   });
+
+  it('stores photos when valid photoUrls are provided', async () => {
+    const { client, calls } = fakeClient({ product, orders: [paidOrder] });
+    const result = await submitProductReview(client, { customerId: 'c1', productSlug: 'rose-hour', rating: 5, body: 'ok', photoUrls: ['https://x.supabase.co/storage/v1/object/public/review-images/a.jpg'] });
+    expect(result).toEqual({ status: 'created' });
+    const insert = calls.find((call) => call.table === 'product_reviews');
+    expect(insert?.payload).toEqual(expect.objectContaining({ photos: ['https://x.supabase.co/storage/v1/object/public/review-images/a.jpg'] }));
+  });
+
+  it('returns invalid for a foreign photo URL', async () => {
+    const { client } = fakeClient({ product, orders: [paidOrder] });
+    const result = await submitProductReview(client, { customerId: 'c1', productSlug: 'rose-hour', rating: 5, body: 'ok', photoUrls: ['https://evil.com/a.jpg'] });
+    expect(result).toEqual({ status: 'invalid' });
+  });
+
+  it('returns invalid for more than 3 photos', async () => {
+    const url = 'https://x.supabase.co/storage/v1/object/public/review-images/';
+    const { client } = fakeClient({ product, orders: [paidOrder] });
+    const result = await submitProductReview(client, { customerId: 'c1', productSlug: 'rose-hour', rating: 5, body: 'ok', photoUrls: [`${url}1.jpg`, `${url}2.jpg`, `${url}3.jpg`, `${url}4.jpg`] });
+    expect(result).toEqual({ status: 'invalid' });
+  });
 });
 
 describe('reviewProductReview', () => {
