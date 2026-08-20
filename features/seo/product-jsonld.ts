@@ -1,6 +1,6 @@
 import type { Product } from '@/features/catalog/types';
 
-export type JsonLdReview = { rating: number; body: string; createdAt: string; displayName?: string | null };
+export type JsonLdReview = { rating: number; body: string; createdAt: string; displayName?: string | null; photos?: string[] };
 
 export function buildProductJsonLd(product: Product, reviews?: JsonLdReview[]) {
   return {
@@ -27,6 +27,7 @@ export function buildProductJsonLd(product: Product, reviews?: JsonLdReview[]) {
             reviewRating: { '@type': 'Rating', ratingValue: review.rating },
             reviewBody: review.body,
             datePublished: review.createdAt,
+            ...(review.photos && review.photos.length > 0 ? { image: review.photos } : {}),
           })),
         }
       : {}),

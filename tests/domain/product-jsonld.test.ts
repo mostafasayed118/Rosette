@@ -57,6 +57,24 @@ describe('buildProductJsonLd', () => {
     expect('review' in json).toBe(false);
   });
 
+  it('includes review photo URLs as the schema image field', () => {
+    const json = buildProductJsonLd(product, [{
+      rating: 5,
+      body: 'Beautiful arrangement',
+      createdAt: '2026-08-01T00:00:00Z',
+      photos: ['https://img.example.com/review-1.jpg', 'https://img.example.com/review-2.jpg'],
+    }]);
+    expect(json.review![0]!.image).toEqual([
+      'https://img.example.com/review-1.jpg',
+      'https://img.example.com/review-2.jpg',
+    ]);
+  });
+
+  it('omits the review image when no photos are present', () => {
+    const json = buildProductJsonLd(product, [{ rating: 4, body: 'ok', createdAt: '2026-08-01T00:00:00Z' }]);
+    expect('image' in json.review![0]!).toBe(false);
+  });
+
   it('omits the author name when a review has no display name', () => {
     const json = buildProductJsonLd(product, [{ rating: 4, body: 'ok', createdAt: '2026-08-01T00:00:00Z', displayName: null }]);
     expect(json.review![0]!.author).toEqual({ '@type': 'Person' });
