@@ -17,9 +17,13 @@ export async function GET(request: Request, context: VoteContext) {
   const { id } = await context.params;
   const voterKey = await resolveVoterKey(request);
   if (!voterKey) return NextResponse.json({ error: 'A visitor id is required' }, { status: 400 });
-  const result = await getVoteState(getAdminSupabase(), { reviewId: id, voterKey });
-  if (result.status === 'not_found') return NextResponse.json({ error: 'Review not found' }, { status: 404 });
-  return NextResponse.json({ helpful: result.helpful, voted: result.voted });
+  try {
+    const result = await getVoteState(getAdminSupabase(), { reviewId: id, voterKey });
+    if (result.status === 'not_found') return NextResponse.json({ error: 'Review not found' }, { status: 404 });
+    return NextResponse.json({ helpful: result.helpful, voted: result.voted });
+  } catch {
+    return NextResponse.json({ error: 'Could not load votes' }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request, context: VoteContext) {
@@ -28,7 +32,11 @@ export async function POST(request: Request, context: VoteContext) {
   const customer = await getCurrentCustomer();
   const voterKey = customer ? customerVoterKey(customer.id) : (typeof body.visitor === 'string' && body.visitor ? visitorVoterKey(body.visitor) : null);
   if (!voterKey) return NextResponse.json({ error: 'A visitor id is required' }, { status: 400 });
-  const result = await toggleVote(getAdminSupabase(), { reviewId: id, voterKey });
-  if (result.status === 'not_found') return NextResponse.json({ error: 'Review not found' }, { status: 404 });
-  return NextResponse.json({ helpful: result.helpful, voted: result.voted });
+  try {
+    const result = await toggleVote(getAdminSupabase(), { reviewId: id, voterKey });
+    if (result.status === 'not_found') return NextResponse.json({ error: 'Review not found' }, { status: 404 });
+    return NextResponse.json({ helpful: result.helpful, voted: result.voted });
+  } catch {
+    return NextResponse.json({ error: 'Could not update vote' }, { status: 500 });
+  }
 }
