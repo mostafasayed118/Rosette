@@ -27,4 +27,38 @@ describe('buildProductJsonLd', () => {
     expect(json.offers.price).toBe('21.22');
     expect(json.offers.availability).toBe('https://schema.org/InStock');
   });
+
+  it('emits aggregateRating when the product has reviews', () => {
+    const json = buildProductJsonLd({ ...product, rating: { average: 4.8, count: 12 } });
+    expect(json.aggregateRating).toEqual({ '@type': 'AggregateRating', ratingValue: 4.8, reviewCount: 12 });
+  });
+
+  it('omits aggregateRating when there are no reviews', () => {
+    const json = buildProductJsonLd(product);
+    expect('aggregateRating' in json).toBe(false);
+  });
+
+  it('emits up to 10 review nodes with author, rating, body and date', () => {
+    const reviews = Array.from({ length: 11 }, (_, i) => ({ rating: 5, body: `Body ${i}`, createdAt: `2026-08-0${(i % 9) + 1}T00:00:00Z`, displayName: `Person ${i}` }));
+    const json = buildProductJsonLd(product, reviews);
+    expect(Array.isArray(json.review)).toBe(true);
+    expect(json.review!).toHaveLength(10);
+    expect(json.review![0]).toEqual({
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Person 0' },
+      reviewRating: { '@type': 'Rating', ratingValue: 5 },
+      reviewBody: 'Body 0',
+      datePublished: '2026-08-01T00:00:00Z',
+    });
+  });
+
+  it('omits the review array when no reviews are passed', () => {
+    const json = buildProductJsonLd(product);
+    expect('review' in json).toBe(false);
+  });
+
+  it('omits the author name when a review has no display name', () => {
+    const json = buildProductJsonLd(product, [{ rating: 4, body: 'ok', createdAt: '2026-08-01T00:00:00Z', displayName: null }]);
+    expect(json.review![0]!.author).toEqual({ '@type': 'Person' });
+  });
 });
