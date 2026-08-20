@@ -3,7 +3,7 @@ import { submitProductReview, reviewProductReview } from '@/features/reviews/rev
 
 type Call = { table: string; op: string; payload?: unknown; eq?: Array<[string, unknown]> };
 
-function fakeClient(options: { product?: unknown; orders?: unknown[]; existingReview?: unknown; insertError?: unknown; updateError?: unknown; deleteError?: unknown } = {}) {
+function fakeClient(options: { product?: unknown; orders?: unknown[]; existingReview?: unknown; rejectPhotos?: unknown; insertError?: unknown; updateError?: unknown; deleteError?: unknown } = {}) {
   const calls: Call[] = [];
   const record = (table: string, op: string, payload?: unknown) => calls.push({ table, op, payload });
   const from = (table: string) => {
@@ -19,7 +19,7 @@ function fakeClient(options: { product?: unknown; orders?: unknown[]; existingRe
     }
     if (table === 'product_reviews') {
       return {
-        select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: options.existingReview ?? null, error: null }) }) }) }),
+        select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: options.rejectPhotos ?? null, error: null }), eq: () => ({ maybeSingle: async () => ({ data: options.existingReview ?? null, error: null }) }) }) }),
         insert: (payload: unknown) => { record(table, 'insert', payload); return { select: () => ({ single: async () => ({ data: { id: 'rev-1' }, error: options.insertError ?? null }) }) }; },
         update: (payload: unknown) => ({ eq: (_col: string, id: string) => { record(table, 'update', payload); return { error: options.updateError ?? null }; } }),
         delete: () => ({ eq: (_col: string, id: string) => { record(table, 'delete'); return { error: options.deleteError ?? null }; } }),
@@ -127,5 +127,24 @@ describe('reviewProductReview', () => {
     const { client } = fakeClient({ updateError: { message: 'nope' } });
     const result = await reviewProductReview(client, { admin, reviewId: 'rev-1', action: 'approve' });
     expect(result).toEqual({ status: 'failure' });
+  });
+
+  it('reject deletes the review and removes its photos from storage', async () => {
+    const remove = vi.fn().mockResolvedValue({ error: null });
+    const storageClient = { storage: { from: () => ({ remove }) } };
+    const { client, calls } = fakeClient({ rejectPhotos: { photos: ['https://x.supabase.co/storage/v1/object/public/review-images/a.jpg', 'https://x.supabase.co/storage/v1/object/public/review-images/b.jpg'] } });
+    const result = await reviewProductReview({ ...client, storage: storageClient.storage }, { admin, reviewId: 'rev-1', action: 'reject' });
+    expect(result).toEqual({ status: 'rejected' });
+    expect(calls).toContainEqual(expect.objectContaining({ table: 'product_reviews', op: 'delete' }));
+    expect(remove).toHaveBeenCalledWith(['a.jpg']);
+    expect(remove).toHaveBeenCalledWith(['b.jpg']);
+  });
+
+  it('reject still succeeds when storage removal throws', async () => {
+    const remove = vi.fn().mockRejectedValue(new Error('storage down'));
+    const storageClient = { storage: { from: () => ({ remove }) } };
+    const { client } = fakeClient({ rejectPhotos: { photos: ['https://x.supabase.co/storage/v1/object/public/review-images/a.jpg'] } });
+    const result = await reviewProductReview({ ...client, storage: storageClient.storage }, { admin, reviewId: 'rev-1', action: 'reject' });
+    expect(result).toEqual({ status: 'rejected' });
   });
 });

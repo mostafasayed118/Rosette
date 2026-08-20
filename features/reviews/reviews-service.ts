@@ -1,5 +1,5 @@
 import { canSubmitReview, clampRating, cleanReviewBody, isEligibleOrderPayment } from './review-rules';
-import { isReviewImageUrl, REVIEW_PHOTO_MAX } from './review-storage';
+import { isReviewImageUrl, reviewImagePathFromUrl, REVIEW_PHOTO_MAX } from './review-storage';
 import type { AdminIdentity } from '@/features/admin/authorization';
 
 type ReviewClient = { from: (table: string) => any };
@@ -56,14 +56,27 @@ export type ReviewActionResult =
   | { status: 'not_found' }
   | { status: 'failure' };
 
+type ReviewAdminClient = { from: (table: string) => any; storage?: { from: (bucket: string) => any } };
+
 export async function reviewProductReview(
-  client: ReviewClient,
+  client: ReviewAdminClient,
   input: { admin: AdminIdentity; reviewId: string; action: 'approve' | 'reject' },
 ): Promise<ReviewActionResult> {
   try {
     if (input.action === 'reject') {
+      const { data: row } = await client.from('product_reviews').select('photos').eq('id', input.reviewId).maybeSingle();
       const { error } = await client.from('product_reviews').delete().eq('id', input.reviewId);
       if (error) return { status: 'failure' };
+      const photos = (Array.isArray(row?.photos) ? row.photos : []).filter((p: unknown): p is string => typeof p === 'string');
+      const bucket = client.storage?.from('review-images');
+      if (bucket) {
+        for (const url of photos) {
+          const path = reviewImagePathFromUrl(url);
+          if (path) {
+            try { await bucket.remove([path]); } catch { /* best-effort */ }
+          }
+        }
+      }
       return { status: 'rejected' };
     }
     const { error } = await client.from('product_reviews').update({ status: 'approved', reviewed_by: input.admin.userId, reviewed_at: new Date().toISOString() }).eq('id', input.reviewId);
