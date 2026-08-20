@@ -79,16 +79,21 @@ export async function activateGiftCardPurchase(
   return { handled: true, status: 'activated' };
 }
 
-export async function quoteGiftCard(client: GiftCardClient, input: { code: string; orderTotalMinor: number; now?: Date }): Promise<{ ok: true; value: GiftCardQuote } | { ok: false; error: 'invalid_gift_card' }> {
+export async function quoteGiftCardForOrder(client: GiftCardClient, input: { code: string; orderTotalMinor: number; now?: Date }): Promise<{ ok: true; value: GiftCardQuote & { giftCardId: string } } | { ok: false; error: 'invalid_gift_card' }> {
   try {
     const secret = getRequiredServerEnv('GIFT_CARD_SECRET');
     const { data: card } = await client.from('gift_cards').select('id,balance_minor,code_last4,status,expires_at').eq('code_hash', hashGiftCardCode(input.code, secret)).maybeSingle();
     if (!card || card.status !== 'active' || new Date(card.expires_at).getTime() <= (input.now ?? new Date()).getTime() || card.balance_minor <= 0) return { ok: false, error: 'invalid_gift_card' };
     const amountAppliedMinor = Math.min(Number(card.balance_minor), Math.max(0, input.orderTotalMinor));
-    return { ok: true, value: { codeLast4: String(card.code_last4), amountAppliedMinor, remainingTotalMinor: Math.max(0, input.orderTotalMinor - amountAppliedMinor) } };
+    return { ok: true, value: { giftCardId: String(card.id), codeLast4: String(card.code_last4), amountAppliedMinor, remainingTotalMinor: Math.max(0, input.orderTotalMinor - amountAppliedMinor) } };
   } catch {
     return { ok: false, error: 'invalid_gift_card' };
   }
+}
+
+export async function quoteGiftCard(client: GiftCardClient, input: { code: string; orderTotalMinor: number; now?: Date }): Promise<{ ok: true; value: GiftCardQuote } | { ok: false; error: 'invalid_gift_card' }> {
+  const result = await quoteGiftCardForOrder(client, input);
+  return result.ok ? { ok: true, value: { codeLast4: result.value.codeLast4, amountAppliedMinor: result.value.amountAppliedMinor, remainingTotalMinor: result.value.remainingTotalMinor } } : result;
 }
 
 export async function holdGiftCardForOrder(client: GiftCardClient, input: { code: string; orderId: string; amountMinor: number }): Promise<{ ok: true; holdId: string } | { ok: false; error: 'invalid_gift_card' }> {

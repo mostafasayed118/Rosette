@@ -4,6 +4,7 @@ export function buildOrderInsertRow(params: {
   deliveryAddress: string; deliveryCityCode: string; deliveryDate: string; deliveryWindow: string;
   locale: string; subtotalMinor: number; deliveryFeeMinor: number; discountMinor: number;
   promoCode: string | null; totalMinor: number;
+  giftCardMinor?: number; giftCardId?: string | null; giftCardHoldId?: string | null; giftCardCodeLast4?: string | null;
 }): Record<string, unknown> {
   return {
     display_number: params.number,
@@ -23,6 +24,10 @@ export function buildOrderInsertRow(params: {
     discount_minor: params.discountMinor,
     promo_code: params.promoCode,
     total_minor: params.totalMinor,
+    gift_card_minor: params.giftCardMinor ?? 0,
+    gift_card_id: params.giftCardId ?? null,
+    gift_card_hold_id: params.giftCardHoldId ?? null,
+    gift_card_code_last4: params.giftCardCodeLast4 ?? null,
     payment_status: 'pending',
     fulfillment_status: 'confirmed',
   };

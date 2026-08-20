@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     const customer = await getCurrentCustomer();
     const result = await getOrderRepository().createPending({ cart: body.cart as never, destination: body.destination as never, checkout: body.checkout as never, locale: body.locale, customerId: customer?.id ?? null });
-    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.error === 'invalid_promo' ? 400 : 409 });
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.error === 'invalid_promo' || result.error === 'invalid_gift_card' ? 400 : 409 });
     const order = result.value;
     const checkout = body.checkout as { senderEmail: string; recipientPhone: string; recipientName: string };
     await deliverOrderNotification(getAdminSupabase(), {
@@ -36,18 +36,36 @@ export async function POST(request: Request) {
     });
     // Best-effort: an order must never fail because a cart could not be marked.
     await markCartConverted(getAdminSupabase(), { email: checkout.senderEmail });
+    if (order.totalMinor === 0 && order.giftCardHoldId) {
+      const supabase = getAdminSupabase();
+      const { error: redeemError } = await supabase.rpc('redeem_gift_card_hold', { p_hold_id: order.giftCardHoldId, p_idempotency_key: `gift-card-zero:${order.id}` });
+      if (redeemError) return NextResponse.json({ error: 'Checkout is temporarily unavailable.' }, { status: 503 });
+      await supabase.from('orders').update({ payment_status: 'paid', updated_at: new Date().toISOString() }).eq('id', order.id);
+      await supabase.from('payments').insert({ order_id: order.id, provider: 'gift_card', provider_reference: null, idempotency_key: `gift-card-zero-payment:${order.id}`, amount_minor: 0, currency: 'EGP', status: 'paid' });
+      await deliverOrderNotification(supabase, { orderId: order.id, type: 'payment_confirmed', recipient: checkout.senderEmail, locale: body.locale, orderNumber: order.displayNumber, totalMinor: 0, subtotalMinor: order.subtotalMinor, deliveryFeeMinor: order.deliveryFeeMinor, discountMinor: order.discountMinor, orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}` });
+      return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: 'paid', checkoutUrl: null });
+    }
     const paymobConfigured = Boolean(getOptionalServerEnv('PAYMOB_API_KEY') && getOptionalServerEnv('PAYMOB_PUBLIC_KEY') && getOptionalServerEnv('PAYMOB_INTEGRATION_ID') && getOptionalServerEnv('PAYMOB_HMAC_SECRET'));
-    if (!paymobConfigured) return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: order.paymentStatus, checkoutUrl: null });
+    if (!paymobConfigured) {
+      if (order.giftCardHoldId) await getAdminSupabase().rpc('release_gift_card_hold', { p_hold_id: order.giftCardHoldId, p_idempotency_key: `gift-card-release:${order.id}` });
+      return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: order.paymentStatus, checkoutUrl: null });
+    }
 
     const origin = getPublicOrigin(request);
-    const payment = await createPaymobIntention({
-      amountMinor: order.totalMinor,
-      orderReference: order.displayNumber,
-      integrationId: Number(getRequiredServerEnv('PAYMOB_INTEGRATION_ID')),
-      customer: { name: checkout.recipientName, email: checkout.senderEmail, phone: checkout.recipientPhone },
-      notificationUrl: `${origin}/api/webhooks/paymob`,
-      redirectionUrl: `${origin}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}`,
-    });
+    let payment: Awaited<ReturnType<typeof createPaymobIntention>>;
+    try {
+      payment = await createPaymobIntention({
+        amountMinor: order.totalMinor,
+        orderReference: order.displayNumber,
+        integrationId: Number(getRequiredServerEnv('PAYMOB_INTEGRATION_ID')),
+        customer: { name: checkout.recipientName, email: checkout.senderEmail, phone: checkout.recipientPhone },
+        notificationUrl: `${origin}/api/webhooks/paymob`,
+        redirectionUrl: `${origin}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}`,
+      });
+    } catch (error) {
+      if (order.giftCardHoldId) await getAdminSupabase().rpc('release_gift_card_hold', { p_hold_id: order.giftCardHoldId, p_idempotency_key: `gift-card-release:${order.id}` });
+      throw error;
+    }
     return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: 'payment_started', checkoutUrl: payment.checkoutUrl });
   } catch (error) {
     logRouteError('order creation', error);
