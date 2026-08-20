@@ -11,7 +11,7 @@ async function handle(request: Request) {
     if (!isCronAuthorized(request.headers.get('authorization'), getRequiredServerEnv('CRON_SECRET'))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const summary = await runWishlistCron(getAdminSupabase(), { origin: getPublicOrigin(request) });
+    const summary = await runWishlistCron(getAdminSupabase(), { origin: getPublicOrigin(request), secret: getRequiredServerEnv('EMAIL_PREFERENCES_SECRET') });
     return NextResponse.json({ ok: true, summary });
   } catch (error) {
     logRouteError('wishlist price watch', error);
