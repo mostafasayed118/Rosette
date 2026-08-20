@@ -3,6 +3,7 @@ import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { StarRating } from '@/components/ui/StarRating';
 import { ReviewForm, type ReviewFormState } from './ReviewForm';
+import { HelpfulButton } from './HelpfulButton';
 import type { ApprovedReviewData } from '@/features/reviews/get-approved-reviews';
 
 export async function ProductReviews({ productSlug, locale, data }: { productSlug: string; locale: string; data: ApprovedReviewData | null }) {
@@ -49,6 +50,7 @@ export async function ProductReviews({ productSlug, locale, data }: { productSlu
                 <div className="flex items-center gap-2"><StarRating value={review.rating} />{review.displayName ?? t('verifiedCustomer')}</div>
                 <p className="mt-1 text-sm">{review.body}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</p>
+                <HelpfulButton reviewId={review.id} />
               </article>
             ))}
           </div>
