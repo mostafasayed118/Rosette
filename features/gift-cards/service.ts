@@ -53,7 +53,7 @@ export async function activateGiftCardPurchase(
   if (!transaction.specialReference.startsWith('giftcard:')) return { handled: true, status: 'ignored' };
   const reference = transaction.specialReference.slice('giftcard:'.length);
   if (!reference) return { handled: true, status: 'ignored' };
-  const { data: purchase } = await client.from('gift_card_purchases').select('*').eq('reference', reference).maybeSingle();
+  const { data: purchase } = await client.from('gift_card_purchases').select('*').eq('id', reference).maybeSingle();
   if (!purchase) return { handled: true, status: 'ignored' };
   if (purchase.status === 'paid') return { handled: true, status: 'already_processed' };
   if (!transaction.success || Number(purchase.amount_minor) !== transaction.amountMinor) {
@@ -83,7 +83,12 @@ export async function quoteGiftCardForOrder(client: GiftCardClient, input: { cod
     const secret = getRequiredServerEnv('GIFT_CARD_SECRET');
     const { data: card } = await client.from('gift_cards').select('id,balance_minor,code_last4,status,expires_at').eq('code_hash', hashGiftCardCode(input.code, secret)).maybeSingle();
     if (!card || card.status !== 'active' || new Date(card.expires_at).getTime() <= (input.now ?? new Date()).getTime() || card.balance_minor <= 0) return { ok: false, error: 'invalid_gift_card' };
-    const amountAppliedMinor = Math.min(Number(card.balance_minor), Math.max(0, input.orderTotalMinor));
+    const { data: holds } = await client.from('gift_card_holds').select('amount_minor,expires_at').eq('gift_card_id', card.id).eq('status', 'held');
+    const now = input.now ?? new Date();
+    const heldMinor = ((holds ?? []) as Array<{ amount_minor: number; expires_at: string }>).filter((hold) => new Date(hold.expires_at).getTime() > now.getTime()).reduce((sum, hold) => sum + Number(hold.amount_minor), 0);
+    const availableMinor = Math.max(0, Number(card.balance_minor) - heldMinor);
+    if (availableMinor <= 0) return { ok: false, error: 'invalid_gift_card' };
+    const amountAppliedMinor = Math.min(availableMinor, Math.max(0, input.orderTotalMinor));
     return { ok: true, value: { giftCardId: String(card.id), codeLast4: String(card.code_last4), amountAppliedMinor, remainingTotalMinor: Math.max(0, input.orderTotalMinor - amountAppliedMinor) } };
   } catch {
     return { ok: false, error: 'invalid_gift_card' };

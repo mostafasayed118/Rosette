@@ -34,7 +34,7 @@ Expected time: 1–2 hours the first time, mostly waiting on account approvals.
 git clone https://github.com/mostafasayed118/Rosette.git
 cd Rosette
 npm install
-npm test        # 301 tests should pass
+npm test        # the repository test suite should pass
 npm run lint    # tsc --noEmit, must be clean
 npm run build   # production build must succeed
 npm run dev
@@ -68,7 +68,7 @@ Open the **SQL Editor** in the dashboard and, in numeric order, paste and
 `007_blog_authors.sql`, `008_promos.sql`, `009_order_cancel_requests.sql`,
 `010_product_reviews.sql`, `011_order_change_requests.sql`,
 `012_wishlist.sql`, `013_abandoned_carts.sql`, `014_review_engagement.sql`,
-`015_email_preferences.sql`). `001` creates:
+`015_email_preferences.sql`, `016_gift_cards.sql`). `001` creates:
 
 - `profiles`, `categories`, `products`, `product_variants`, `cities`,
   `delivery_rules`, `inventory`, `orders`, `order_items`,
@@ -241,6 +241,7 @@ cp .env.example .env.local
 | `GMAIL_APP_PASSWORD` | the new app password (16 chars, with spaces removed) |
 | `GMAIL_FROM` | same as `GMAIL_USER` for now |
 | `EMAIL_PREFERENCES_SECRET` | a random server-only secret for signed engagement-email unsubscribe links |
+| `GIFT_CARD_SECRET` | a random server-only secret used to hash/encrypt digital gift-card codes |
 | `GROQ_API_KEY` | Groq console |
 | `GROQ_MODEL` | `groq/compound-mini` (default) |
 | `WHATSAPP_BUSINESS_NUMBER` | e.g. `201000000000` |
@@ -325,8 +326,9 @@ The repo ships `fly.toml` with the non-secret env (`SITE_URL`,
 1. Run `fly launch` to generate a Dockerfile (keep the committed `fly.toml`).
 2. Set every secret with `fly secrets set` — never in `fly.toml`:
    `SUPABASE_SERVICE_ROLE_KEY`, `PAYMOB_API_KEY`, `PAYMOB_PUBLIC_KEY`,
-   `PAYMOB_INTEGRATION_ID`, `PAYMOB_HMAC_SECRET`, `GMAIL_USER`,
-   `GMAIL_APP_PASSWORD`, `GMAIL_FROM`, `EMAIL_PREFERENCES_SECRET`,
+   `PAYMOB_INTEGRATION_ID`, `PAYMOB_HMAC_SECRET`, `GMAIL_USER`,    `GMAIL_APP_PASSWORD`, `GMAIL_FROM`, `EMAIL_PREFERENCES_SECRET`,
+   `GIFT_CARD_SECRET`,
+
    `GROQ_API_KEY`, `CRON_SECRET`, plus the
    public Supabase pair `NEXT_PUBLIC_SUPABASE_URL` /
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`.

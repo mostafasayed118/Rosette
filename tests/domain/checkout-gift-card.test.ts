@@ -5,9 +5,15 @@ afterEach(() => vi.unstubAllEnvs());
 
 type Client = { from: (table: string) => any; rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> };
 
-function quoteClient(card: Record<string, unknown> | null): Client {
+function quoteClient(card: Record<string, unknown> | null, holds: Array<Record<string, unknown>> = []): Client {
   return {
-    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: card, error: null }) }) }) }),
+    from: (table: string) => ({
+      select: () => ({
+        eq: (_column: string, _value: unknown) => table === 'gift_card_holds'
+          ? { eq: async () => ({ data: holds, error: null }) }
+          : { maybeSingle: async () => ({ data: card, error: null }) },
+      }),
+    }),
     rpc: async () => ({ data: 'hold-1', error: null }),
   };
 }
@@ -15,9 +21,15 @@ function quoteClient(card: Record<string, unknown> | null): Client {
 describe('gift-card checkout quote', () => {
   it('caps a valid active balance at the order total and returns only masked data', async () => {
     vi.stubEnv('GIFT_CARD_SECRET', 'test-secret');
-    const result = await quoteGiftCard(quoteClient({ balance_minor: 75000, code_last4: 'ZZZZ', status: 'active', expires_at: '2027-08-20T00:00:00.000Z' }), { code: 'ROSE-ABCD-2345-ZZZZ', orderTotalMinor: 120000, now: new Date('2026-08-20T00:00:00Z') });
+    const result = await quoteGiftCard(quoteClient({ id: 'card-1', balance_minor: 75000, code_last4: 'ZZZZ', status: 'active', expires_at: '2027-08-20T00:00:00.000Z' }), { code: 'ROSE-ABCD-2345-ZZZZ', orderTotalMinor: 120000, now: new Date('2026-08-20T00:00:00Z') });
     expect(result).toEqual({ ok: true, value: { codeLast4: 'ZZZZ', amountAppliedMinor: 75000, remainingTotalMinor: 45000 } });
     expect(JSON.stringify(result)).not.toContain('ROSE');
+  });
+
+  it('subtracts unexpired holds before quoting available balance', async () => {
+    vi.stubEnv('GIFT_CARD_SECRET', 'test-secret');
+    const result = await quoteGiftCard(quoteClient({ id: 'card-1', balance_minor: 75000, code_last4: 'ZZZZ', status: 'active', expires_at: '2027-08-20T00:00:00.000Z' }, [{ amount_minor: 50000, expires_at: '2027-08-21T00:00:00.000Z' }]), { code: 'ROSE-ABCD-2345-ZZZZ', orderTotalMinor: 120000, now: new Date('2026-08-20T00:00:00Z') });
+    expect(result).toEqual({ ok: true, value: { codeLast4: 'ZZZZ', amountAppliedMinor: 25000, remainingTotalMinor: 95000 } });
   });
 
   it.each([

@@ -100,6 +100,45 @@ Preference lookup failures fail closed for engagement cron sends so a temporary
 database problem cannot accidentally send after an opt-out; wishlist events
 remain eligible for a later retry when that happens.
 
+## Digital gift cards
+
+Set `GIFT_CARD_SECRET` to a random server-only value and apply
+`supabase/migrations/016_gift_cards.sql` after the earlier commerce, promo,
+review, wishlist, abandoned-cart, and email-preference migrations. The
+migration creates the purchase, card, hold, and append-only transaction tables,
+adds masked gift-card references to orders, and installs the atomic reserve,
+redeem, release, and refund functions. All gift-card tables use RLS with no
+public policies.
+
+Customers purchase cards at `/[locale]/[city]/gift-cards` using fixed 500,
+1,000, 2,500, or 5,000 EGP denominations, or a custom 500–50,000 EGP amount.
+Paymob intentions use `giftcard:<purchase-id>` as `special_reference`; only a
+verified HMAC callback with the exact amount activates a card. The full code is
+sent to both distinct buyer and recipient addresses after payment. A paid card
+remains active if Gmail delivery fails; delivery state on the purchase/card is
+retryable and can be resent from `/admin/gift-cards`.
+
+Checkout accepts one gift-card code, applies the balance to merchandise and
+delivery, and sends Paymob only the remaining amount. A zero-total order skips
+Paymob and redeems the hold through the trusted server path. Failed intentions
+or payment callbacks release the hold. Approving a cancellation restores the
+gift-card portion with an idempotent `refund` transaction and refunds only the
+Paymob remainder; if either monetary operation fails, approval remains pending.
+
+Operational checks:
+
+```sql
+select id, code_last4, status, balance_minor, expires_at, delivery_status
+from public.gift_cards order by created_at desc limit 10;
+
+select gift_card_id, type, amount_minor, order_id, idempotency_key, created_at
+from public.gift_card_transactions order by created_at desc limit 20;
+```
+
+Never query, log, or display `code_ciphertext`; the browser and admin list only
+receive the last four characters. Admin issue, void, resend, and history actions
+are restricted to `admin`/`operator` profiles and write `admin_audit_logs`.
+
 ## Groq chatbot
 
 Set `GROQ_API_KEY` and optionally `GROQ_MODEL`. The API key is used only by `/api/chat`. The deterministic guard rejects unrelated questions and prompt-injection attempts before a model call. Model output is schema-validated and product slugs are checked against the catalog.

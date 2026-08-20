@@ -48,7 +48,7 @@ describe('createGiftCardPurchase', () => {
 
 describe('activateGiftCardPurchase', () => {
   const purchase = { id: 'purchase-1', reference: 'GC-PURCHASE1', amount_minor: 100000, status: 'pending', sender_name: 'Maya', sender_email: 'maya@example.com', recipient_name: 'Nour', recipient_email: 'nour@example.com', message: 'A little joy', locale: 'en' };
-  const transaction = { specialReference: 'giftcard:GC-PURCHASE1', amountMinor: 100000, providerReference: 'provider-1', success: true };
+  const transaction = { specialReference: 'giftcard:purchase-1', amountMinor: 100000, providerReference: 'provider-1', success: true };
 
   it('activates exactly one card after a verified successful payment', async () => {
     const { client, calls } = fakeClient({ purchase });

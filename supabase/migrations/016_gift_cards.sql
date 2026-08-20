@@ -96,6 +96,8 @@ as $$
 declare
   card public.gift_cards%rowtype;
   hold_id uuid;
+  expired_hold public.gift_card_holds%rowtype;
+  reserved_minor integer;
 begin
   if p_amount_minor <= 0 then raise exception 'INVALID_GIFT_CARD_AMOUNT'; end if;
   select * into card from public.gift_cards where code_hash = p_code_hash for update;
@@ -104,7 +106,15 @@ begin
     update public.gift_cards set status = 'expired', updated_at = now() where id = card.id;
     raise exception 'INVALID_GIFT_CARD';
   end if;
-  if card.status <> 'active' or card.balance_minor < p_amount_minor then raise exception 'INVALID_GIFT_CARD'; end if;
+  if card.status <> 'active' then raise exception 'INVALID_GIFT_CARD'; end if;
+  for expired_hold in select * from public.gift_card_holds where gift_card_id = card.id and status = 'held' and expires_at <= now() for update loop
+    update public.gift_card_holds set status = 'released', updated_at = now() where id = expired_hold.id;
+    insert into public.gift_card_transactions(gift_card_id, type, amount_minor, order_id, idempotency_key, metadata)
+    values (card.id, 'release', expired_hold.amount_minor, expired_hold.order_id, 'gift-card-expired-release:' || expired_hold.id, jsonb_build_object('hold_id', expired_hold.id))
+    on conflict (idempotency_key) do nothing;
+  end loop;
+  select coalesce(sum(amount_minor), 0) into reserved_minor from public.gift_card_holds where gift_card_id = card.id and status = 'held' and expires_at > now();
+  if card.balance_minor - reserved_minor < p_amount_minor then raise exception 'INVALID_GIFT_CARD'; end if;
   if exists (select 1 from public.gift_card_holds where gift_card_id = card.id and order_id = p_order_id and status = 'held') then
     raise exception 'GIFT_CARD_ALREADY_HELD';
   end if;
