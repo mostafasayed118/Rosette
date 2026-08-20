@@ -1,4 +1,6 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
+import { createGmailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
+import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
 import type { EmailLocale } from '@/features/notifications/email-types';
 
 export type GiftCardEmailInput = {
@@ -31,6 +33,17 @@ export function renderGiftCardEmail(input: GiftCardEmailInput) {
   const text = `${c.subject}\n${c.intro(input.recipientName)}\n${c.amount}: ${money}\n${c.expiry}: ${expiry}\n${c.code}: ${input.code}\n${input.message ? `${c.message}: ${input.message}\n` : ''}${c.instructions}`;
   const html = `<!doctype html><html lang="${input.locale}" dir="${direction}"><body style="font-family:Arial,sans-serif;text-align:${direction === 'rtl' ? 'right' : 'left'}"><h1>${c.heading}</h1><p>${c.intro(name)}</p><p><strong>${c.amount}: ${money}</strong></p><p>${c.expiry}: ${expiry}</p><p><strong>${c.code}: ${code}</strong></p>${message ? `<p>${c.message}: ${message}</p>` : ''}<p>${c.instructions}</p></body></html>`;
   return { subject: c.subject, text, html };
+}
+
+export async function sendGiftCardEmail(input: { recipient: string; rendered: ReturnType<typeof renderGiftCardEmail> }, injectedTransport?: MailTransport) {
+  try {
+    const transport = injectedTransport ?? createGmailTransport();
+    const from = injectedTransport ? (getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@example.invalid>') : getRequiredServerEnv('GMAIL_FROM');
+    await transport.sendMail({ from, to: input.recipient, subject: input.rendered.subject, text: input.rendered.text, html: input.rendered.html });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 type DeliveryInput = Omit<GiftCardEmailInput, 'recipientCopy'> & { buyerEmail: string; recipientEmail: string };

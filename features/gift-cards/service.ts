@@ -5,6 +5,7 @@ import type { PaymentCustomer } from '@/features/payment/types';
 import { decryptGiftCardCode, encryptGiftCardCode, generateGiftCardCode, hashGiftCardCode, maskGiftCardCode } from './crypto';
 import type { GiftCardPurchaseInput, GiftCardQuote } from './types';
 import { validateGiftCardPurchaseInput } from './validation';
+import { renderGiftCardEmail, sendGiftCardEmail } from './purchase-email';
 
 export type GiftCardClient = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => any };
 type GiftCardRpcClient = { rpc?: (name: string, args: Record<string, unknown>) => any };
@@ -69,14 +70,11 @@ export async function activateGiftCardPurchase(
   await client.from('gift_card_transactions').insert({ gift_card_id: String(card.id), type: 'issue', amount_minor: purchase.amount_minor, idempotency_key: `gift-card-issue:${purchase.id}`, metadata: { provider_reference: transaction.providerReference } });
   await client.from('gift_card_purchases').update({ status: 'paid', provider_reference: transaction.providerReference, updated_at: now.toISOString() }).eq('id', purchase.id);
 
-  if (deps.deliver) {
-    const recipients = [...new Set([String(purchase.sender_email).trim().toLowerCase(), String(purchase.recipient_email).trim().toLowerCase()])].filter(Boolean);
-    let failed = 0;
-    for (const recipient of recipients) {
-      if (!(await deps.deliver({ recipient, code, purchase }))) failed += 1;
-    }
-    await client.from('gift_card_purchases').update({ delivery_status: failed ? 'failed' : 'sent', delivery_attempts: 1, last_delivery_error: failed ? 'smtp_failed' : null }).eq('id', purchase.id);
-  }
+  const deliver = deps.deliver ?? (async ({ recipient, code: deliveryCode, purchase: deliveryPurchase }: DeliveryInput) => sendGiftCardEmail({ recipient, rendered: renderGiftCardEmail({ locale: deliveryPurchase.locale as 'en' | 'ar' | 'fr', recipientName: String(deliveryPurchase.recipient_name), buyerName: String(deliveryPurchase.sender_name), message: String(deliveryPurchase.message ?? ''), amountMinor: Number(deliveryPurchase.amount_minor), code: deliveryCode, expiresAt: String(deliveryPurchase.expires_at ?? new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString()), recipientCopy: recipient === String(deliveryPurchase.recipient_email).toLowerCase() }) }));
+  const recipients = [...new Set([String(purchase.sender_email).trim().toLowerCase(), String(purchase.recipient_email).trim().toLowerCase()])].filter(Boolean);
+  let failed = 0;
+  for (const recipient of recipients) if (!(await deliver({ recipient, code, purchase: { ...purchase, expires_at: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString() } }))) failed += 1;
+  await client.from('gift_card_purchases').update({ delivery_status: failed ? 'failed' : 'sent', delivery_attempts: 1, last_delivery_error: failed ? 'smtp_failed' : null }).eq('id', purchase.id);
   return { handled: true, status: 'activated' };
 }
 
