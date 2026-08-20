@@ -11,8 +11,8 @@ export type ReviewFormState = 'anonymous' | 'not-verified' | 'already-reviewed' 
 
 const ACCEPT = (REVIEW_PHOTO_TYPES as readonly string[]).join(',');
 
-function makePreview(file: File): string {
-  return typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : '';
+function makePreview(file: File): string | null {
+  return typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : null;
 }
 
 export function ReviewForm({ productSlug, state }: { productSlug: string; state: ReviewFormState }) {
@@ -86,12 +86,15 @@ export function ReviewForm({ productSlug, state }: { productSlug: string; state:
       <button type="button" onClick={() => fileInput.current?.click()} className="text-sm text-primary underline underline-offset-4">{t('addPhotos')}</button>
       {photos.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {photos.map((file, index) => (
-            <div key={`${file.name}-${index}`} className="relative">
-              <img src={makePreview(file)} alt={file.name} className="h-16 w-16 rounded object-cover" />
-              <button type="button" onClick={() => removePhoto(index)} aria-label={t('removePhoto')} className="absolute -right-1 -top-1 rounded-full bg-muted p-0.5"><X size={12} aria-hidden="true" /></button>
-            </div>
-          ))}
+          {photos.map((file, index) => {
+            const preview = makePreview(file);
+            return (
+              <div key={`${file.name}-${index}`} className="relative">
+                {preview ? <img src={preview} alt={file.name} className="h-16 w-16 rounded object-cover" /> : null}
+                <button type="button" onClick={() => removePhoto(index)} aria-label={t('removePhoto')} className="absolute -right-1 -top-1 rounded-full bg-muted p-0.5"><X size={12} aria-hidden="true" /></button>
+              </div>
+            );
+          })}
         </div>
       ) : null}
       {photoError ? <p className="text-sm text-destructive">{photoError}</p> : null}
