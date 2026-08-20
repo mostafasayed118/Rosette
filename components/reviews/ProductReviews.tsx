@@ -49,6 +49,13 @@ export async function ProductReviews({ productSlug, locale, data }: { productSlu
               <article key={review.id} className="border-b pb-4">
                 <div className="flex items-center gap-2"><StarRating value={review.rating} />{review.displayName ?? t('verifiedCustomer')}</div>
                 <p className="mt-1 text-sm">{review.body}</p>
+                {review.photos.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {review.photos.slice(0, 3).map((url) => (
+                      <img key={url} src={url} alt="" className="h-20 w-20 rounded object-cover" />
+                    ))}
+                  </div>
+                ) : null}
                 <p className="mt-1 text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</p>
                 <HelpfulButton reviewId={review.id} />
               </article>
