@@ -6,8 +6,8 @@ import { getServerT } from '@/features/i18n/server';
 type WishlistPageParams = { params: Promise<{ locale: string; city: string }> };
 
 export default async function WishlistPage({ params }: WishlistPageParams) {
-  const { city } = await params;
-  const { locale, t } = await getServerT();
+  const { locale: localeSegment, city } = await params;
+  const { locale, t } = await getServerT(localeSegment);
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />

@@ -18,7 +18,7 @@ export default async function AccountOrderDetailPage({ params }: { params: Promi
   const { locale: routeLocale, city, id } = await params;
   const customer = await getCurrentCustomer();
   if (!customer) redirect(`/${routeLocale}/${city}/account/login`);
-  const { t, locale } = await getServerT();
+  const { t, locale } = await getServerT(routeLocale);
   const supabase = await getServerSupabase();
   const order = supabase ? await getCustomerOrder(supabase, customer.id, id) : null;
   if (!order) notFound();

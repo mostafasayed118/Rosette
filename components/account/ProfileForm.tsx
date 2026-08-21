@@ -7,7 +7,7 @@ import { StatusMessage } from '@/components/ui/status-message';
 import { updateProfile } from '@/features/account/actions';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
-export function ProfileForm({ initialName, initialPhone }: { initialName: string; initialPhone: string }) {
+export function ProfileForm({ initialName, initialPhone, accountPath }: { initialName: string; initialPhone: string; accountPath?: string }) {
   const { t } = useI18n();
   const [name, setName] = useState(initialName);
   const [phone, setPhone] = useState(initialPhone);
@@ -19,7 +19,7 @@ export function ProfileForm({ initialName, initialPhone }: { initialName: string
     event.preventDefault();
     setSaving(true);
     setMessage('');
-    const result = await updateProfile({ displayName: name, phone });
+    const result = await updateProfile({ displayName: name, phone, accountPath });
     if (result === 'saved') {
       setMessage(t('profileSaved'));
       setTone('success');

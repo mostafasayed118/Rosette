@@ -7,7 +7,7 @@ import { HelpfulButton } from './HelpfulButton';
 import type { ApprovedReviewData } from '@/features/reviews/get-approved-reviews';
 
 export async function ProductReviews({ productSlug, locale, data }: { productSlug: string; locale: string; data: ApprovedReviewData | null }) {
-  const { t } = await getServerT();
+  const { t } = await getServerT(locale);
   if (!data || !data.productId) return null;
   const { reviews, aggregate } = data;
   const breakdown = [5, 4, 3, 2, 1].map((star) => ({ star, count: reviews.filter((row) => row.rating === star).length }));

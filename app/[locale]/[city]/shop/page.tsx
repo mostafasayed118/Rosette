@@ -17,9 +17,9 @@ type ShopPageParams = { params: Promise<{ locale: string; city: string }>; searc
 
 export async function generateMetadata({ params }: ShopPageParams): Promise<Metadata> {
   const { locale, city } = await params;
-  const { t } = await getServerT();
-  const base = (getOptionalServerEnv('SITE_URL') ?? 'https://rosette.fly.dev').replace(/\/$/, '');
   const resolvedLocale: Locale = (LOCALES as string[]).includes(locale) ? (locale as Locale) : 'en';
+  const { t } = await getServerT(resolvedLocale);
+  const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
   return buildLocalizedPageMetadata({ locale: resolvedLocale, city, path: '/shop', base, title: t('collectionTitle'), description: t('collectionLede') });
 }
 

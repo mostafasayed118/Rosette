@@ -5,9 +5,9 @@ import { useI18n } from '@/features/i18n/I18nProvider';
 import { setEmailEngagementPreference } from '@/features/account/actions';
 import { StatusMessage } from '@/components/ui/status-message';
 
-type EmailPreferencesProps = { initialEnabled: boolean; loadFailed?: boolean };
+type EmailPreferencesProps = { initialEnabled: boolean; loadFailed?: boolean; accountPath?: string };
 
-export function EmailPreferences({ initialEnabled, loadFailed = false }: EmailPreferencesProps) {
+export function EmailPreferences({ initialEnabled, loadFailed = false, accountPath }: EmailPreferencesProps) {
   const { t } = useI18n();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [saving, setSaving] = useState(false);
@@ -18,7 +18,7 @@ export function EmailPreferences({ initialEnabled, loadFailed = false }: EmailPr
     setSaving(true);
     setMessage('');
     setError(false);
-    const result = await setEmailEngagementPreference(nextEnabled);
+    const result = await setEmailEngagementPreference(nextEnabled, undefined, accountPath);
     if (result === 'saved') {
       setEnabled(nextEnabled);
       setMessage(t('emailPreferencesSaved'));

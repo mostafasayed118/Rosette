@@ -17,16 +17,16 @@ type BlogPageParams = { params: Promise<{ locale: string; city: string }> };
 
 export async function generateMetadata({ params }: BlogPageParams): Promise<Metadata> {
   const { locale, city } = await params;
-  const { t } = await getServerT();
-  const base = (getOptionalServerEnv('SITE_URL') ?? 'https://rosette.fly.dev').replace(/\/$/, '');
   const resolvedLocale: Locale = (LOCALES as string[]).includes(locale) ? (locale as Locale) : 'en';
+  const { t } = await getServerT(resolvedLocale);
+  const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
   return buildLocalizedPageMetadata({ locale: resolvedLocale, city, path: '/blog', base, title: t('blogTitle'), description: t('blogLede') });
 }
 
 export default async function BlogPage({ params }: BlogPageParams) {
   const { locale: localeRaw, city: citySlug } = await params;
-  const { t } = await getServerT();
   const locale: Locale = (LOCALES as string[]).includes(localeRaw) ? (localeRaw as Locale) : 'en';
+  const { t } = await getServerT(locale);
   const city = getCityBySlug(citySlug);
   const cityName = city ? pickLocalized(locale, { en: city.name, ar: city.nameAr, fr: city.nameFr }) : undefined;
   const posts = await getBlogRepository().listPublished({ type: 'post' });

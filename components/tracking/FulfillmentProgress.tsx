@@ -4,8 +4,8 @@ import { getServerT } from '@/features/i18n/server';
 import { FULFILLMENT_STEPS, FULFILLMENT_STEP_KEYS, fulfillmentStepIndex } from '@/features/tracking/fulfillment-progress';
 import type { FulfillmentStatus } from '@/features/commerce/order-state';
 
-export async function FulfillmentProgress({ status }: { status: FulfillmentStatus }) {
-  const { t } = await getServerT();
+export async function FulfillmentProgress({ status, locale }: { status: FulfillmentStatus; locale?: string }) {
+  const { t } = await getServerT(locale);
   const current = fulfillmentStepIndex(status);
   if (current < 0) return <StatusMessage title={t('statusCancelled')} tone="error" />;
 

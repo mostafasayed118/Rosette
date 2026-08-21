@@ -16,9 +16,9 @@ type HomePageParams = { params: Promise<{ locale: string; city: string }> };
 
 export async function generateMetadata({ params }: HomePageParams): Promise<Metadata> {
   const { locale, city } = await params;
-  const { t } = await getServerT();
-  const base = (getOptionalServerEnv('SITE_URL') ?? 'https://rosette.fly.dev').replace(/\/$/, '');
   const resolvedLocale: Locale = (LOCALES as string[]).includes(locale) ? (locale as Locale) : 'en';
+  const { t } = await getServerT(resolvedLocale);
+  const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
   return buildLocalizedPageMetadata({ locale: resolvedLocale, city, path: '', base, title: t('homeTitle'), description: t('homeLede') });
 }
 
@@ -30,8 +30,8 @@ const MINI_IMAGES = [
 ];
 
 export default async function HomePage({ params }: HomePageParams) {
-  const { city: cityCode } = await params;
-  const { locale, t } = await getServerT();
+  const { locale: localeSegment, city: cityCode } = await params;
+  const { locale, t } = await getServerT(localeSegment);
   const city = getCityBySlug(cityCode);
   const cityName = city ? pickLocalized(locale, { en: city.name, ar: city.nameAr, fr: city.nameFr }) : undefined;
 

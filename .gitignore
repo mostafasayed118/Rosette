@@ -5,6 +5,9 @@ coverage/
 *.tsbuildinfo
 .env*
 !.env.example
+.dev.vars
+.open-next/
+.wrangler/
 .worktrees/
 .claude/
 

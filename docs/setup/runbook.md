@@ -21,10 +21,13 @@ Expected time: 1–2 hours the first time, mostly waiting on account approvals.
 | Chatbot | Groq API key | free tier |
 | WhatsApp handoff | any WhatsApp number | free |
 | Public HTTPS during local testing | ngrok or cloudflared | free |
-| Production host | Render / Fly.io / similar (commercial-friendly free plan) | free tier |
+| Production host | Cloudflare Workers via OpenNext (`*.workers.dev`) | free tier |
 
-> Hosting note: Vercel Hobby's free plan restricts non-personal/commercial use.
-> For a paying storefront, pick a host whose free plan permits commercial use.
+> Hosting note: the storefront deploys to Cloudflare Workers (OpenNext) on a
+> free `workers.dev` subdomain. The worker script must stay under Cloudflare's
+> 3 MiB compressed free-plan limit (the `npm run cf:build` gate checks this).
+> Real orders use Cash on Delivery / manual confirmation; online card payments
+> are Paymob test mode only unless you accept the per-transaction fee.
 
 ---
 
@@ -68,7 +71,8 @@ Open the **SQL Editor** in the dashboard and, in numeric order, paste and
 `007_blog_authors.sql`, `008_promos.sql`, `009_order_cancel_requests.sql`,
 `010_product_reviews.sql`, `011_order_change_requests.sql`,
 `012_wishlist.sql`, `013_abandoned_carts.sql`, `014_review_engagement.sql`,
-`015_email_preferences.sql`, `016_gift_cards.sql`). `001` creates:
+`015_email_preferences.sql`, `016_gift_cards.sql`,
+`017_notification_skipped.sql`). `001` creates:
 
 - `profiles`, `categories`, `products`, `product_variants`, `cities`,
   `delivery_rules`, `inventory`, `orders`, `order_items`,
@@ -229,6 +233,10 @@ cp .env.example .env.local
 
 | Variable | Value source |
 | --- | --- |
+| `DEPLOYMENT_RUNTIME` | `node` (local) or `cloudflare` (deployed); defaults to `node` |
+| `PAYMENT_MODE` | `cod` (default), `paymob_test`, or `paymob_live` |
+| `EMAIL_DELIVERY_MODE` | `smtp` (Node/Gmail) or `disabled` (Cloudflare default) |
+| `SITE_URL` | public origin, e.g. `https://rosette.<account>.workers.dev` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API → anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → service_role |
@@ -260,11 +268,18 @@ never paste these values in chat, issues, or commits.
 npm run dev
 ```
 
+> By default `PAYMENT_MODE=cod`: checkout places a `pending` Cash-on-Delivery
+> order and never opens Paymob. Steps 2–4 below describe the opt-in
+> `PAYMENT_MODE=paymob_test` flow; set that mode and the four Paymob test keys
+> first to run them.
+
 1. Open the store (via tunnel for payment tests) and add products to the bag.
-2. Checkout → pick Greater Cairo → submit. Expect `Checkout is temporarily
-   unavailable` to disappear and the Paymob hosted page to open.
-3. Complete payment with the Paymob test card.
-4. You land on `/orders/<id>?token=...` with payment status **paid**.
+2. Checkout → pick Greater Cairo → submit. For COD, expect the confirmation
+   page with a `pending` payment status and no hosted checkout. For Paymob
+   test mode, the Paymob hosted page opens.
+3. (Paymob test only) Complete payment with the Paymob test card.
+4. (Paymob test only) You land on `/orders/<id>?token=...` with payment status
+   **paid**. COD orders stay `pending` until confirmed in `/admin/orders`.
 5. Verify the database, in the **Supabase SQL Editor**:
 
    ```sql
@@ -296,43 +311,91 @@ npm run dev
 
 ---
 
-## 8. Deploy
+## 8. Deploy to Cloudflare Workers (OpenNext)
 
-Host choice: a platform whose free plan allows commercial use (Render free
-web services, Fly.io; check current terms). Vercel Hobby is excluded for a
-commercial store.
+The app deploys to Cloudflare Workers through `@opennextjs/cloudflare` and
+Wrangler. `wrangler.jsonc` points at the generated worker; application secrets
+are stored as Cloudflare secrets, never in the repo.
 
-1. Push `master` to the provider's git integration (or a Dockerfile build —
-   this is a standard Next.js app; `next build` + `next start`).
-2. Configure **all** `.env.local` variables in the host's dashboard, never
-   in the repo.
-3. Set the custom domain. After that, callbacks automatically use it
-   (`https://shop.example.com/api/webhooks/paymob`) — no code change.
-4. Enable the email retry scheduler: add two repository secrets under
-   **GitHub → Settings → Secrets and variables → Actions** —
-   `CRON_ENDPOINT` (the full `https://<your-domain>/api/cron/notifications`
-   URL) and `CRON_SECRET` (the same random string set in this host's env).
-   Then open the **Actions** tab, run the "Retry stuck email notifications"
-   workflow once manually, and confirm it succeeds. Run the "Smoke test cron
-   endpoint" workflow too (pass the deployed URL via the `url` input to check
-   a staging deployment) to confirm the 401 guard and summary response.
-5. Redeploy, then repeat Section 6 from the public domain with test keys.
+### 8.1 One-time setup
 
-### Fly.io (with fly.toml)
+1. Create a Cloudflare account and, in **Workers & Pages**, note your
+   **Account ID**.
+2. Create an API token with the **Edit Cloudflare Workers** template
+   (`https://dash.cloudflare.com/profile/api-tokens`).
+3. Add four repository secrets under
+   **GitHub → Settings → Secrets and variables → Actions**:
+   - `CLOUDFLARE_API_TOKEN` — the token above
+   - `CLOUDFLARE_ACCOUNT_ID` — the account ID
+   - `NEXT_PUBLIC_SUPABASE_URL` — your Supabase project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — your Supabase anon (public) key
 
-The repo ships `fly.toml` with the non-secret env (`SITE_URL`,
-`PAYMOB_BASE_URL`, `GROQ_MODEL`) and the HTTP service definition.
+   The two `NEXT_PUBLIC_*` values are **public** by design and are inlined into
+   the client bundle at build time, so the CI build needs them as build-time
+   environment; they never leave your app as server-side secrets.
 
-1. Run `fly launch` to generate a Dockerfile (keep the committed `fly.toml`).
-2. Set every secret with `fly secrets set` — never in `fly.toml`:
-   `SUPABASE_SERVICE_ROLE_KEY`, `PAYMOB_API_KEY`, `PAYMOB_PUBLIC_KEY`,
-   `PAYMOB_INTEGRATION_ID`, `PAYMOB_HMAC_SECRET`, `GMAIL_USER`,    `GMAIL_APP_PASSWORD`, `GMAIL_FROM`, `EMAIL_PREFERENCES_SECRET`,
-   `GIFT_CARD_SECRET`,
+### 8.2 Application secrets (Cloudflare)
 
-   `GROQ_API_KEY`, `CRON_SECRET`, plus the
-   public Supabase pair `NEXT_PUBLIC_SUPABASE_URL` /
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-3. Update `SITE_URL` in `fly.toml` to your real domain, then `fly deploy`.
+Set every runtime secret with Wrangler (or the Workers dashboard) — never in
+`wrangler.jsonc` or the repo. These are injected as Cloudflare bindings at
+runtime, so a rebuilt worker never bakes them into its bundle:
+
+```bash
+npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+npx wrangler secret put EMAIL_PREFERENCES_SECRET
+npx wrangler secret put GIFT_CARD_SECRET
+npx wrangler secret put CRON_SECRET
+npx wrangler secret put SITE_URL
+# Paymob test mode only — omit these to keep COD as the only payment path:
+npx wrangler secret put PAYMOB_API_KEY
+npx wrangler secret put PAYMOB_PUBLIC_KEY
+npx wrangler secret put PAYMOB_INTEGRATION_ID
+npx wrangler secret put PAYMOB_HMAC_SECRET
+npx wrangler secret put PAYMOB_BASE_URL
+```
+
+### 8.3 Modes
+
+Non-secret mode switches are declared in `wrangler.jsonc` under `vars` (so the
+Worker always boots with the correct $0 defaults even if a secret is missing):
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `DEPLOYMENT_RUNTIME` | `cloudflare` on Workers | use `node` for local dev |
+| `PAYMENT_MODE` | `cod` | `paymob_test` opt-in; `paymob_live` requires explicit set + keys |
+| `EMAIL_DELIVERY_MODE` | `disabled` on Workers | Gmail SMTP is Node-only; orders still save when email is off |
+
+To opt into Paymob test mode or SMTP email, set the matching `PAYMENT_MODE` /
+`EMAIL_DELIVERY_MODE` value in `wrangler.jsonc` `vars` (a code change you
+commit), or override it with a same-named Cloudflare secret.
+
+- **COD / manual payment** is the real-order path at $0. It creates a
+  `pending` order and never calls Paymob.
+- **Paymob test mode** works only when `PAYMENT_MODE=paymob_test` and all four
+  Paymob keys are set. Live card payments carry a processor fee and are not
+  enabled by default.
+- **Email** is failure-safe. On Cloudflare, `EMAIL_DELIVERY_MODE` defaults to
+  `disabled`: orders, gift cards, and notification rows still record their
+  state, and the admin can see/retry notification status. To send mail, run a
+  Node deployment with `EMAIL_DELIVERY_MODE=smtp`.
+
+### 8.4 Deploy
+
+Pushing to `master` runs `.github/workflows/deploy-cloudflare.yml`: install,
+`npm test`, `npm run lint`, `npm run cf:build` (OpenNext build + worker-size
+gate), then `npx wrangler deploy`. The storefront is served from
+`https://rosette.<account>.workers.dev` (the `workers.dev` subdomain).
+
+### 8.5 Email retry scheduler
+
+Add two more repository secrets and run the workflows once manually:
+
+- `CRON_ENDPOINT` — `https://rosette.<account>.workers.dev/api/cron/notifications`
+- `CRON_SECRET` — the same random string set in Cloudflare
+
+Open the **Actions** tab, run "Retry stuck email notifications", then "Smoke
+test cron endpoint" (pass the deployed URL via the `url` input) to confirm the
+401 guard and summary response.
 
 ---
 

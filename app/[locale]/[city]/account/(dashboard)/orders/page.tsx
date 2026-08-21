@@ -13,7 +13,7 @@ export default async function AccountOrdersPage({ params }: { params: Promise<{ 
   const { locale: routeLocale, city } = await params;
   const customer = await getCurrentCustomer();
   if (!customer) redirect(`/${routeLocale}/${city}/account/login`);
-  const { t, locale } = await getServerT();
+  const { t, locale } = await getServerT(routeLocale);
   const supabase = await getServerSupabase();
   const orders = supabase ? await listCustomerOrders(supabase, customer.id) : [];
   if (!orders.length) return <StatusMessage title={t('noOrdersYet')} />;

@@ -23,7 +23,7 @@ const infoCardClass = 'rounded-2xl border bg-card p-5 shadow-sm';
 
 export default async function TrackPage({ params: routeParams, searchParams }: { params: Promise<{ locale: string; city: string }>; searchParams: Promise<{ number?: string; email?: string }> }) {
   const { locale: localeSegment, city } = await routeParams;
-  const { locale, t } = await getServerT();
+  const { locale, t } = await getServerT(localeSegment);
   const trackHref = `/${localeSegment}/${city}/track`;
   const shopHref = `/${localeSegment}/${city}/shop`;
   const params = await searchParams;
@@ -52,7 +52,7 @@ export default async function TrackPage({ params: routeParams, searchParams }: {
       </div>
       <div className="grid gap-3">
         <h2 className="font-display text-2xl">{t('fulfillment')}</h2>
-        <FulfillmentProgress status={order.fulfillmentStatus} />
+        <FulfillmentProgress status={order.fulfillmentStatus} locale={locale} />
       </div>
       <h2 className="font-display text-2xl">{t('items')}</h2>
       <div className="grid gap-3">{order.items.map((item, index) => <div className={infoCardClass} key={index}><strong className="block">{pickLocalized(locale, { en: item.nameEn, ar: item.nameAr })}</strong><span className="text-sm text-muted-foreground">{t('quantity')} {item.quantity} · {formatMoney(item.unitPriceMinor, locale)}</span>{item.addOns.map((addOn) => <span key={addOn.nameEn} className="block text-sm text-muted-foreground">+ {pickLocalized(locale, { en: addOn.nameEn, ar: addOn.nameAr })} · {formatMoney(addOn.priceMinor, locale)}</span>)}</div>)}</div>

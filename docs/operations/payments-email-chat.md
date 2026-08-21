@@ -6,6 +6,26 @@ Copy `.env.example` to `.env.local` and fill values locally. Never paste keys in
 
 The Gmail app password previously exposed during setup was revoked. Create a new app password only after enabling Google 2-Step Verification, then store it in `.env.local` or the deployment secret manager.
 
+## Deployment modes
+
+The app reads three mode variables with safe defaults (`lib/runtime-config.ts`,
+`features/checkout/payment-mode.ts`):
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `DEPLOYMENT_RUNTIME` | `node` | `cloudflare` on Workers; `node` locally |
+| `PAYMENT_MODE` | `cod` | `cod`, `paymob_test`, or `paymob_live` |
+| `EMAIL_DELIVERY_MODE` | `smtp` (node) / `disabled` (cloudflare) | SMTP vs disabled mailer |
+
+- `PAYMENT_MODE=cod` (default) creates a `pending` Cash-on-Delivery order and
+  never calls Paymob. `paymob_test` requires all four Paymob keys and is the
+  only no-cost online-payment demo. `paymob_live` is never implied — it must be
+  set explicitly and still carries Paymob's per-transaction fee.
+- `EMAIL_DELIVERY_MODE=disabled` records notification rows as `skipped`
+  (terminal, never retried) and keeps orders and gift-card activations valid
+  when email cannot be sent. Gmail SMTP is for Node deployments only;
+  Cloudflare Workers does not run raw SMTP.
+
 ## Supabase
 
 1. Create a Supabase project.
@@ -18,6 +38,9 @@ The Gmail app password previously exposed during setup was revoked. Create a new
 The app uses local mock data when Supabase public configuration is absent.
 
 ## Paymob test mode
+
+Enabled only when `PAYMENT_MODE=paymob_test` (or `paymob_live`) and all four
+Paymob keys are set. The default `cod` mode never opens Paymob.
 
 1. Create or access the Paymob Egypt merchant dashboard.
 2. Use test credentials and a test integration ID while developing.
@@ -156,6 +179,7 @@ npm install
 npm test
 npm run lint
 npm run build
+npm run cf:build   # OpenNext Worker build + free-plan size gate
 npm audit --omit=dev
 ```
 

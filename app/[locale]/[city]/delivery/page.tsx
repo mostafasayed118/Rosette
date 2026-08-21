@@ -15,9 +15,9 @@ type DeliveryPageParams = { params: Promise<{ locale: string; city: string }> };
 
 export async function generateMetadata({ params }: DeliveryPageParams): Promise<Metadata> {
   const { locale, city } = await params;
-  const { t } = await getServerT();
-  const base = (getOptionalServerEnv('SITE_URL') ?? 'https://rosette.fly.dev').replace(/\/$/, '');
   const resolvedLocale: Locale = (LOCALES as string[]).includes(locale) ? (locale as Locale) : 'en';
+  const { t } = await getServerT(resolvedLocale);
+  const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
   const cityRow = getCityBySlug(city);
   const cityName = cityRow ? pickLocalized(resolvedLocale, { en: cityRow.name, ar: cityRow.nameAr, fr: cityRow.nameFr }) : city;
   return buildLocalizedPageMetadata({ locale: resolvedLocale, city, path: '/delivery', base, title: t('blogDeliveryTitle', { city: cityName }), description: t('blogDeliveryLede') });
@@ -25,8 +25,8 @@ export async function generateMetadata({ params }: DeliveryPageParams): Promise<
 
 export default async function DeliveryPage({ params }: DeliveryPageParams) {
   const { locale: localeRaw, city: citySlug } = await params;
-  const { t } = await getServerT();
   const locale: Locale = (LOCALES as string[]).includes(localeRaw) ? (localeRaw as Locale) : 'en';
+  const { t } = await getServerT(locale);
   const cityRow = getCityBySlug(citySlug);
   const cityName = cityRow ? pickLocalized(locale, { en: cityRow.name, ar: cityRow.nameAr, fr: cityRow.nameFr }) : citySlug;
   const authored = cityRow ? (await getBlogRepository().listPublished({ type: 'city', cityCode: cityRow.code }))[0] ?? null : null;

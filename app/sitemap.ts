@@ -7,7 +7,7 @@ import { getOptionalServerEnv } from '@/lib/server-env';
 import { buildSitemapEntries } from '@/features/seo/sitemap';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = (getOptionalServerEnv('SITE_URL') ?? 'https://rosette.fly.dev').replace(/\/$/, '');
+  const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
   const { products } = await getCatalogRepository().list({});
   const posts = await getBlogRepository().listPublished();
   const authors = await getBlogRepository().listAuthors();

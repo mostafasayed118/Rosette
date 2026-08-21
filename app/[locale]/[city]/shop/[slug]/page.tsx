@@ -22,7 +22,7 @@ const getProduct = cache((slug: string) => getCatalogRepository().getBySlug(slug
 export async function generateMetadata({ params }: ProductPageParams): Promise<Metadata> {
   const { locale, city, slug } = await params;
   const product = await getProduct(slug);
-  const base = (getOptionalServerEnv('SITE_URL') ?? 'https://rosette.fly.dev').replace(/\/$/, '');
+  const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
   const resolvedLocale: Locale = (LOCALES as string[]).includes(locale) ? (locale as Locale) : 'en';
   if (!product) return { title: 'Not found' };
   return buildProductMetadata({ product, locale: resolvedLocale, city, base });
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: ProductPageParams): Promise<M
 
 export default async function ProductPage({ params }: ProductPageParams) {
   const { locale, city, slug } = await params;
-  const { t } = await getServerT();
+  const { t } = await getServerT(locale);
   const product = await getProduct(slug);
   const shopHref = `/${locale}/${city}/shop`;
   if (!product) return <main className="mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('productNotFoundEyebrow')}</p><h1 className="mt-2 mb-6 max-w-[12ch] font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[.95]">{t('productNotFoundTitle')}</h1><Button asChild><Link href={shopHref}>{t('backCollection')} ↗</Link></Button></main>;

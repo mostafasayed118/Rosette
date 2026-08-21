@@ -21,9 +21,25 @@ export const metadata: Metadata = {
   description: 'An original botanical gift storefront concept.',
 };
 
+// Cloudflare has no middleware, so sync <html lang/dir> and the locale cookie
+// from the URL's first segment before first paint. The server still renders a
+// cookie-based default so non-prefixed routes (/admin, /login) keep working.
+const LOCALE_SYNC_SCRIPT = `
+(function () {
+  try {
+    var seg = window.location.pathname.split('/').filter(Boolean)[0];
+    if (seg === 'en' || seg === 'ar' || seg === 'fr') {
+      document.documentElement.setAttribute('lang', seg);
+      document.documentElement.setAttribute('dir', seg === 'ar' ? 'rtl' : 'ltr');
+      document.cookie = 'rosette.locale=' + seg + '; path=/; max-age=31536000; samesite=lax';
+    }
+  } catch (e) {}
+})();
+`;
+
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const store = await cookies();
   const locale = await resolveServerLocale();
   const attrs = resolveHtmlAttributes(locale, store.get('rosette.theme')?.value);
-  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${inter.variable} ${cairo.variable}${attrs.themeClass}`}><body><ThemeProvider><I18nProvider><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></body></html>;
+  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${inter.variable} ${cairo.variable}${attrs.themeClass}`}><body><script dangerouslySetInnerHTML={{ __html: LOCALE_SYNC_SCRIPT }} /><ThemeProvider><I18nProvider><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></body></html>;
 }

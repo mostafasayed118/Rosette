@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const ignored = new Set(['node_modules', '.next', '.git', 'coverage']);
+const ignored = new Set(['node_modules', '.next', '.open-next', '.wrangler', '.git', 'coverage']);
 const secretPatterns = [/gsk_[A-Za-z0-9_-]{20,}/, /sk_(?:live|test)_[A-Za-z0-9]{12,}/, /service_role_[A-Za-z0-9_-]{12,}/, /GMAIL_APP_PASSWORD\s*=\s*[^\s<][^\n]{15,}/];
 
 function filesIn(directory: string): string[] {
