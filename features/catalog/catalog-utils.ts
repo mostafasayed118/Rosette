@@ -1,5 +1,23 @@
 import type { CatalogQuery, Product } from './types';
 
+/** Products per catalog page — tuned to the two-column masonry rhythm. */
+export const CATALOG_PER_PAGE = 8;
+
+export type PaginatedProducts = { items: Product[]; page: number; perPage: number; totalPages: number; total: number };
+
+/**
+ * Slice an already filtered/sorted list into a single page.
+ * Pages are clamped into range so a stale `?page=` never renders an empty grid.
+ */
+export function paginateProducts(products: Product[], page: number | undefined, perPage: number = CATALOG_PER_PAGE): PaginatedProducts {
+  const total = products.length;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const requested = Number.isFinite(page) ? Math.trunc(page as number) : 1;
+  const current = Math.min(Math.max(requested || 1, 1), totalPages);
+  const start = (current - 1) * perPage;
+  return { items: products.slice(start, start + perPage), page: current, perPage, totalPages, total };
+}
+
 export function filterProducts(products: Product[], query: CatalogQuery): Product[] {
   const search = query.search?.trim().toLowerCase();
   return products.filter((product) => {
@@ -27,10 +45,12 @@ export function parseCatalogQuery(params: URLSearchParams): CatalogQuery {
   const category = params.get('category');
   const occasion = params.get('occasion');
   const sort = params.get('sort');
+  const page = Number(params.get('page'));
   if (search) query.search = search;
   if (category) query.category = category;
   if (occasion) query.occasion = occasion;
   if (sort === 'recommended' || sort === 'newest' || sort === 'price-asc' || sort === 'price-desc') query.sort = sort;
+  if (Number.isInteger(page) && page > 1) query.page = page;
   return query;
 }
 
@@ -40,5 +60,7 @@ export function serializeCatalogQuery(query: CatalogQuery): string {
     const value = query[key];
     if (value) params.set(key, String(value));
   }
+  // Page 1 is the default, so keep it out of the URL for clean canonical links.
+  if (query.page && query.page > 1) params.set('page', String(query.page));
   return params.toString();
 }

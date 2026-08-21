@@ -6,14 +6,15 @@
                     "dev":  "next dev",
                     "build":  "next build",
                     "start":  "next start",
-                    "lint":  "tsc --noEmit",
+                    "lint":  "tsc --noEmit \u0026\u0026 eslint .",
                     "test":  "vitest run",
                     "test:watch":  "vitest",
                     "cf:build":  "opennextjs-cloudflare build \u0026\u0026 node scripts/check-worker-size.mjs",
                     "cf:preview":  "opennextjs-cloudflare build \u0026\u0026 opennextjs-cloudflare preview",
                     "cf:deploy":  "opennextjs-cloudflare build \u0026\u0026 node scripts/check-worker-size.mjs \u0026\u0026 opennextjs-cloudflare deploy",
                     "test:e2e":  "vitest run --config vitest.e2e.config.ts tests/e2e/rosette.playwright.test.ts",
-                    "test:e2e:stagehand":  "vitest run --config vitest.e2e.config.ts tests/e2e/rosette.e2e.test.ts"
+                    "test:e2e:stagehand":  "vitest run --config vitest.e2e.config.ts tests/e2e/rosette.e2e.test.ts",
+                    "lint:fix":  "eslint . --fix"
                 },
     "dependencies":  {
                          "@supabase/ssr":  "^0.12.4",
@@ -34,6 +35,7 @@
                      },
     "devDependencies":  {
                             "@browserbasehq/stagehand":  "^3.7.2",
+                            "@eslint/eslintrc":  "^3.3.6",
                             "@opennextjs/cloudflare":  "^1.20.2",
                             "@tailwindcss/postcss":  "^4.3.3",
                             "@testing-library/jest-dom":  "6.8.0",
@@ -43,6 +45,8 @@
                             "@types/nodemailer":  "^8.0.1",
                             "@types/react":  "19.1.10",
                             "@types/react-dom":  "19.1.7",
+                            "eslint":  "^9.39.5",
+                            "eslint-config-next":  "^16.3.2",
                             "jsdom":  "26.1.0",
                             "playwright":  "^1.62.1",
                             "tailwindcss":  "^4.3.3",

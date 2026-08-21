@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
+import { LocalBusinessJsonLd, OrganizationJsonLd } from '@/components/seo/SiteJsonLd';
 import { getCityBySlug } from '@/features/destination/data';
 import { getServerT } from '@/features/i18n/server';
 import { pickLocalized } from '@/features/i18n/pick';
@@ -45,51 +47,56 @@ export default async function HomePage({ params }: HomePageParams) {
   const cityName = city ? pickLocalized(locale, { en: city.name, ar: city.nameAr, fr: city.nameFr }) : undefined;
   const titleWords = t('homeTitle').split(' ');
   const inlineAt = Math.min(3, Math.max(1, titleWords.length - 2));
+  const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
 
   return (
     <div className="flex min-h-screen flex-col">
+      <OrganizationJsonLd base={base} locale={locale} />
+      {cityName ? <LocalBusinessJsonLd base={base} locale={locale} cityName={cityName} citySlug={cityCode} /> : null}
       <SiteHeader cityName={cityName} />
       <main className="flex-grow">
         {/* Hero */}
-        <section className="mx-auto max-w-[1280px] px-5 md:px-[64px] pt-12 md:pt-24 pb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div className="lg:col-span-5 order-2 lg:order-1 pt-8 lg:pt-0 lg:pl-8">
-              <span className="uppercase tracking-widest text-xs font-medium text-tertiary mb-6 block">{t('homeEyebrow')}</span>
-              <h1 className="font-display text-[42px] lg:text-[64px] font-semibold leading-[1.1] tracking-[-0.02em] text-on-surface mb-8">
+        <section className="mx-auto max-w-[1280px] px-5 md:px-[64px] pt-16 md:pt-32 pb-24">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            <div className="stagger-item lg:col-span-5 order-2 lg:order-1 pt-10 lg:pt-0 lg:pl-8">
+              <span className="uppercase tracking-[0.18em] text-xs font-semibold text-tertiary mb-7 block">{t('homeEyebrow')}</span>
+              <h1 className="font-display text-[42px] lg:text-[64px] font-semibold leading-[1.08] tracking-[-0.025em] text-on-surface mb-9">
                 {titleWords.slice(0, inlineAt + 1).join(' ')}{' '}
-                <span className="inline-block align-middle mx-2 w-16 h-12 md:w-24 md:h-16 rounded-full overflow-hidden border border-outline-variant/50">
-                  <span className="block h-full w-full bg-cover bg-center" style={{ backgroundImage: `url(${HERO_INLINE_IMAGE})` }} aria-hidden="true" />
+                <span className="relative inline-block align-middle mx-2 w-16 h-12 md:w-24 md:h-16 rounded-full overflow-hidden border border-outline-variant/50 shadow-[0_8px_20px_-8px_rgb(58_20_30_/_25%)]">
+                  <Image src={HERO_INLINE_IMAGE} alt="" aria-hidden="true" fill sizes="96px" priority className="object-cover" />
                 </span>{' '}
                 {titleWords.slice(inlineAt + 1).join(' ')}
               </h1>
-              <p className="text-[18px] leading-[1.6] text-on-surface-variant mb-10 max-w-md">{t('homeLede')}</p>
-              <Link href={`/${locale}/${cityCode}/shop`} className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-sm font-medium text-on-primary transition-colors hover:bg-on-primary-fixed-variant active:scale-95">
-                {t('explore')} <ArrowRight className="h-4 w-4" />
+              <p className="text-[18px] leading-[1.7] text-on-surface-variant mb-11 max-w-lg">{t('homeLede')}</p>
+              <Link href={`/${locale}/${cityCode}/shop`} className="lift press inline-flex items-center gap-2 rounded-full bg-primary px-9 py-4 text-sm font-semibold text-on-primary transition-colors hover:bg-on-primary-fixed-variant">
+                {t('explore')} <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
             </div>
-            <div className="lg:col-span-7 order-1 lg:order-2 flex justify-end">
-              <div className="relative w-full md:w-4/5 lg:w-full aspect-[4/5] overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low p-2 md:p-4 glow-shadow">
-                <div className="h-full w-full overflow-hidden rounded bg-cover bg-center" style={{ backgroundImage: `url(${HERO_IMAGE_URL})` }} aria-label="A warm bouquet of fresh flowers" />
+            <div className="stagger-item lg:col-span-7 order-1 lg:order-2 flex justify-end">
+              <div className="relative w-full md:w-4/5 lg:w-full aspect-[4/5] overflow-hidden rounded-[1.25rem] border border-outline-variant/30 bg-surface-container-low p-2 md:p-4 shadow-[0_28px_64px_-24px_rgb(58_20_30_/_22%)]">
+                <div className="relative h-full w-full overflow-hidden rounded-lg">
+                  <Image src={HERO_IMAGE_URL} alt="A warm bouquet of fresh flowers" fill sizes="(max-width: 1024px) 80vw, 55vw" priority className="object-cover" />
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* Featured gestures */}
-        <section className="border-y border-outline-variant/20 bg-surface-container-low py-16">
-          <div className="mx-auto flex max-w-[1280px] items-end justify-between px-5 md:px-[64px] mb-8">
-            <h2 className="font-display text-2xl font-medium text-on-surface">Featured gestures</h2>
+        <section className="border-y border-outline-variant/25 bg-surface-container-low py-24">
+          <div className="mx-auto flex max-w-[1280px] items-end justify-between px-5 md:px-[64px] mb-12">
+            <h2 className="font-display text-[28px] font-medium tracking-[-0.01em] text-on-surface">Featured gestures</h2>
           </div>
-          <div className="hide-scrollbar w-full overflow-x-auto pb-8">
-            <div className="flex w-max gap-6 px-5 md:px-[64px]">
+          <div className="hide-scrollbar w-full overflow-x-auto pb-10">
+            <div className="flex w-max gap-8 px-5 md:px-[64px]">
               {FEATURED.map((card) => (
-                <Link key={card.name} href={`/${locale}/${cityCode}/shop`} className="group w-[280px] md:w-[320px] cursor-pointer">
-                  <div className="relative mb-4 aspect-[3/4] overflow-hidden rounded-lg border border-outline-variant/30 bg-surface">
-                    {card.badge ? <span className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-xs font-medium ${card.tone}`}>{card.badge}</span> : null}
-                    <span className="block h-full w-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${card.image})` }} />
+                <Link key={card.name} href={`/${locale}/${cityCode}/shop`} className="stagger-item group w-[280px] md:w-[320px] cursor-pointer">
+                  <div className="ambient-glow relative mb-5 aspect-[3/4] overflow-hidden rounded-[1rem] border border-outline-variant/30 bg-surface">
+                    {card.badge ? <span className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-xs font-semibold ${card.tone}`}>{card.badge}</span> : null}
+                    <Image src={card.image} alt={card.name} fill sizes="(max-width: 768px) 280px, 320px" className="object-cover transition-transform duration-700 group-hover:scale-[1.06]" />
                   </div>
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-display text-lg text-on-surface">{card.name}</h3>
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="font-display text-lg text-on-surface transition-colors group-hover:text-primary">{card.name}</h3>
                     <span className="price text-sm tracking-[0.05em] text-on-surface-variant">{card.price}</span>
                   </div>
                 </Link>
@@ -99,36 +106,36 @@ export default async function HomePage({ params }: HomePageParams) {
         </section>
 
         {/* Editorial split */}
-        <section className="mx-auto max-w-[1280px] px-5 md:px-[64px] py-16 mt-12 mb-24">
-          <div className="mb-16 text-center">
-            <h2 className="font-display text-[32px] font-medium leading-[1.2] text-on-surface mb-4">
+        <section className="mx-auto max-w-[1280px] px-5 md:px-[64px] py-24 mt-16 mb-32">
+          <div className="mb-20 text-center">
+            <h2 className="font-display text-[32px] md:text-[38px] font-medium leading-[1.2] tracking-[-0.015em] text-on-surface mb-5">
               {t('editorialTitle')}
             </h2>
-            <div className="mx-auto h-px w-12 bg-outline-variant" />
+            <div className="mx-auto h-px w-16 bg-outline-variant" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-16 items-start">
-            <div className="flex flex-col gap-12 pt-0 md:pt-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-20 items-start">
+            <div className="flex flex-col gap-16 pt-0 md:pt-28">
               {FEELINGS.slice(0, 2).map((feeling) => (
-                <Link key={feeling.label} href={`/${locale}/${cityCode}/shop`} className={`group relative block overflow-hidden rounded-lg border border-outline-variant/20 bg-surface p-2 glow-shadow ${feeling.offset}`}>
-                  <div className={`${feeling.aspect} overflow-hidden rounded`}>
-                    <span className="block h-full w-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${feeling.image})` }} />
+                <Link key={feeling.label} href={`/${locale}/${cityCode}/shop`} className={`stagger-item ambient-glow group relative block overflow-hidden rounded-[1rem] border border-outline-variant/25 bg-surface p-2 ${feeling.offset}`}>
+                  <div className={`relative ${feeling.aspect} overflow-hidden rounded-lg`}>
+                    <Image src={feeling.image} alt={feeling.label} fill sizes="(max-width: 768px) 100vw, 45vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.06]" />
                   </div>
-                  <span className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded border border-outline-variant/30 bg-surface/90 p-4 backdrop-blur-sm">
-                    <span className="font-display text-xl text-on-surface">{feeling.label}</span>
-                    <ArrowRight className="h-5 w-5 text-primary transition-transform group-hover:translate-x-1" />
+                  <span className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface/92 p-4 backdrop-blur-md">
+                    <span className="font-display text-xl text-on-surface transition-colors group-hover:text-primary">{feeling.label}</span>
+                    <ArrowRight className="h-5 w-5 text-primary transition-transform duration-300 group-hover:translate-x-1.5" />
                   </span>
                 </Link>
               ))}
             </div>
-            <div className="flex flex-col gap-12 pt-12 md:pt-0">
+            <div className="flex flex-col gap-16 pt-16 md:pt-0">
               {FEELINGS.slice(2, 4).map((feeling) => (
-                <Link key={feeling.label} href={`/${locale}/${cityCode}/shop`} className={`group relative block overflow-hidden rounded-lg border border-outline-variant/20 bg-surface p-2 glow-shadow ${feeling.offset}`}>
-                  <div className={`${feeling.aspect} overflow-hidden rounded`}>
-                    <span className="block h-full w-full bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${feeling.image})` }} />
+                <Link key={feeling.label} href={`/${locale}/${cityCode}/shop`} className={`stagger-item ambient-glow group relative block overflow-hidden rounded-[1rem] border border-outline-variant/25 bg-surface p-2 ${feeling.offset}`}>
+                  <div className={`relative ${feeling.aspect} overflow-hidden rounded-lg`}>
+                    <Image src={feeling.image} alt={feeling.label} fill sizes="(max-width: 768px) 100vw, 45vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.06]" />
                   </div>
-                  <span className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded border border-outline-variant/30 bg-surface/90 p-4 backdrop-blur-sm">
-                    <span className="font-display text-xl text-on-surface">{feeling.label}</span>
-                    <ArrowRight className="h-5 w-5 text-primary transition-transform group-hover:translate-x-1" />
+                  <span className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded-lg border border-outline-variant/30 bg-surface/92 p-4 backdrop-blur-md">
+                    <span className="font-display text-xl text-on-surface transition-colors group-hover:text-primary">{feeling.label}</span>
+                    <ArrowRight className="h-5 w-5 text-primary transition-transform duration-300 group-hover:translate-x-1.5" />
                   </span>
                 </Link>
               ))}

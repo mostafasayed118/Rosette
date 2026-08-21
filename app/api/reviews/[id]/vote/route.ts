@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { customerVoterKey, getVoteState, toggleVote, visitorVoterKey } from '@/features/reviews/vote-service';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
+import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 
 type VoteContext = { params: Promise<{ id: string }> };
 
@@ -27,6 +28,8 @@ export async function GET(request: Request, context: VoteContext) {
 }
 
 export async function POST(request: Request, context: VoteContext) {
+  const limited = enforceRateLimit(request, RATE_LIMITS.reviewVote);
+  if (limited) return limited;
   const { id } = await context.params;
   const body = (await request.json().catch(() => ({}))) as { visitor?: unknown };
   const customer = await getCurrentCustomer();

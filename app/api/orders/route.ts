@@ -10,8 +10,11 @@ import { deliverOrderNotification } from '@/features/notifications/notification-
 import { markCartConverted } from '@/features/cart/cart-sync';
 import { resolvePaymentMethodAvailability } from '@/features/checkout/payment-mode';
 import { logRouteError } from '@/lib/api';
+import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit(request, RATE_LIMITS.orders);
+  if (limited) return limited;
   try {
     const body = await request.json() as { cart?: unknown; destination?: unknown; checkout?: unknown; locale?: unknown };
     const validation = validateOrderRequest(body as { cart?: { lines?: unknown[] }; total?: unknown });

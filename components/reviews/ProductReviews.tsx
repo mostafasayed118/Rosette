@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getServerT } from '@/features/i18n/server';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
@@ -63,7 +64,7 @@ export async function ProductReviews({ productSlug, locale, data }: { productSlu
                 {review.photos.length > 0 ? (
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     {review.photos.slice(0, 3).map((url) => (
-                      <img key={url} src={url} alt="" className="h-20 w-20 rounded-xl object-cover" />
+                      <Image key={url} src={url} alt="" width={80} height={80} className="h-20 w-20 rounded-xl object-cover" />
                     ))}
                   </div>
                 ) : null}

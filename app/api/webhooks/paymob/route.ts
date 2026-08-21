@@ -7,6 +7,7 @@ import { handleChangePaymentCallback } from '@/features/orders/change-request-se
 import { activateGiftCardPurchase, settleGiftCardOrderPayment } from '@/features/gift-cards/service';
 import { getPublicOrigin } from '@/lib/origin';
 import { logRouteError } from '@/lib/api';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as Record<string, unknown> & { hmac?: string; obj?: Record<string, unknown> };
@@ -14,7 +15,11 @@ export async function POST(request: Request) {
   // Paymob delivers the HMAC as a query parameter on the callback URL (?hmac=), not in the body.
   const queryHmac = new URL(request.url).searchParams.get('hmac') ?? undefined;
   const callback = { ...transaction, hmac: payload.hmac ?? transaction.hmac ?? queryHmac };
-  if (!verifyPaymobCallback(callback, getRequiredServerEnv('PAYMOB_HMAC_SECRET'))) return NextResponse.json({ error: 'Invalid callback signature' }, { status: 401 });
+  if (!verifyPaymobCallback(callback, getRequiredServerEnv('PAYMOB_HMAC_SECRET'))) {
+    logger.warn('payment.webhook.invalid_signature', { providerReference: String(transaction.id ?? '') });
+    return NextResponse.json({ error: 'Invalid callback signature' }, { status: 401 });
+  }
+  logger.info('payment.webhook.received', { providerReference: String(transaction.id ?? ''), success: transaction.success === true });
 
   // Refund callbacks must never be treated as payments: they would insert a bogus
   // payments row and flip the order's payment_status from 'refunded' back to 'paid'.
@@ -33,6 +38,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     } catch (error) {
       logRouteError('gift-card webhook', error);
+      logger.error('payment.webhook.gift_card_failed', { specialReference, error });
       return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
     }
   }
@@ -80,9 +86,11 @@ export async function POST(request: Request) {
         orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}`,
       });
     }
+    logger.info('payment.webhook.processed', { orderReference, providerReference, success, amountMinor });
     return NextResponse.json({ received: true });
   } catch (error) {
     logRouteError('paymob webhook', error);
+    logger.error('payment.webhook.failed', { orderReference, providerReference, error });
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }
 }

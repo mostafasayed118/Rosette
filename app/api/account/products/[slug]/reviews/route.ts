@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 import { submitProductReview } from '@/features/reviews/reviews-service';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
+import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 
 export async function POST(request: Request, context: { params: Promise<{ slug: string }> }) {
+  const limited = enforceRateLimit(request, RATE_LIMITS.reviewSubmit);
+  if (limited) return limited;
   const customer = await getCurrentCustomer();
   if (!customer) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
   const { slug } = await context.params;

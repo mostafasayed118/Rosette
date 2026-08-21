@@ -50,7 +50,8 @@ describe('AuthorByline', () => {
     const { container } = renderWithProviders(<AuthorByline author={author} locale="en" city="greater-cairo" />);
     const img = container.querySelector('img');
     expect(img).not.toBeNull();
-    expect(img).toHaveAttribute('src', 'https://example.com/nour.jpg');
+    // next/image rewrites src through the optimizer, so assert the source is referenced.
+    expect(img?.getAttribute('src')).toContain(encodeURIComponent('https://example.com/nour.jpg'));
     expect(img).toHaveAttribute('width', '48');
     expect(img).toHaveAttribute('height', '48');
   });

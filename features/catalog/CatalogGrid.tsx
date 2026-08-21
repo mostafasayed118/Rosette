@@ -14,11 +14,11 @@ export function CatalogGrid({ products }: { products: Product[] }) {
   const col1 = products.filter((_, index) => index % 2 === 0);
   const col2 = products.filter((_, index) => index % 2 === 1);
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 md:gap-y-8 items-start">
-      <div className="masonry-col-1 flex flex-col gap-8">
+    <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-12 items-start">
+      <div className="masonry-col-1 flex flex-col gap-12">
         {col1.map((product) => <ProductCard key={product.slug} product={product} />)}
       </div>
-      <div className="masonry-col-2 flex flex-col gap-8 md:pt-8">
+      <div className="masonry-col-2 flex flex-col gap-12 md:pt-12">
         {col2.map((product) => <ProductCard key={product.slug} product={product} />)}
       </div>
     </div>

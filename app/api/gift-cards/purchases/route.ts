@@ -4,8 +4,11 @@ import { getPublicOrigin } from '@/lib/origin';
 import { createGiftCardPurchase } from '@/features/gift-cards/service';
 import type { GiftCardPurchaseInput } from '@/features/gift-cards/types';
 import { logRouteError } from '@/lib/api';
+import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 
 export async function POST(request: Request) {
+  const limited = enforceRateLimit(request, RATE_LIMITS.giftCardPurchase);
+  if (limited) return limited;
   try {
     const body = await request.json() as { purchase?: unknown; locale?: unknown };
     if (!body.purchase || typeof body.purchase !== 'object') return NextResponse.json({ error: 'Invalid gift-card details' }, { status: 400 });

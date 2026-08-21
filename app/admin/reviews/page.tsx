@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -73,7 +74,7 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
       <TableRow key={review.id}>
         <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/products/${review.product?.id ?? ''}`}>{review.product?.name_en ?? '—'}</Link><span className="block text-sm text-muted-foreground">{date(review.createdAt)}</span></TableCell>
         <TableCell><StarRating value={review.rating} /></TableCell>
-        <TableCell className="max-w-md"><p className="line-clamp-3 text-sm">{review.body}</p>{review.photos.length > 0 ? <span className="mt-1 flex flex-wrap gap-1">{review.photos.slice(0, 3).map((url) => <img key={url} src={url} alt="" className="h-10 w-10 rounded object-cover" />)}</span> : null}{review.reviewedAt ? <span className="block text-xs text-muted-foreground">{date(review.reviewedAt)}</span> : null}</TableCell>
+        <TableCell className="max-w-md"><p className="line-clamp-3 text-sm">{review.body}</p>{review.photos.length > 0 ? <span className="mt-1 flex flex-wrap gap-1">{review.photos.slice(0, 3).map((url) => <Image key={url} src={url} alt="" width={40} height={40} className="h-10 w-10 rounded object-cover" />)}</span> : null}{review.reviewedAt ? <span className="block text-xs text-muted-foreground">{date(review.reviewedAt)}</span> : null}</TableCell>
         {showApproved ? <TableCell>{review.reviewedByName ?? '—'}</TableCell> : <TableCell className="text-end"><ReviewQueueActions reviewId={review.id} /></TableCell>}
       </TableRow>
     ))}</TableBody></Table></div></Card>}

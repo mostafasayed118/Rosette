@@ -40,17 +40,17 @@ export function ProductDetail({ product }: { product: Product }) {
     addItem({ id: `${product.slug}-${variantId}-${[...addOnIds].sort().join('-') || 'none'}-${deliveryDate}`, productSlug: product.slug, productName: product.name, productNameAr: product.nameAr, productNameFr: product.nameFr, tone: product.tone, imageUrl: product.imageUrl, unitPrice, quantity: 1, variantId: variant?.id, variantName: variant ? t(variantMessageKeys[variant.id] ?? variant.name) : undefined, addOns, message: message.trim(), deliveryDate });
     setAdded(true);
   }
-  const variantPill = (active: boolean) => `rounded-full border px-6 py-3 text-sm transition-colors ${active ? 'border-2 border-primary bg-primary-fixed/20 text-on-surface' : 'border border-outline-variant/50 bg-surface text-on-surface hover:bg-surface-container'}`;
-  const addOnPill = (active: boolean) => `flex items-center gap-3 rounded-full border px-5 py-3 text-sm transition-colors ${active ? 'border-2 border-primary bg-primary-fixed/20' : 'border border-outline-variant/50 bg-surface hover:bg-surface-container'}`;
+  const variantPill = (active: boolean) => `press cursor-pointer rounded-full border px-6 py-3 text-sm font-medium transition-all duration-300 ${active ? 'border-2 border-primary bg-primary-fixed/25 text-on-surface shadow-[0_4px_14px_-4px_rgb(58_20_30_/_25%)]' : 'border border-outline-variant/50 bg-surface text-on-surface hover:-translate-y-0.5 hover:bg-surface-container'}`;
+  const addOnPill = (active: boolean) => `press flex cursor-pointer items-center gap-3 rounded-full border px-5 py-3 text-sm transition-all duration-300 ${active ? 'border-2 border-primary bg-primary-fixed/25 shadow-[0_4px_14px_-4px_rgb(58_20_30_/_25%)]' : 'border border-outline-variant/50 bg-surface hover:-translate-y-0.5 hover:bg-surface-container'}`;
 
   return (
-    <div className="grid grid-cols-1 gap-6 py-8 md:grid-cols-12 md:gap-8 items-start">
+    <div className="grid grid-cols-1 gap-10 py-12 md:grid-cols-12 md:gap-12 items-start">
       {/* Gallery — 7 cols */}
       <div className="flex flex-col-reverse gap-4 md:col-span-7 md:flex-row">
         <div className="hidden shrink-0 md:flex md:w-24 md:flex-col gap-3">
           <span className="h-32 w-24 overflow-hidden rounded border-2 border-primary opacity-100"><ProductVisual tone={product.tone} imageUrl={product.imageUrl} label={`${name} thumb`} className="h-full w-full" /></span>
         </div>
-        <div className="w-full overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low shadow-ambient">
+        <div className="w-full overflow-hidden rounded-[1.25rem] border border-outline-variant/30 bg-surface-container-low shadow-[0_28px_64px_-24px_rgb(58_20_30_/_20%)]">
           <ProductVisual tone={product.tone} imageUrl={product.imageUrl} label={`${name} visual`} className="aspect-[4/5] w-full md:aspect-[3/4]" />
         </div>
       </div>
@@ -106,7 +106,7 @@ export function ProductDetail({ product }: { product: Product }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button type="submit" className="flex-1 justify-center gap-2 py-6 text-base">{t('addToBag')} <span className="price border-l border-on-primary/30 pl-3 text-sm opacity-80">{formatMoney(unitPrice, locale)}</span></Button>
+            <Button type="submit" className="lift press flex-1 justify-center gap-2 py-6 text-base font-semibold">{t('addToBag')} <span className="price border-l border-on-primary/30 pl-3 text-sm opacity-80">{formatMoney(unitPrice, locale)}</span></Button>
             <WishlistHeart slug={product.slug} />
           </div>
           {added ? <p className="rounded-xl bg-surface-container p-4 text-primary" role="status">{t('added')} <Link href={href('/cart')} className="underline underline-offset-4">{t('reviewBag')} ↗</Link></p> : null}

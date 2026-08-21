@@ -90,6 +90,8 @@ export function ReviewForm({ productSlug, state }: { productSlug: string; state:
             const preview = makePreview(file);
             return (
               <div key={`${file.name}-${index}`} className="relative">
+                {/* Local blob: URL previews are not routable by the image optimizer. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 {preview ? <img src={preview} alt={file.name} className="h-16 w-16 rounded object-cover" /> : null}
                 <button type="button" onClick={() => removePhoto(index)} aria-label={t('removePhoto')} className="absolute -right-1 -top-1 rounded-full bg-muted p-0.5"><X size={12} aria-hidden="true" /></button>
               </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -131,10 +132,13 @@ export function DestinationGate({ locale }: DestinationGateProps) {
 
           {/* Right Image Block: spans 6 columns, subtle paper-on-paper frame */}
           <div className="md:col-span-5 md:col-start-8 h-[614px] md:h-[768px] w-full relative rounded-lg overflow-hidden order-1 md:order-2 bg-surface-container-low">
-            <img
+            <Image
               alt="A high-end, soft botanical photograph of a vintage courier bicycle basket overflowing with fresh, artisanal florist blooms like ranunculus and lilies. The scene is bathed in warm, airy, editorial natural light."
-              className="absolute inset-0 w-full h-full object-cover rounded-lg mix-blend-multiply opacity-90 transition-transform duration-1000 hover:scale-105"
+              className="object-cover rounded-lg mix-blend-multiply opacity-90 transition-transform duration-1000 hover:scale-105"
               src={GATE_IMAGE}
+              fill
+              sizes="(max-width: 768px) 100vw, 42vw"
+              priority
             />
             {/* Subtle ambient glow to blend with canvas */}
             <div className="absolute inset-0 shadow-[inset_0_0_80px_rgba(255,248,243,0.5)] pointer-events-none rounded-lg" />

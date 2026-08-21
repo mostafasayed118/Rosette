@@ -1,7 +1,7 @@
 import { ratingBySlug } from '@/features/reviews/aggregate';
 import { demoReviews } from '@/features/reviews/demo-data';
 import { getCity } from '@/features/destination/data';
-import { filterProducts, sortProducts } from './catalog-utils';
+import { filterProducts, paginateProducts, sortProducts } from './catalog-utils';
 import { products } from './data';
 import type { CatalogRepository, CatalogQuery, DeliveryEligibilityInput } from './types';
 
@@ -14,7 +14,8 @@ function withRatings(rows: typeof products) {
 export const localCatalogRepository: CatalogRepository = {
   async list(query: CatalogQuery) {
     const filtered = sortProducts(filterProducts(products, query), query.sort);
-    return { products: withRatings(filtered), total: filtered.length, query };
+    const { items, page, perPage, totalPages, total } = paginateProducts(filtered, query.page);
+    return { products: withRatings(items), total, query, page, perPage, totalPages };
   },
   async getBySlug(slug) {
     const product = products.find((product) => product.slug === slug);

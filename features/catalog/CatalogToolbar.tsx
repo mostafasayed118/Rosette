@@ -16,11 +16,12 @@ export function CatalogToolbar() {
   const searchParams = useSearchParams();
   const query = parseCatalogQuery(new URLSearchParams(searchParams.toString()));
   function update(key: 'search' | 'category' | 'occasion' | 'sort', value: string) {
-    const next = { ...query, [key]: value || undefined };
+    // Any filter or sort change invalidates the current page, so reset to page 1.
+    const next = { ...query, [key]: value || undefined, page: undefined };
     const serialized = serializeCatalogQuery(next);
     router.push(`${pathname}${serialized ? `?${serialized}` : ''}`);
   }
-  const chip = (active: boolean) => `rounded-full px-5 py-2 text-sm whitespace-nowrap transition-colors ${active ? 'chip-active' : 'chip-inactive hover:bg-outline-variant/20'}`;
+  const chip = (active: boolean) => `press rounded-full px-5 py-2 text-sm font-medium whitespace-nowrap transition-all duration-300 ${active ? 'chip-active shadow-[0_4px_14px_-4px_rgb(58_20_30_/_35%)]' : 'chip-inactive hover:bg-outline-variant/25 hover:-translate-y-0.5'}`;
   return (
     <section className="sticky top-[57px] z-30 -mx-[min(calc((100vw-80rem)/2),1.5rem)] border-y border-surface-variant bg-background/90 px-[min(calc((100vw-80rem)/2),1.5rem)] py-4 backdrop-blur-md md:mx-0 md:px-0">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

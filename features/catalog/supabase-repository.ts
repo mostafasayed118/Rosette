@@ -1,7 +1,7 @@
 import { getCity } from '@/features/destination/data';
 import { applyDeliveryRule, fetchDeliveryRule } from '@/features/order/delivery-rules';
 import { getServerSupabase } from '@/lib/supabase/server';
-import { filterProducts, sortProducts } from './catalog-utils';
+import { filterProducts, paginateProducts, sortProducts } from './catalog-utils';
 import { mapSupabaseProduct } from './row-mappers';
 import { ratingBySlug, type ReviewRatingRow } from '@/features/reviews/aggregate';
 import type { CatalogRepository, CatalogQuery, DeliveryEligibilityInput } from './types';
@@ -31,7 +31,8 @@ async function readProducts(): Promise<Product[]> {
 export const supabaseCatalogRepository: CatalogRepository = {
   async list(query: CatalogQuery) {
     const filtered = sortProducts(filterProducts(await readProducts(), query), query.sort);
-    return { products: filtered, total: filtered.length, query };
+    const { items, page, perPage, totalPages, total } = paginateProducts(filtered, query.page);
+    return { products: items, total, query, page, perPage, totalPages };
   },
   async getBySlug(slug) {
     const products = await readProducts();
