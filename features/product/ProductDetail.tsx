@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import Link from 'next/link';
+import { Flower2, Droplets, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,8 +18,6 @@ import { defaultDeliveryDate, minDeliveryDate } from '@/features/delivery/dates'
 import { categoryMessageKeys, variantMessageKeys } from '@/features/catalog/catalog-labels';
 import { addOnLabel } from '@/features/catalog/add-on-labels';
 import type { Product } from '@/features/catalog/types';
-
-const choiceClass = 'flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors has-[:checked]:border-primary has-[:checked]:bg-accent has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring';
 
 export function ProductDetail({ product }: { product: Product }) {
   const { locale, t } = useI18n();
@@ -41,5 +40,84 @@ export function ProductDetail({ product }: { product: Product }) {
     addItem({ id: `${product.slug}-${variantId}-${[...addOnIds].sort().join('-') || 'none'}-${deliveryDate}`, productSlug: product.slug, productName: product.name, productNameAr: product.nameAr, productNameFr: product.nameFr, tone: product.tone, imageUrl: product.imageUrl, unitPrice, quantity: 1, variantId: variant?.id, variantName: variant ? t(variantMessageKeys[variant.id] ?? variant.name) : undefined, addOns, message: message.trim(), deliveryDate });
     setAdded(true);
   }
-  return <div className="grid grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)] gap-20 py-12 max-md:grid-cols-1 max-md:gap-8"><div><ProductVisual tone={product.tone} imageUrl={product.imageUrl} label={`${name} visual`} /></div><div><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t(categoryMessageKeys[product.category] ?? 'plants')} · {delivery}</p><h1 className="mt-2 mb-4 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[.95] tracking-[-.02em]">{name}</h1><p className="text-[1.1rem] text-muted-foreground">{description}</p><p className="my-6 text-lg font-bold text-primary">{t('from')} {formatMoney(unitPrice, locale)}</p>{product.rating && product.rating.count > 0 ? <p className="-mt-4 mb-6 text-sm text-muted-foreground">★ {product.rating.average.toFixed(1)} · {product.rating.count}</p> : null}<form className="grid gap-5" onSubmit={submit}>{product.variants.length ? <fieldset className="grid gap-2.5 border-0 p-0"><legend className="mb-1.5 font-bold">{t('chooseSize')}</legend>{product.variants.map((item) => <label className={choiceClass} key={item.id}><input type="radio" name="variant" value={item.id} checked={variantId === item.id} onChange={() => setVariantId(item.id)} className="accent-primary" /><span>{t(variantMessageKeys[item.id] ?? item.name)}{item.priceDelta ? ` · +${item.priceDelta / 100} EGP` : ''}</span></label>)}</fieldset> : null}{product.addOns.length ? <fieldset className="grid gap-2.5 border-0 p-0"><legend className="mb-1.5 font-bold">{t('extraThoughtful')}</legend>{product.addOns.map((item) => <label className={choiceClass} key={item.id}><input type="checkbox" checked={addOnIds.includes(item.id)} onChange={() => toggleAddOn(item.id)} className="accent-primary" /><span>{addOnLabel(item, t)} · +{item.price / 100} EGP</span></label>)}</fieldset> : null}<Field label={t('deliveryDate')} type="date" min={minDeliveryDate(new Date())} value={deliveryDate} onChange={(event) => setDeliveryDate(event.target.value)} required /><label className="grid gap-1.5" htmlFor="message"><span className="text-sm font-bold text-foreground">{t('giftNote')} <small>({t('optional')})</small></span><Textarea id="message" maxLength={160} value={message} onChange={(event) => setMessage(event.target.value)} placeholder={t('notePlaceholder')} className="min-h-24" /></label><div className="flex items-center gap-3"><Button type="submit">{t('addToBag')} <span aria-hidden="true">↗</span></Button><WishlistHeart slug={product.slug} /></div>{added ? <p className="rounded-xl bg-accent p-4 text-primary" role="status">{t('added')} <Link href={href('/cart')} className="underline underline-offset-4">{t('reviewBag')} ↗</Link></p> : null}</form></div></div>;
+  const variantPill = (active: boolean) => `rounded-full border px-6 py-3 text-sm transition-colors ${active ? 'border-2 border-primary bg-primary-fixed/20 text-on-surface' : 'border border-outline-variant/50 bg-surface text-on-surface hover:bg-surface-container'}`;
+  const addOnPill = (active: boolean) => `flex items-center gap-3 rounded-full border px-5 py-3 text-sm transition-colors ${active ? 'border-2 border-primary bg-primary-fixed/20' : 'border border-outline-variant/50 bg-surface hover:bg-surface-container'}`;
+
+  return (
+    <div className="grid grid-cols-1 gap-6 py-8 md:grid-cols-12 md:gap-8 items-start">
+      {/* Gallery — 7 cols */}
+      <div className="flex flex-col-reverse gap-4 md:col-span-7 md:flex-row">
+        <div className="hidden shrink-0 md:flex md:w-24 md:flex-col gap-3">
+          <span className="h-32 w-24 overflow-hidden rounded border-2 border-primary opacity-100"><ProductVisual tone={product.tone} imageUrl={product.imageUrl} label={`${name} thumb`} className="h-full w-full" /></span>
+        </div>
+        <div className="w-full overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low shadow-ambient">
+          <ProductVisual tone={product.tone} imageUrl={product.imageUrl} label={`${name} visual`} className="aspect-[4/5] w-full md:aspect-[3/4]" />
+        </div>
+      </div>
+
+      {/* Details — 5 cols */}
+      <div className="flex flex-col gap-6 md:col-span-5">
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-sage">{t(categoryMessageKeys[product.category] ?? 'plants')} · {delivery}</p>
+          <h1 className="font-display text-[42px] font-semibold leading-[1.1] tracking-[-0.02em] text-on-surface md:text-[48px]">{name}</h1>
+          <p className="price text-lg font-medium text-on-surface-variant">{t('from')} {formatMoney(unitPrice, locale)}</p>
+          {product.rating && product.rating.count > 0 ? <p className="text-sm text-muted-foreground">★ {product.rating.average.toFixed(1)} · {product.rating.count}</p> : null}
+          <p className="max-w-prose text-[1.05rem] leading-relaxed text-on-surface-variant">{description}</p>
+        </div>
+
+        <form className="grid gap-6" onSubmit={submit}>
+          {product.variants.length ? (
+            <fieldset className="grid gap-3 border-0 p-0">
+              <legend className="price text-xs font-medium uppercase tracking-widest text-on-surface-variant">{t('chooseSize')}</legend>
+              <div className="flex flex-wrap gap-3">
+                {product.variants.map((item) => (
+                  <label key={item.id} className={variantPill(variantId === item.id)}>
+                    <input type="radio" name="variant" value={item.id} checked={variantId === item.id} onChange={() => setVariantId(item.id)} className="sr-only" />
+                    <span>{t(variantMessageKeys[item.id] ?? item.name)}</span>{item.priceDelta ? <span className="price ml-1 text-xs text-on-surface-variant">+{formatMoney(item.priceDelta, locale)}</span> : null}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
+          {product.addOns.length ? (
+            <fieldset className="grid gap-3 border-0 p-0">
+              <legend className="price text-xs font-medium uppercase tracking-widest text-on-surface-variant">{t('extraThoughtful')}</legend>
+              <div className="flex flex-wrap gap-3">
+                {product.addOns.map((item) => (
+                  <label key={item.id} className={addOnPill(addOnIds.includes(item.id))}>
+                    <input type="checkbox" checked={addOnIds.includes(item.id)} onChange={() => toggleAddOn(item.id)} className="sr-only" />
+                    <span>{addOnLabel(item, t)}</span><span className="price text-xs text-on-surface-variant">+{formatMoney(item.price, locale)}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
+          <div className="grid gap-3 border-t border-outline-variant/30 pt-4">
+            <label className="flex items-center justify-between text-sm text-on-surface-variant" htmlFor="message">
+              <span>{t('giftNote')}</span><span className="price text-xs opacity-60">({t('optional')}) — {locale === 'ar' ? 'رسالة الهدية' : ''}</span>
+            </label>
+            <Textarea id="message" maxLength={160} value={message} onChange={(event) => setMessage(event.target.value)} placeholder={t('notePlaceholder')} className="min-h-20 border-x-0 border-b border-t-0 border-outline-variant/50 bg-surface-container-low focus:border-primary focus:ring-0" />
+          </div>
+
+          <div className="grid gap-3">
+            <Field label={t('deliveryDate')} type="date" min={minDeliveryDate(new Date())} value={deliveryDate} onChange={(event) => setDeliveryDate(event.target.value)} required />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button type="submit" className="flex-1 justify-center gap-2 py-6 text-base">{t('addToBag')} <span className="price border-l border-on-primary/30 pl-3 text-sm opacity-80">{formatMoney(unitPrice, locale)}</span></Button>
+            <WishlistHeart slug={product.slug} />
+          </div>
+          {added ? <p className="rounded-xl bg-surface-container p-4 text-primary" role="status">{t('added')} <Link href={href('/cart')} className="underline underline-offset-4">{t('reviewBag')} ↗</Link></p> : null}
+        </form>
+
+        <div className="grid grid-cols-3 gap-6 border-t border-outline-variant/20 pt-6">
+          <span className="flex flex-col items-center gap-2 text-center"><Truck className="h-7 w-7 text-secondary" /><span className="text-xs leading-tight text-on-surface-variant">Same-day delivery before 3pm</span></span>
+          <span className="flex flex-col items-center gap-2 text-center"><Flower2 className="h-7 w-7 text-secondary" /><span className="text-xs leading-tight text-on-surface-variant">Hand-tied fresh daily</span></span>
+          <span className="flex flex-col items-center gap-2 text-center"><Droplets className="h-7 w-7 text-secondary" /><span className="text-xs leading-tight text-on-surface-variant">Care instructions included</span></span>
+        </div>
+      </div>
+    </div>
+  );
 }

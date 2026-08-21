@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
+import { CardContent } from '@/components/ui/card';
 import { ProductVisual } from '@/components/ui/ProductVisual';
 import { WishlistHeart } from '@/components/wishlist/WishlistHeart';
 import { useI18n } from '@/features/i18n/I18nProvider';
@@ -11,34 +11,56 @@ import { formatMoney } from '@/features/money';
 import { categoryMessageKeys } from './catalog-labels';
 import type { Product } from './types';
 
-export function ProductCard({ product }: { product: Product }) {
+type ProductCardProps = {
+  product: Product;
+  aspectClass?: string;
+  statusPill?: { label: string; variant: 'sage' | 'neutral' } | null;
+  imageClassName?: string;
+};
+
+export function ProductCard({ product, aspectClass = 'aspect-[3/4]', statusPill, imageClassName }: ProductCardProps) {
   const { locale, t } = useI18n();
   const { href } = useStorePath();
   const name = pickLocalized(locale, { en: product.name, ar: product.nameAr, fr: product.nameFr });
   const description = pickLocalized(locale, { en: product.description, ar: product.descriptionAr, fr: product.descriptionFr });
   const delivery = product.delivery.startsWith('Same-day') ? t('sameDay') : t('nextDay');
+  const badgeLabel = product.delivery.startsWith('Same-day') ? 'Same-Day' : 'Next-Day';
   return (
-    <Card className="group relative min-w-0 overflow-hidden transition-transform hover:-translate-y-1">
-      <Link href={href(`/shop/${product.slug}`)}>
-        <div className="overflow-hidden rounded-none">
-          <ProductVisual compact tone={product.tone} imageUrl={product.imageUrl} label={`${name} visual`} className="min-h-[270px] w-full" />
-        </div>
-        <CardContent className="pt-4">
-          <div className="flex items-baseline justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t(categoryMessageKeys[product.category] ?? 'category')}</p>
-              <h3 className="mt-1 font-display text-2xl leading-tight">{name}</h3>
-            </div>
-            <div className="text-end">
-              <strong className="whitespace-nowrap text-sm font-bold text-primary">{t('from')} {formatMoney(product.price, locale)}</strong>
-              {product.rating && product.rating.count > 0 ? <p className="mt-1 text-xs text-muted-foreground">★ {product.rating.average.toFixed(1)} · {product.rating.count}</p> : null}
-            </div>
-          </div>
-          <p className="mt-2.5 mb-3 text-sm text-muted-foreground">{description}</p>
-          <p className="text-xs text-sage">{delivery}</p>
-        </CardContent>
+    <article className="product-card group cursor-pointer">
+      <div className="relative overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container ambient-glow">
+        <Link href={href(`/shop/${product.slug}`)} className={`block overflow-hidden ${aspectClass}`}>
+          <ProductVisual
+            compact
+            tone={product.tone}
+            imageUrl={product.imageUrl}
+            label={`${name} visual`}
+            className={`h-full w-full transition-transform duration-700 group-hover:scale-105 ${statusPill?.variant === 'neutral' ? 'grayscale opacity-80' : ''} ${imageClassName ?? ''}`}
+          />
+        </Link>
+        <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-surface-variant bg-surface-container/90 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-tertiary backdrop-blur-sm">{badgeLabel}</span>
+        <WishlistHeart slug={product.slug} className="absolute right-3 top-3" />
+        {statusPill ? (
+          <span
+            className={`pointer-events-none absolute bottom-3 left-3 inline-flex items-center rounded-full border px-3 py-1 font-mono text-[11px] font-medium tracking-widest shadow-sm backdrop-blur-sm ${
+              statusPill.variant === 'sage'
+                ? 'border-secondary-fixed/50 bg-secondary-container text-on-secondary-container'
+                : 'border-outline-variant/50 bg-surface-variant text-on-surface-variant'
+            }`}
+          >
+            {statusPill.label}
+          </span>
+        ) : null}
+      </div>
+      <Link href={href(`/shop/${product.slug}`)} className="mt-3 flex items-start justify-between gap-3">
+        <span>
+          <span className="block text-xs font-bold uppercase tracking-[0.12em] text-sage">{t(categoryMessageKeys[product.category] ?? 'category')}</span>
+          <span className="mt-1 block font-display text-[22px] leading-tight text-on-surface group-hover:text-primary">{name}</span>
+          <span className="mt-1 block max-w-[22ch] text-sm leading-snug text-on-surface-variant">{description}</span>
+          <span className="mt-1 block text-xs text-muted-foreground">{delivery}</span>
+        </span>
+        <span className="price shrink-0 text-sm font-medium text-on-surface">{t('from')} {formatMoney(product.price, locale)}</span>
       </Link>
-      <WishlistHeart slug={product.slug} className="absolute right-3 top-3" />
-    </Card>
+      {product.rating && product.rating.count > 0 ? <span className="mt-1 block text-xs text-muted-foreground">★ {product.rating.average.toFixed(1)} · {product.rating.count}</span> : null}
+    </article>
   );
 }

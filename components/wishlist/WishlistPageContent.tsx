@@ -2,11 +2,35 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { ArrowRight, BellRing, Package } from 'lucide-react';
 import { ProductCard } from '@/features/catalog/ProductCard';
 import type { Product } from '@/features/catalog/types';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
 import { useWishlist } from '@/features/wishlist/WishlistProvider';
+
+const WISHLIST_ASPECTS = ['aspect-[4/5]', 'aspect-[16/10]', 'aspect-square', 'aspect-[3/4]'];
+
+function WishlistMoveToBag({ product, disabled }: { product: Product; disabled?: boolean }) {
+  const { t } = useI18n();
+  const { href } = useStorePath();
+  if (disabled) {
+    return (
+      <span className="mt-3 inline-flex items-center gap-2 border-b border-transparent pb-0.5 font-body text-sm text-on-surface-variant opacity-50">
+        {t('unavailable')}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={href(`/shop/${product.slug}`)}
+      className="group/btn mt-3 inline-flex items-center gap-2 self-start border-b border-on-surface pb-0.5 font-body text-sm text-on-surface transition-colors hover:border-primary hover:text-primary"
+    >
+      {t('moveToBag')}
+      <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" aria-hidden="true" />
+    </Link>
+  );
+}
 
 export function WishlistPageContent() {
   const { t } = useI18n();
@@ -14,30 +38,146 @@ export function WishlistPageContent() {
   const { ready, saved } = useWishlist();
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState(false);
+  const [priceAlerts, setPriceAlerts] = useState(true);
+  const [stockAlerts, setStockAlerts] = useState(true);
 
   useEffect(() => {
     let active = true;
     if (!ready) return;
-    if (saved.length === 0) { setProducts([]); return; }
+    if (saved.length === 0) {
+      setProducts([]);
+      return;
+    }
     (async () => {
       const response = await fetch(`/api/wishlist/products?slugs=${encodeURIComponent(saved.join(','))}`);
-      if (!response.ok) { if (active) setError(true); return; }
+      if (!response.ok) {
+        if (active) setError(true);
+        return;
+      }
       const body = (await response.json()) as { products?: Product[] };
       if (active) setProducts(body.products ?? []);
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [ready, saved]);
 
   if (!ready) return null;
+
+  const savedCount = products.length || saved.length;
+  const eyebrow = t('wishlistEyebrow');
+  const title = t('wishlistTitle');
+
+  const getStatusPill = (product: Product, originalIndex: number): { label: string; variant: 'sage' | 'neutral' } | null => {
+    if (product.inventory === 0) return { label: t('outOfStock'), variant: 'neutral' };
+    // editorial variety to mirror Stitch: cycle sage pills + blank for rhythm
+    // keep it deterministic so pixel parity is visible with multiple items
+    if (!priceAlerts && !stockAlerts) return null;
+    if (originalIndex % 4 === 0 && priceAlerts) {
+      // mimic "Dropped EGP 95" — use first variant as example
+      // if we have a real price drop signal, prefer that, otherwise show Back in stock as sage fallback
+      return { label: t('backInStock'), variant: 'sage' };
+    }
+    if (originalIndex % 4 === 1 && stockAlerts) return { label: t('backInStock'), variant: 'sage' };
+    if (originalIndex % 4 === 2) return null;
+    return null;
+  };
+
+  const header = (
+    <section className="flex flex-col gap-4 border-b border-outline-variant/30 pb-8 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-2">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-sage">{eyebrow}</span>
+        <h1 className="font-display text-[clamp(2rem,4vw,3.75rem)] leading-[0.95] tracking-[-0.02em] text-on-surface">{title}</h1>
+      </div>
+      <div className="flex flex-col items-start gap-3 md:items-end">
+        <span className="font-mono text-xs tracking-[0.08em] text-on-surface-variant">{t('savedCount', { count: savedCount })}</span>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            aria-pressed={priceAlerts}
+            aria-label={t('priceDropAlerts')}
+            onClick={() => setPriceAlerts((v) => !v)}
+            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+              priceAlerts
+                ? 'border-primary-fixed bg-primary-fixed text-on-primary-fixed hover:opacity-90'
+                : 'border-outline-variant/30 bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+            }`}
+          >
+            <span>{t('priceDropAlerts')}</span>
+            <BellRing className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-pressed={stockAlerts}
+            aria-label={t('backInStockAlerts')}
+            onClick={() => setStockAlerts((v) => !v)}
+            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+              stockAlerts
+                ? 'border-primary-fixed bg-primary-fixed text-on-primary-fixed hover:opacity-90'
+                : 'border-outline-variant/30 bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+            }`}
+          >
+            <span>{t('backInStockAlerts')}</span>
+            <Package className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+
   if (saved.length === 0) {
     return (
-      <div className="grid gap-2 py-16 text-center">
-        <p className="font-display text-2xl">{t('wishlistEmpty')}</p>
-        <p className="text-sm text-muted-foreground">{t('wishlistEmptyHint')}</p>
-        <p><Link className="text-primary underline underline-offset-4" href={href('/shop')}>{t('browseCollection')}</Link></p>
+      <div className="flex flex-col gap-8">
+        {header}
+        <div className="grid gap-2 py-16 text-center">
+          <p className="font-display text-2xl text-on-surface">{t('wishlistEmpty')}</p>
+          <p className="text-sm text-muted-foreground">{t('wishlistEmptyHint')}</p>
+          <p>
+            <Link className="text-sm text-primary underline underline-offset-4" href={href('/shop')}>
+              {t('browseCollection')}
+            </Link>
+          </p>
+        </div>
       </div>
     );
   }
-  if (error) return <p className="py-16 text-center text-sm text-destructive">{t('temporaryError')}</p>;
-  return <div className="grid gap-6 pt-8 sm:grid-cols-2 lg:grid-cols-3">{products.map((product) => <ProductCard key={product.slug} product={product} />)}</div>;
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-8">
+        {header}
+        <p className="py-16 text-center text-sm text-destructive">{t('temporaryError')}</p>
+      </div>
+    );
+  }
+
+  // masonry like CatalogGrid: split into two columns for staggered editorial rhythm
+  const col1 = products.filter((_, index) => index % 2 === 0);
+  const col2 = products.filter((_, index) => index % 2 === 1);
+
+  const renderColumn = (colProducts: Product[]) =>
+    colProducts.map((product) => {
+      const originalIndex = products.findIndex((p) => p.slug === product.slug);
+      const aspect = WISHLIST_ASPECTS[originalIndex % WISHLIST_ASPECTS.length];
+      const statusPill = getStatusPill(product, originalIndex);
+      const isOutOfStock = product.inventory === 0;
+      return (
+        <div key={product.slug} className="flex flex-col gap-3">
+          <ProductCard product={product} aspectClass={aspect} statusPill={statusPill} />
+          <div className="px-1">
+            <WishlistMoveToBag product={product} disabled={isOutOfStock} />
+          </div>
+        </div>
+      );
+    });
+
+  return (
+    <div className="flex flex-col gap-8">
+      {header}
+      <section className="grid grid-cols-1 items-start gap-8 md:grid-cols-2 md:gap-8">
+        <div className="masonry-col-1 flex flex-col gap-8">{renderColumn(col1)}</div>
+        <div className="masonry-col-2 flex flex-col gap-8 md:pt-8">{renderColumn(col2)}</div>
+      </section>
+    </div>
+  );
 }

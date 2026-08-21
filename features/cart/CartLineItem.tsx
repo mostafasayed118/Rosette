@@ -1,4 +1,3 @@
-import { Input } from '@/components/ui/input';
 import { ProductVisual } from '@/components/ui/ProductVisual';
 import { formatMoney } from '@/features/money';
 import { useI18n } from '@/features/i18n/I18nProvider';
@@ -12,5 +11,55 @@ export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemP
   const { locale, t } = useI18n();
   const name = pickLocalized(locale, { en: line.productName, ar: line.productNameAr, fr: line.productNameFr });
   const addOnLabels = line.addOns.map((addOn) => addOnLabel(addOn, t));
-  return <article className="grid grid-cols-[130px_1fr_auto] gap-4 border-b py-4 max-md:grid-cols-[90px_1fr]"><ProductVisual compact tone={line.tone} imageUrl={line.imageUrl} label={`${name} visual`} /><div><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{line.variantName ?? t('signature')}</p><h3 className="font-display text-2xl">{name}</h3><p className="my-2 text-sm text-muted-foreground">{addOnLabels.join(' · ') || t('noAddOns')}{line.message ? ` · “${line.message}”` : ''}</p><strong className="text-sm text-primary">{formatMoney((line.unitPrice + line.addOns.reduce((sum, addOn) => sum + addOn.price, 0)) * line.quantity)}</strong></div><div className="grid justify-items-end gap-1.5 text-xs text-muted-foreground"><label htmlFor={`quantity-${line.id}`}>{t('quantity')}</label><Input id={`quantity-${line.id}`} type="number" min={1} max={20} value={line.quantity} onChange={(event) => onQuantityChange(Number(event.target.value))} className="h-9 w-16 text-center" /><button className="text-sm text-destructive underline underline-offset-4" type="button" onClick={onRemove}>{t('remove')}</button></div></article>;
+  const lineTotal = (line.unitPrice + line.addOns.reduce((sum, addOn) => sum + addOn.price, 0)) * line.quantity;
+  return (
+    <article className="flex gap-4 items-start group py-1">
+      <div className="w-20 h-20 shrink-0 rounded-md overflow-hidden bg-surface-dim relative border border-outline-variant/30">
+        <ProductVisual compact tone={line.tone} imageUrl={line.imageUrl} label={`${name} visual`} className="h-full w-full min-h-0 rounded-md" sizes="80px" />
+      </div>
+      <div className="flex-grow flex flex-col justify-between min-h-20 py-1 gap-2">
+        <div className="flex justify-between items-start gap-3">
+          <div className="min-w-0">
+            <h4 className="font-display text-[18px] leading-tight text-on-surface truncate">{name}</h4>
+            <p className="text-[14px] leading-normal text-on-surface-variant mt-1 truncate">
+              {line.variantName ?? t('signature')}
+              {addOnLabels.length ? ` · ${addOnLabels.join(' · ')}` : ''}
+            </p>
+            {line.message ? <p className="text-[13px] italic text-on-surface-variant mt-1 line-clamp-2">“{line.message}”</p> : null}
+          </div>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="shrink-0 text-[12px] text-on-surface-variant hover:text-error underline decoration-outline-variant/50 underline-offset-2 transition-colors"
+          >
+            {t('remove')}
+          </button>
+        </div>
+        <div className="flex justify-between items-end gap-3 mt-auto">
+          <div className="flex items-center border border-outline-variant rounded-md overflow-hidden bg-surface-container-lowest">
+            <button
+              type="button"
+              aria-label="Decrease quantity"
+              onClick={() => onQuantityChange(Math.max(1, line.quantity - 1))}
+              className="px-2.5 py-1 text-sm text-on-surface-variant hover:bg-surface-variant transition-colors disabled:opacity-40"
+              disabled={line.quantity <= 1}
+            >
+              −
+            </button>
+            <span className="font-mono text-[12px] px-2.5 py-1 text-on-surface border-x border-outline-variant/50 min-w-8 text-center">{line.quantity}</span>
+            <button
+              type="button"
+              aria-label="Increase quantity"
+              onClick={() => onQuantityChange(Math.min(20, line.quantity + 1))}
+              className="px-2.5 py-1 text-sm text-on-surface-variant hover:bg-surface-variant transition-colors disabled:opacity-40"
+              disabled={line.quantity >= 20}
+            >
+              +
+            </button>
+          </div>
+          <span className="font-mono text-[14px] tracking-[0.05em] text-on-surface shrink-0">{formatMoney(lineTotal, locale)}</span>
+        </div>
+      </div>
+    </article>
+  );
 }

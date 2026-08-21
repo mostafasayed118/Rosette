@@ -36,28 +36,41 @@ export async function ProductReviews({ productSlug, locale, data }: { productSlu
       </div>
 
       {aggregate && aggregate.count > 0 ? (
-        <div className="mt-4 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-8 max-md:grid-cols-1">
-          <div className="grid gap-2">
-            {breakdown.map(({ star, count }) => (
-              <p key={star} className="flex items-center gap-3 text-sm text-muted-foreground">
-                <StarRating value={star} size={12} /> {star} · {count}
-              </p>
-            ))}
+        <div className="mt-6 grid grid-cols-[minmax(0,20rem)_minmax(0,1fr)] gap-12 max-md:grid-cols-1">
+          <div className="grid content-start gap-5">
+            <p className="flex items-baseline gap-3">
+              <span className="font-display text-5xl leading-none text-primary">{aggregate.average.toFixed(1)}</span>
+              <span className="grid gap-1"><StarRating value={Math.round(aggregate.average)} /><span className="price text-xs text-muted-foreground">{t('reviewAverage', { average: aggregate.average.toFixed(1), count: aggregate.count })}</span></span>
+            </p>
+            <div className="grid gap-1.5">
+              {breakdown.map(({ star, count }) => (
+                <p key={star} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="w-8 shrink-0">{star} ★</span>
+                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-muted"><span className="block h-full rounded-full bg-primary/70" style={{ width: `${aggregate.count ? Math.round((count / aggregate.count) * 100) : 0}%` }} /></span>
+                  <span className="price w-8 shrink-0 text-end">{count}</span>
+                </p>
+              ))}
+            </div>
           </div>
-          <div className="grid content-start gap-4">
+          <div className="grid content-start">
             {reviews.map((review) => (
-              <article key={review.id} className="border-b pb-4">
-                <div className="flex items-center gap-2"><StarRating value={review.rating} />{review.displayName ?? t('verifiedCustomer')}</div>
-                <p className="mt-1 text-sm">{review.body}</p>
+              <article key={review.id} className="border-b border-border/60 py-5 first:pt-0 last:border-b-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <StarRating value={review.rating} />
+                  <strong className="text-sm font-semibold">{review.displayName ?? t('verifiedCustomer')}</strong>
+                </div>
+                <p className="mt-1.5 leading-relaxed">{review.body}</p>
                 {review.photos.length > 0 ? (
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-2.5 flex flex-wrap gap-2">
                     {review.photos.slice(0, 3).map((url) => (
-                      <img key={url} src={url} alt="" className="h-20 w-20 rounded object-cover" />
+                      <img key={url} src={url} alt="" className="h-20 w-20 rounded-xl object-cover" />
                     ))}
                   </div>
                 ) : null}
-                <p className="mt-1 text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</p>
-                <HelpfulButton reviewId={review.id} />
+                <div className="mt-2 flex items-center gap-3">
+                  <span className="price text-xs text-muted-foreground">{new Date(review.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</span>
+                  <HelpfulButton reviewId={review.id} />
+                </div>
               </article>
             ))}
           </div>

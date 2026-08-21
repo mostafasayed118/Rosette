@@ -8,9 +8,12 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./tests/setup.ts'],
+    include: ['tests/e2e/*.test.ts', 'tests/e2e/**/*.test.ts'],
+    environment: 'node',
     globals: true,
-    exclude: ['node_modules/**', '.worktrees/**', 'worktrees/**', 'dist/**', 'cypress/**', 'tests/e2e/**'],
+    testTimeout: 300_000,
+    hookTimeout: 300_000,
+    fileParallelism: false,
+    globalSetup: ['./tests/e2e/global-setup.ts'],
   },
 });

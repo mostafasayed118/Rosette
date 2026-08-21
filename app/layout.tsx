@@ -1,4 +1,4 @@
-import { Cairo, Fraunces, Inter } from 'next/font/google';
+import { Fraunces, IBM_Plex_Sans_Arabic, JetBrains_Mono, Outfit } from 'next/font/google';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import type { ReactNode } from 'react';
@@ -13,8 +13,9 @@ import { ChatWidget } from '@/features/chat/ChatWidget';
 import { getOptionalServerEnv } from '@/lib/server-env';
 
 const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
-const inter = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
-const cairo = Cairo({ subsets: ['arabic'], variable: '--font-arabic', display: 'swap' });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-body', display: 'swap' });
+const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains', display: 'swap' });
+const plexArabic = IBM_Plex_Sans_Arabic({ subsets: ['arabic'], weight: ['400', '500', '600', '700'], variable: '--font-arabic', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Rosette — thoughtful flowers, delivered',
@@ -41,5 +42,5 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const store = await cookies();
   const locale = await resolveServerLocale();
   const attrs = resolveHtmlAttributes(locale, store.get('rosette.theme')?.value);
-  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${inter.variable} ${cairo.variable}${attrs.themeClass}`}><body><script dangerouslySetInnerHTML={{ __html: LOCALE_SYNC_SCRIPT }} /><ThemeProvider><I18nProvider><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></body></html>;
+  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${outfit.variable} ${jetbrains.variable} ${plexArabic.variable}${attrs.themeClass}`}><body><script dangerouslySetInnerHTML={{ __html: LOCALE_SYNC_SCRIPT }} /><ThemeProvider><I18nProvider><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></body></html>;
 }

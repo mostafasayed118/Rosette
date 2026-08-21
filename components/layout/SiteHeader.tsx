@@ -28,11 +28,12 @@ export function SiteHeader({ cityName, cartCount }: SiteHeaderProps) {
   const { locale, href } = useStorePath();
   const count = cartCount ?? (cart.ready ? cart.itemCount : 0);
   const bag = (
-    <Link className="flex items-center gap-2" href={href('/cart')}>{t('bag')} <span className="grid h-6 min-w-6 place-items-center rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{count}</span></Link>
+    <Link className="flex items-center gap-2" href={href('/cart')}>{t('bag')} <span className="grid h-6 min-w-6 place-items-center rounded-full bg-primary px-1.5 font-mono text-xs text-primary-foreground">{count}</span></Link>
   );
   const wishlist = <WishlistLink />;
   return (
-    <header className="mx-auto flex w-[min(calc(100%-3rem),80rem)] items-center justify-between gap-4 py-5">
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
+      <div className="mx-auto flex w-[min(calc(100%-3rem),80rem)] items-center justify-between gap-4 py-4">
       <Link className="font-display text-3xl tracking-tight text-primary" href={href('/')}>Rosette</Link>
       <nav className="hidden items-center gap-5 text-sm md:flex" aria-label="Main navigation">
         <Link href={href('/shop')}>{t('shop')}</Link>
@@ -63,6 +64,7 @@ export function SiteHeader({ cityName, cartCount }: SiteHeaderProps) {
             </nav>
           </SheetContent>
         </Sheet>
+      </div>
       </div>
     </header>
   );
