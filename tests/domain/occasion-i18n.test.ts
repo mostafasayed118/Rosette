@@ -7,6 +7,7 @@ const KEYS = [
   'recurrenceAnnual', 'recurrenceOnce', 'occasionRecipient', 'occasionRelationship',
   'occasionKind_birthday', 'occasionKind_anniversary', 'occasionKind_graduation', 'occasionKind_other',
   'occasionSaved', 'occasionRemoved', 'occasionInvalid',
+  'occasionMonth', 'occasionDay', 'occasionDate', 'occasionKindLegend', 'occasionRecurrenceLegend',
 ] as const;
 
 describe('occasion i18n keys', () => {

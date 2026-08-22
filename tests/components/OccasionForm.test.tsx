@@ -57,7 +57,7 @@ describe('OccasionForm', () => {
     renderWithProviders(<OccasionForm recipients={[]} onSubmit={onSubmit} />);
     await userEvent.type(screen.getByLabelText(/who is it for/i), 'Mum');
     await userEvent.click(screen.getByRole('button', { name: /add a date/i }));
-    await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
     expect(screen.getByLabelText(/who is it for/i)).toHaveValue('Mum');
   });
 });

@@ -6,7 +6,7 @@ type StatusMessageProps = { title: string; children?: ReactNode; tone?: 'neutral
 export function StatusMessage({ title, children, tone = 'neutral' }: StatusMessageProps) {
   return (
     <div
-      role={tone === 'error' ? 'status' : tone === 'success' ? 'status' : undefined}
+      role={tone === 'error' ? 'alert' : undefined}
       className={cn(
         'rounded-2xl border bg-card p-6 shadow-sm',
         tone === 'error' && 'border-destructive/40 bg-destructive/5',
