@@ -49,6 +49,9 @@ export function OccasionForm({ recipients, onSubmit, initial }: OccasionFormProp
         : 'border border-outline-variant/50 bg-surface text-on-surface hover:-translate-y-0.5 hover:bg-surface-container'
     }`;
 
+  const intlLocale = locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB';
+  const monthName = (value: number) => new Intl.DateTimeFormat(intlLocale, { month: 'long' }).format(new Date(Date.UTC(2026, value - 1, 1)));
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -103,7 +106,7 @@ export function OccasionForm({ recipients, onSubmit, initial }: OccasionFormProp
       </label>
 
       <fieldset className="grid gap-3 border-0 p-0">
-        <legend className="price text-xs font-medium uppercase tracking-widest text-on-surface-variant">{t('category')}</legend>
+        <legend className="price text-xs font-medium uppercase tracking-widest text-on-surface-variant">{t('occasionKindLegend')}</legend>
         <div className="flex flex-wrap gap-3">
           {OCCASION_KINDS.map((option) => (
             <label key={option} className={pill(kind === option)}>
@@ -115,7 +118,7 @@ export function OccasionForm({ recipients, onSubmit, initial }: OccasionFormProp
       </fieldset>
 
       <fieldset className="grid gap-3 border-0 p-0">
-        <legend className="price text-xs font-medium uppercase tracking-widest text-on-surface-variant">{t('sort')}</legend>
+        <legend className="price text-xs font-medium uppercase tracking-widest text-on-surface-variant">{t('occasionRecurrenceLegend')}</legend>
         <div className="flex flex-wrap gap-3">
           {(['annual', 'once'] as const).map((option) => (
             <label key={option} className={pill(recurrence === option)}>
@@ -129,7 +132,7 @@ export function OccasionForm({ recipients, onSubmit, initial }: OccasionFormProp
       {recurrence === 'annual' ? (
         <div className="grid grid-cols-2 gap-4">
           <label className="grid gap-2" htmlFor="occasion-month">
-            <span className="text-sm font-semibold text-on-surface">Month</span>
+            <span className="text-sm font-semibold text-on-surface">{t('occasionMonth')}</span>
             <select
               id="occasion-month"
               value={month}
@@ -138,11 +141,11 @@ export function OccasionForm({ recipients, onSubmit, initial }: OccasionFormProp
               required
             >
               <option value="">—</option>
-              {MONTHS.map((value) => <option key={value} value={value}>{value}</option>)}
+              {MONTHS.map((value) => <option key={value} value={value}>{monthName(value)}</option>)}
             </select>
           </label>
           <label className="grid gap-2" htmlFor="occasion-day">
-            <span className="text-sm font-semibold text-on-surface">Day</span>
+            <span className="text-sm font-semibold text-on-surface">{t('occasionDay')}</span>
             <select
               id="occasion-day"
               value={day}
@@ -157,7 +160,7 @@ export function OccasionForm({ recipients, onSubmit, initial }: OccasionFormProp
         </div>
       ) : (
         <label className="grid gap-2" htmlFor="occasion-date">
-          <span className="text-sm font-semibold text-on-surface">Date</span>
+          <span className="text-sm font-semibold text-on-surface">{t('occasionDate')}</span>
           <Input id="occasion-date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} required />
         </label>
       )}
@@ -177,7 +180,7 @@ export function OccasionForm({ recipients, onSubmit, initial }: OccasionFormProp
       </fieldset>
 
       <Button type="submit" disabled={busy} className="lift press justify-center">
-        {t('addDate')}
+        {initial ? t('editDate') : t('addDate')}
       </Button>
     </form>
   );

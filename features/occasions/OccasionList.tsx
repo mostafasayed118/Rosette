@@ -1,19 +1,24 @@
 'use client';
 
-import { CalendarHeart, X } from 'lucide-react';
+import { CalendarHeart, Pencil, X } from 'lucide-react';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import type { OccasionRow } from './repository';
 
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const intlLocale = (locale: string) => (locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB');
 
-function formatWhen(occasion: OccasionRow): string {
-  if (occasion.recurrence === 'once') return occasion.eventDate ?? '';
+function formatWhen(occasion: OccasionRow, locale: string): string {
+  if (occasion.recurrence === 'once') {
+    return occasion.eventDate
+      ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(new Date(`${occasion.eventDate}T00:00:00Z`))
+      : '';
+  }
   if (occasion.month == null || occasion.day == null) return '';
-  return `${occasion.day} ${MONTH_NAMES[occasion.month - 1] ?? ''}`.trim();
+  const monthName = new Intl.DateTimeFormat(intlLocale(locale), { month: 'long' }).format(new Date(Date.UTC(2026, occasion.month - 1, 1)));
+  return `${occasion.day} ${monthName}`;
 }
 
-export function OccasionList({ occasions, onRemove }: { occasions: OccasionRow[]; onRemove: (id: string) => void }) {
-  const { t } = useI18n();
+export function OccasionList({ occasions, onRemove, onEdit }: { occasions: OccasionRow[]; onRemove: (id: string) => void; onEdit: (occasion: OccasionRow) => void }) {
+  const { t, locale } = useI18n();
 
   if (occasions.length === 0) {
     return (
@@ -47,7 +52,15 @@ export function OccasionList({ occasions, onRemove }: { occasions: OccasionRow[]
             >
               {occasion.recurrence === 'annual' ? t('recurrenceAnnual') : t('recurrenceOnce')}
             </span>
-            <span className="price text-sm text-on-surface">{formatWhen(occasion)}</span>
+            <span className="price text-sm text-on-surface">{formatWhen(occasion, locale)}</span>
+            <button
+              type="button"
+              onClick={() => onEdit(occasion)}
+              aria-label={t('editDate')}
+              className="press grid h-9 w-9 place-items-center rounded-full border border-outline-variant/50 text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+            </button>
             <button
               type="button"
               onClick={() => onRemove(occasion.id)}
