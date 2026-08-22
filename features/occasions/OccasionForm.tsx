@@ -81,14 +81,7 @@ export function OccasionForm({ recipients, onSubmit, initial }: OccasionFormProp
 
   return (
     <form className="grid gap-6" onSubmit={submit} noValidate>
-      {message ? (
-        <>
-          <StatusMessage title={message} tone={error ? 'error' : 'success'} />
-          <div role="status" className="sr-only">
-            {message}
-          </div>
-        </>
-      ) : null}
+      {message ? <StatusMessage title={message} tone={error ? 'error' : 'success'} /> : null}
 
       <label className="grid gap-2" htmlFor="occasion-recipient">
         <span className="text-sm font-semibold text-on-surface">{t('occasionRecipient')}</span>
@@ -115,7 +108,7 @@ export function OccasionForm({ recipients, onSubmit, initial }: OccasionFormProp
           {OCCASION_KINDS.map((option) => (
             <label key={option} className={pill(kind === option)}>
               <input type="radio" name="occasionKind" value={option} checked={kind === option} onChange={() => setKind(option)} className="sr-only" />
-              {t(`occasionKind_${option}`).replace(/day/i, 'd\u200bay')}
+              {t(`occasionKind_${option}`)}
             </label>
           ))}
         </div>

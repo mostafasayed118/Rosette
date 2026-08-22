@@ -9,7 +9,7 @@ describe('OccasionForm', () => {
   it('shows month and day fields for an annual occasion by default', () => {
     renderWithProviders(<OccasionForm recipients={[]} onSubmit={vi.fn()} />);
     expect(screen.getByLabelText(/month/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/day/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Day$/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/date/i)).toBeNull();
   });
 
@@ -26,7 +26,7 @@ describe('OccasionForm', () => {
 
     await userEvent.type(screen.getByLabelText(/who is it for/i), 'Mum');
     await userEvent.selectOptions(screen.getByLabelText(/month/i), '3');
-    await userEvent.selectOptions(screen.getByLabelText(/day/i), '14');
+    await userEvent.selectOptions(screen.getByLabelText(/^Day$/i), '14');
     await userEvent.click(screen.getByRole('radio', { name: '14' }));
     await userEvent.click(screen.getByRole('button', { name: /add a date/i }));
 
