@@ -12,7 +12,12 @@ create table if not exists public.recipients (
   city_slug text,
   relationship text,
   created_at timestamptz not null default now(),
-  unique (customer_id, name)
+  unique (customer_id, name),
+  -- Redundant against the primary key on its own, but it gives occasions a
+  -- composite key to point at so a recipient can never be paired with another
+  -- customer's id. Postgres requires a unique constraint on the referenced
+  -- columns of a foreign key.
+  unique (customer_id, id)
 );
 
 create index if not exists recipients_customer_idx on public.recipients(customer_id);
@@ -20,7 +25,7 @@ create index if not exists recipients_customer_idx on public.recipients(customer
 create table if not exists public.occasions (
   id uuid primary key default gen_random_uuid(),
   customer_id uuid not null references public.profiles(id) on delete cascade,
-  recipient_id uuid not null references public.recipients(id) on delete cascade,
+  recipient_id uuid not null,
   kind text not null check (kind in ('birthday', 'anniversary', 'graduation', 'other')),
   recurrence text not null check (recurrence in ('annual', 'once')),
   -- annual: month + day set, event_date null. once: event_date set only.
@@ -37,17 +42,34 @@ create table if not exists public.occasions (
   constraint occasion_shape check (
     (recurrence = 'annual' and month is not null and day is not null and event_date is null)
     or (recurrence = 'once' and event_date is not null and month is null and day is null)
-  )
+  ),
+  -- Composite rather than a plain recipient_id reference: it pins the occasion
+  -- and the recipient to the same customer, so a mixed-up id pair is rejected by
+  -- the database instead of leaking one customer's recipient into another's
+  -- reminder. This is the only FK on recipient_id — it already enforces that the
+  -- recipient exists.
+  foreign key (customer_id, recipient_id) references public.recipients(customer_id, id) on delete cascade
 );
 
 create index if not exists occasions_customer_idx on public.occasions(customer_id);
+create index if not exists occasions_recipient_idx on public.occasions(recipient_id);
 create index if not exists occasions_active_idx on public.occasions(active) where active;
 
 -- One row per occasion per cycle. The cron inserts this BEFORE sending, so the
 -- unique constraint is what makes overlapping runs safe.
+--
+-- At-most-once, deliberately. A row with sent_at null and suppressed_reason null
+-- is a claimed-but-unsent attempt: the cron claims the cycle by inserting, then
+-- updates the same row after sending or suppressing. It never re-inserts, so a
+-- crash between the claim and the send skips that cycle entirely. We prefer a
+-- missed reminder over a duplicate one; do not add a status column or retry
+-- path to "fix" this.
 create table if not exists public.occasion_reminders (
   id uuid primary key default gen_random_uuid(),
   occasion_id uuid not null references public.occasions(id) on delete cascade,
+  -- Calendar year of the resolved occurrence, NOT the year the email is sent.
+  -- With lead_days up to 30 these differ: a 5 January occasion with lead_days 10
+  -- sends on 26 December and still records cycle_year = the January year.
   cycle_year smallint not null,
   sent_at timestamptz,
   suppressed_reason text check (suppressed_reason in ('already_ordered', 'engagement_disabled')),
