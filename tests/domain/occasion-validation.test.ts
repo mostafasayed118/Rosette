@@ -71,6 +71,65 @@ describe('validateOccasion', () => {
 
   it('exposes the kind and lead-day choices for the UI', () => {
     expect(OCCASION_KINDS).toContain('birthday');
+    expect(OCCASION_KINDS).toEqual(['birthday', 'anniversary', 'graduation', 'other']);
     expect(LEAD_DAY_CHOICES).toEqual([3, 7, 14]);
+  });
+
+  it('allows leadDays outside the UI presets but inside 1-30', () => {
+    expect(validateOccasion({ ...annual, leadDays: 10 }).ok).toBe(true);
+  });
+
+  it('surfaces the refine message when recurrence shape is wrong', () => {
+    const result = validateOccasion({ ...annual, month: undefined });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('annual occasions need month and day; one-off occasions need an event date');
+  });
+
+  it('surfaces a non-empty field-level error', () => {
+    const result = validateOccasion({ ...annual, kind: 'wedding' as never });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.length).toBeGreaterThan(0);
+  });
+
+  it('rejects impossible calendar dates', () => {
+    const badDates = ['2026-02-30', '2026-13-45', '0000-00-00'];
+    for (const d of badDates) {
+      const result = validateOccasion({ ...once, eventDate: d });
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.error).toBe('eventDate must be a valid calendar date');
+    }
+  });
+
+  it('rejects an invalid leap-year date', () => {
+    const result = validateOccasion({ ...once, eventDate: '2023-02-29' });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('eventDate must be a valid calendar date');
+  });
+
+  it('normalises whitespace-only optional fields to undefined', () => {
+    const result = validateOccasion({ ...annual, recipientPhone: '   ', relationship: ' ' });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.recipientPhone).toBeUndefined();
+      expect(result.value.relationship).toBeUndefined();
+    }
+  });
+
+  it('normalises empty-string optional fields to undefined', () => {
+    const result = validateOccasion({ ...annual, recipientPhone: '', relationship: '' });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.recipientPhone).toBeUndefined();
+      expect(result.value.relationship).toBeUndefined();
+    }
+  });
+
+  it('trims genuinely provided optional fields', () => {
+    const result = validateOccasion({ ...annual, recipientPhone: '  +971501234567  ', relationship: '  friend  ' });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.recipientPhone).toBe('+971501234567');
+      expect(result.value.relationship).toBe('friend');
+    }
   });
 });
