@@ -397,6 +397,20 @@ Open the **Actions** tab, run "Retry stuck email notifications", then "Smoke
 test cron endpoint" (pass the deployed URL via the `url` input) to confirm the
 401 guard and summary response.
 
+### 8.6 Occasion reminders scheduler
+
+Point your daily scheduler at the occasion cron endpoint. It reuses
+`CRON_SECRET` and `EMAIL_PREFERENCES_SECRET`; no new environment variables are
+required:
+
+- `CRON_ENDPOINT` — `https://rosette.<account>.workers.dev/api/cron/occasions`
+- Method: `POST` (or `GET` if your scheduler cannot POST)
+- Header: `Authorization: Bearer $CRON_SECRET`
+- Frequency: once daily. Reminders fire when
+  `remindOn <= today <= occasion`, so a missed run catches up on the next day
+  rather than skipping the occasion for a year.
+- Response: `{ ok: true, summary: { checked, sent, failed, suppressed } }`
+
 ---
 
 ## 9. Go live with Paymob
