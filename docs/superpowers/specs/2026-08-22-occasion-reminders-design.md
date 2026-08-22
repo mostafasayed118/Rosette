@@ -186,8 +186,9 @@ The CTA links to `/{locale}/{city}/shop?occasion={kind}&recipient={id}`. The
 stage 3 can add prefill without changing the email or invalidating links
 already delivered.
 
-`occasion_reminder` is added to the `notification_deliveries` type union so
-failures land in the existing retry queue and admin notifications view.
+Occasion reminder emails are tracked in the `occasion_reminders` ledger
+(`sent_at` / `suppressed_reason`), not in `notification_deliveries`; no
+retry-queue integration exists or is needed.
 
 ## UI
 

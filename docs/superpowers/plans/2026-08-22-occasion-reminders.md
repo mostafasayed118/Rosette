@@ -1,5 +1,7 @@
 # Occasion Reminders Implementation Plan
 
+> **Implementation divergences (recorded rulings — authoritative over the task code blocks below):** the shipped migration uses a composite FK `(customer_id, recipient_id) references recipients(customer_id, id)` instead of a plain recipient FK; `occasion-dates.ts` gained NaN guards returning null for unparseable input; the notification type union was NOT widened (occasion emails use the occasion_reminders ledger, not notification_deliveries); StatusMessage keeps ``role="alert"`` for errors; server actions derive identity solely from `getCurrentCustomer()` (injectable deps live in `action-internals.ts` for tests only).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Let a signed-in customer save recipients and dates, then email them a reminder ahead of each date, linking into the collection filtered by occasion.

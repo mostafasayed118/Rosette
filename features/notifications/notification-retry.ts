@@ -5,7 +5,7 @@ export const MAX_ATTEMPTS = 3;
 export const STALE_PENDING_MS = 15 * 60 * 1000;
 
 export const NOTIFICATION_TYPES = new Set<NotificationType>([
-  'order_received', 'payment_confirmed', 'payment_failed', 'preparing', 'ready_for_delivery', 'out_for_delivery', 'delivered', 'cancel_approved', 'cancel_rejected', 'change_approved', 'change_payment_required', 'change_rejected', 'occasion_reminder',
+  'order_received', 'payment_confirmed', 'payment_failed', 'preparing', 'ready_for_delivery', 'out_for_delivery', 'delivered', 'cancel_approved', 'cancel_rejected', 'change_approved', 'change_payment_required', 'change_rejected',
 ]);
 
 export type RetryLimits = { maxAttempts: number; stalePendingMs: number };
