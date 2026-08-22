@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { Heart, Mail, Package, Star, User } from 'lucide-react';
+import { CalendarHeart, Heart, Mail, Package, Star, User } from 'lucide-react';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
 
@@ -18,8 +18,10 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const reviewsHref = href('/account');
   const emailPrefsHref = href('/account');
 
+  const occasionsHref = href('/account/occasions');
   const isOrdersActive = pathname === ordersHref || pathname.startsWith(`${ordersHref}/`);
   const isWishlistActive = pathname === wishlistHref || pathname.startsWith(`${wishlistHref}/`);
+  const isOccasionsActive = pathname === occasionsHref || pathname.startsWith(`${occasionsHref}/`);
   const isProfileActive = pathname === profileHref;
 
   function navClasses(active: boolean) {
@@ -42,6 +44,10 @@ export function AccountShell({ children }: { children: ReactNode }) {
           <Link className={navClasses(isWishlistActive)} href={wishlistHref}>
             <Heart className="h-4 w-4 shrink-0" aria-hidden />
             <span>{t('wishlist')}</span>
+          </Link>
+          <Link className={navClasses(isOccasionsActive)} href={occasionsHref} aria-current={isOccasionsActive ? 'page' : undefined}>
+            <CalendarHeart className="h-4 w-4 shrink-0" aria-hidden />
+            <span>{t('occasionsTitle')}</span>
           </Link>
           <Link className={navClasses(false)} href={reviewsHref}>
             <Star className="h-4 w-4 shrink-0" aria-hidden />
