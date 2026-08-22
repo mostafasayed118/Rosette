@@ -59,8 +59,17 @@ describe('nextOccurrence', () => {
     expect(nextOccurrence(once('2026-07-12'), '2026-07-13')).toBeNull();
   });
 
+  it('returns the event date for a one-off happening today', () => {
+    // Task 5's cron evaluates this boundary on every run: a same-day one-off still counts.
+    expect(nextOccurrence(once('2026-07-12'), '2026-07-12')).toBe('2026-07-12');
+  });
+
   it('returns null when annual fields are missing', () => {
     expect(nextOccurrence({ recurrence: 'annual', leadDays: 7 }, '2026-01-01')).toBeNull();
+  });
+
+  it('returns null when the one-off event date is missing', () => {
+    expect(nextOccurrence({ recurrence: 'once', leadDays: 7 }, '2026-01-01')).toBeNull();
   });
 });
 
@@ -75,6 +84,10 @@ describe('remindOnDate', () => {
 
   it('honours a custom lead time', () => {
     expect(remindOnDate(annual(3, 14, 14), '2026-01-01')).toBe('2026-02-28');
+  });
+
+  it('returns null when there is no upcoming occurrence', () => {
+    expect(remindOnDate(once('2026-07-12'), '2026-07-13')).toBeNull();
   });
 });
 
@@ -115,6 +128,10 @@ describe('daysUntil', () => {
   it('spans month boundaries', () => {
     expect(daysUntil('2026-02-24', '2026-03-03')).toBe(7);
   });
+
+  it('counts backwards when the target is in the past', () => {
+    expect(daysUntil('2026-03-14', '2026-03-07')).toBe(-7);
+  });
 });
 
 describe('cycleYearFor', () => {
@@ -125,5 +142,38 @@ describe('cycleYearFor', () => {
 
   it('returns null when there is no upcoming occurrence', () => {
     expect(cycleYearFor(once('2026-07-12'), '2026-07-13')).toBeNull();
+  });
+});
+
+describe('unparseable dates', () => {
+  // Ranges (month 1-12, day 1-31, lead_days 1-30) are enforced by the 018 migration's
+  // CHECK constraints and by the write-path zod schema; this module only guards parseability.
+  it('nextOccurrence returns null when today does not parse', () => {
+    expect(nextOccurrence(annual(3, 14), 'garbage')).toBeNull();
+  });
+
+  it('nextOccurrence returns null when the one-off event date does not parse', () => {
+    expect(nextOccurrence(once('garbage'), '2026-01-01')).toBeNull();
+  });
+
+  it('remindOnDate returns null when today does not parse', () => {
+    expect(remindOnDate(annual(3, 14), 'garbage')).toBeNull();
+  });
+
+  it('remindOnDate returns null when leadDays is not a finite number', () => {
+    expect(remindOnDate({ recurrence: 'annual', month: 3, day: 14, leadDays: Number.NaN }, '2026-01-01')).toBeNull();
+  });
+
+  it('isReminderDue is false when today does not parse', () => {
+    expect(isReminderDue(annual(3, 14), 'garbage')).toBe(false);
+  });
+
+  it('cycleYearFor returns null when today does not parse', () => {
+    expect(cycleYearFor(annual(3, 14), 'garbage')).toBeNull();
+  });
+
+  it('daysUntil returns NaN rather than a misleading zero', () => {
+    expect(daysUntil('garbage', '2026-03-14')).toBeNaN();
+    expect(daysUntil('2026-03-14', 'garbage')).toBeNaN();
   });
 });

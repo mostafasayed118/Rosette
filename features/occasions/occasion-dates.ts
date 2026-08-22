@@ -21,12 +21,30 @@ function pad(value: number): string {
   return String(value).padStart(2, '0');
 }
 
-function toUtc(date: string): number {
+/**
+ * Parse a `YYYY-MM-DD` calendar date to a UTC timestamp, or null if it does not
+ * parse. Callers are the guard for *ranges*: month 1-12, day 1-31 and
+ * lead_days 1-30 are enforced by the CHECK constraints in
+ * `supabase/migrations/018_occasion_reminders.sql`, and `event_date` is a
+ * Postgres `date`, so malformed values cannot reach this module from the
+ * database; the write path is guarded by its own zod schema. This module
+ * therefore validates parseability only, never ranges.
+ *
+ * The `??` coalesces exist because `noUncheckedIndexedAccess` types the
+ * destructured segments as `number | undefined`. They deliberately default to
+ * `NaN` rather than to a plausible-looking date: the `Number.isFinite` check
+ * below is what does the work, and a reader should not mistake a fallback for a
+ * validated value.
+ */
+function toUtc(date: string): number | null {
   const [year, month, day] = date.split('-').map(Number);
-  return Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1);
+  const ms = Date.UTC(year ?? Number.NaN, (month ?? Number.NaN) - 1, day ?? Number.NaN);
+  return Number.isFinite(ms) ? ms : null;
 }
 
-function fromUtc(ms: number): string {
+/** Format a UTC timestamp as `YYYY-MM-DD`, or null if it is not a real instant. */
+function fromUtc(ms: number): string | null {
+  if (!Number.isFinite(ms)) return null;
   const date = new Date(ms);
   return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 }
@@ -49,14 +67,20 @@ export function clampToMonth(year: number, month: number, day: number): string {
 
 /** The next date this occasion falls on, or null if it can never occur again. */
 export function nextOccurrence(schedule: OccasionSchedule, today: string): string | null {
+  const now = toUtc(today);
+  if (now === null) return null;
   if (schedule.recurrence === 'once') {
     if (!schedule.eventDate) return null;
-    return toUtc(schedule.eventDate) >= toUtc(today) ? schedule.eventDate : null;
+    const event = toUtc(schedule.eventDate);
+    if (event === null) return null;
+    return event >= now ? schedule.eventDate : null;
   }
   if (schedule.month == null || schedule.day == null) return null;
   const year = Number(today.slice(0, 4));
   const thisYear = clampToMonth(year, schedule.month, schedule.day);
-  if (toUtc(thisYear) >= toUtc(today)) return thisYear;
+  const thisYearMs = toUtc(thisYear);
+  if (thisYearMs === null) return null;
+  if (thisYearMs >= now) return thisYear;
   return clampToMonth(year + 1, schedule.month, schedule.day);
 }
 
@@ -64,7 +88,9 @@ export function nextOccurrence(schedule: OccasionSchedule, today: string): strin
 export function remindOnDate(schedule: OccasionSchedule, today: string): string | null {
   const occurrence = nextOccurrence(schedule, today);
   if (!occurrence) return null;
-  return fromUtc(toUtc(occurrence) - schedule.leadDays * DAY_MS);
+  const occurrenceMs = toUtc(occurrence);
+  if (occurrenceMs === null || !Number.isFinite(schedule.leadDays)) return null;
+  return fromUtc(occurrenceMs - schedule.leadDays * DAY_MS);
 }
 
 /**
@@ -80,12 +106,18 @@ export function isReminderDue(schedule: OccasionSchedule, today: string): boolea
   const remindOn = remindOnDate(schedule, today);
   if (!occurrence || !remindOn) return false;
   const now = toUtc(today);
-  return toUtc(remindOn) <= now && toUtc(occurrence) >= now;
+  const occurrenceMs = toUtc(occurrence);
+  const remindOnMs = toUtc(remindOn);
+  if (now === null || occurrenceMs === null || remindOnMs === null) return false;
+  return remindOnMs <= now && occurrenceMs >= now;
 }
 
-/** Whole days between two calendar dates. */
+/** Whole days between two calendar dates, or NaN if either does not parse. */
 export function daysUntil(from: string, to: string): number {
-  return Math.round((toUtc(to) - toUtc(from)) / DAY_MS);
+  const fromMs = toUtc(from);
+  const toMs = toUtc(to);
+  if (fromMs === null || toMs === null) return Number.NaN;
+  return Math.round((toMs - fromMs) / DAY_MS);
 }
 
 /** Ledger key: the year of the upcoming occurrence. */
