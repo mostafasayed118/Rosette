@@ -13,3 +13,6 @@ coverage/
 
 # Python bytecode cache
 __pycache__/
+
+dev-restart.log
+.freebuff/
