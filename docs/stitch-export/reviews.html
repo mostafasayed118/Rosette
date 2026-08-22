@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Cairo Sunset — Reviews</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;500;600&amp;family=Outfit:wght@400;500&amp;family=JetBrains+Mono:wght@400&amp;family=IBM+Plex+Sans+Arabic:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed": "#c9ecc4",
+                      "secondary-container": "#c9ecc4",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary": "#476647",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "inverse-surface": "#33302c",
+                      "outline-variant": "#ddbfc4",
+                      "outline": "#897175",
+                      "on-error": "#ffffff",
+                      "background": "#fff8f3",
+                      "on-tertiary-fixed-variant": "#4b463e",
+                      "on-secondary-fixed": "#042109",
+                      "on-background": "#1e1b17",
+                      "surface-dim": "#e0d9d3",
+                      "surface-bright": "#fff8f3",
+                      "on-primary-fixed-variant": "#881642",
+                      "on-primary-fixed": "#3f0019",
+                      "surface-variant": "#e8e1db",
+                      "on-secondary-fixed-variant": "#304e31",
+                      "tertiary-container": "#777168",
+                      "tertiary-fixed-dim": "#cdc5bb",
+                      "tertiary": "#5e5950",
+                      "tertiary-fixed": "#e9e1d6",
+                      "primary-fixed": "#ffd9e0",
+                      "primary": "#a22c55",
+                      "inverse-primary": "#ffb1c3",
+                      "on-surface": "#1e1b17",
+                      "surface-container-highest": "#e8e1db",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-container": "#fff7ec",
+                      "surface": "#fff8f3",
+                      "surface-container-high": "#eee7e1",
+                      "on-secondary": "#ffffff",
+                      "inverse-on-surface": "#f7efe9",
+                      "error": "#ba1a1a",
+                      "secondary-fixed-dim": "#add0aa",
+                      "on-primary": "#ffffff",
+                      "on-surface-variant": "#564146",
+                      "surface-container-low": "#faf2ec",
+                      "on-primary-container": "#fff7f7",
+                      "on-secondary-container": "#4d6c4c",
+                      "surface-tint": "#a83159",
+                      "surface-container": "#f4ede6",
+                      "primary-container": "#c2456d",
+                      "on-tertiary-fixed": "#1e1b15",
+                      "primary-fixed-dim": "#ffb1c3"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-md": "16px",
+                      "gutter": "24px",
+                      "stack-xl": "64px",
+                      "stack-sm": "8px",
+                      "margin-desktop": "64px",
+                      "stack-lg": "32px",
+                      "margin-mobile": "20px",
+                      "max-width": "1280px"
+              },
+              "fontFamily": {
+                      "display-xl-mobile": [
+                              "Fraunces"
+                      ],
+                      "body-lg": [
+                              "Outfit"
+                      ],
+                      "display-xl": [
+                              "Fraunces"
+                      ],
+                      "meta-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-sm": [
+                              "Fraunces"
+                      ],
+                      "arabic-body": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "headline-lg": [
+                              "Fraunces"
+                      ],
+                      "body-md": [
+                              "Outfit"
+                      ]
+              },
+              "fontSize": {
+                      "display-xl-mobile": [
+                              "42px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-xl": [
+                              "64px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "meta-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "arabic-body": [
+                              "17px",
+                              {
+                                      "lineHeight": "1.7",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        /* Minimalist Paper Interaction Styles */
+        .btn-active-scale:active {
+            transform: scale(0.98);
+        }
+        .halo-focus:focus-within {
+            box-shadow: 0 0 0 2px theme('colors.secondary-fixed-dim'), 0 0 0 5px theme('colors.surface-bright');
+        }
+        .ambient-glow {
+            box-shadow: 0 12px 48px -12px rgba(119, 113, 104, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface antialiased">
+<!-- TopNavBar (Rendered via JSON directive) -->
+<nav class="bg-surface dark:bg-surface font-headline-sm text-headline-sm dark:text-surface-bright docked full-width top-0 border-b border-outline-variant/30 dark:border-outline-variant/10 flat no shadows flex justify-between items-center w-full px-margin-desktop py-stack-md max-w-max-width mx-auto">
+<div class="flex items-center gap-gutter">
+<span class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed-dim tracking-tight">Rosette</span>
+</div>
+<div class="hidden md:flex items-center gap-gutter">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Collections</a>
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 active:scale-95 transition-transform duration-200" href="#">Bespoke</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Atelier</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Gifts</a>
+</div>
+<div class="flex items-center gap-stack-md">
+<button class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300">EN/AR</button>
+<button class="text-primary hover:text-primary-container transition-colors duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
+</button>
+</div>
+</nav>
+<main class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-stack-xl flex flex-col gap-stack-xl">
+<!-- Header Section -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-stack-md">
+<div>
+<h1 class="font-display-xl-mobile text-display-xl-mobile md:font-display-xl md:text-display-xl text-on-surface">The Cairo Sunset</h1>
+<p class="font-headline-sm text-headline-sm text-on-surface-variant mt-2">— Reviews</p>
+</div>
+<button class="btn-active-scale bg-primary text-on-primary font-body-md text-body-md px-6 py-3 rounded self-start md:self-end transition-colors hover:bg-primary-container">
+                Write a review
+            </button>
+</header>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Rating Summary (Left Column on Desktop) -->
+<section class="md:col-span-4 flex flex-col gap-stack-lg border-b md:border-b-0 md:border-r border-outline-variant/30 pb-stack-lg md:pb-0 md:pr-gutter">
+<div class="flex flex-col gap-1">
+<div class="font-display-xl-mobile text-display-xl-mobile md:font-display-xl md:text-display-xl text-primary leading-none">4.8</div>
+<div class="flex text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined">star_half</span>
+</div>
+<p class="font-body-md text-body-md text-tertiary mt-2">Based on 127 reviews</p>
+</div>
+<div class="flex flex-col gap-2 w-full">
+<!-- 5 Star -->
+<div class="flex items-center gap-3 font-meta-mono text-meta-mono text-tertiary">
+<span>5</span>
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
+<div class="flex-grow h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 85%"></div>
+</div>
+<span class="w-8 text-right">85%</span>
+</div>
+<!-- 4 Star -->
+<div class="flex items-center gap-3 font-meta-mono text-meta-mono text-tertiary">
+<span>4</span>
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
+<div class="flex-grow h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 10%"></div>
+</div>
+<span class="w-8 text-right">10%</span>
+</div>
+<!-- 3 Star -->
+<div class="flex items-center gap-3 font-meta-mono text-meta-mono text-tertiary">
+<span>3</span>
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
+<div class="flex-grow h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 3%"></div>
+</div>
+<span class="w-8 text-right">3%</span>
+</div>
+<!-- 2 Star -->
+<div class="flex items-center gap-3 font-meta-mono text-meta-mono text-tertiary">
+<span>2</span>
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
+<div class="flex-grow h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 1%"></div>
+</div>
+<span class="w-8 text-right">1%</span>
+</div>
+<!-- 1 Star -->
+<div class="flex items-center gap-3 font-meta-mono text-meta-mono text-tertiary">
+<span>1</span>
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span>
+<div class="flex-grow h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 1%"></div>
+</div>
+<span class="w-8 text-right">1%</span>
+</div>
+</div>
+</section>
+<!-- Review List (Right Column on Desktop) -->
+<section class="md:col-span-8 flex flex-col">
+<!-- Review 1 -->
+<article class="py-stack-lg border-b border-outline-variant/30 flex flex-col gap-stack-sm first:pt-0">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Nour Hassan</h3>
+<div class="flex text-primary text-sm">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<span class="font-meta-mono text-meta-mono text-tertiary">Oct 14, 2024</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-body-md text-body-md text-secondary text-sm">Verified Purchase</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2 leading-relaxed max-w-prose">
+                        The colors were even more vibrant in person. A perfect sunset in a vase. The ranunculus were particularly stunning and lasted over a week. The packaging felt incredibly premium, making the unboxing experience truly special. Highly recommend for anniversaries.
+                    </p>
+<div class="flex gap-stack-sm mt-3">
+<div class="w-24 h-24 rounded overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A close-up, high-quality photograph of a vibrant floral bouquet featuring warm sunset tones—deep oranges, soft pinks, and rich reds. The bouquet is arranged in a clear glass vase, sitting on a textured linen tablecloth. Soft natural light filters in from a nearby window, creating a warm, inviting, minimalist botanical aesthetic consistent with premium editorial photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCW0xndPVvw27eeeeioxJjiTXR1RUTQWuyAp52LD7g6-hmERXsPepjmBId4Yf2N2mBkq2TjPimZWXXc0eIVo4eZhCOk43aEra7FXr5rh7bH1bB0V-7hqaTmT6Ls0tZdPqBj568JJyHujyWpUZf8rw_DZE65niB5DQpRgNlT9Fqx3wmqsfyqLkTPyw9GzAhME_s6KWmpNF0aCXU_918sGboaXVYQRKIqoIhZmDSWnavwkayskRVi9LLRaHYFF_n9Y-o8yVQwHElOYV1w"/>
+</div>
+</div>
+<div class="mt-4">
+<button class="btn-active-scale flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container border border-outline-variant/50 text-tertiary font-meta-mono text-meta-mono hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-sm">thumb_up</span>
+                            Helpful (12)
+                        </button>
+</div>
+</article>
+<!-- Review 2 -->
+<article class="py-stack-lg border-b border-outline-variant/30 flex flex-col gap-stack-sm">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Layla M.</h3>
+<div class="flex text-primary text-sm">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<span class="font-meta-mono text-meta-mono text-tertiary">Sep 28, 2024</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2 leading-relaxed max-w-prose">
+                        Absolutely breathtaking arrangement. The balance of textures and the subtle fragrance made my mother's birthday unforgettable. The handwritten card was a lovely touch that really elevated the entire gift.
+                    </p>
+<div class="mt-4">
+<button class="btn-active-scale flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container border border-outline-variant/50 text-tertiary font-meta-mono text-meta-mono hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-sm">thumb_up</span>
+                            Helpful (4)
+                        </button>
+</div>
+</article>
+<!-- Review 3 -->
+<article class="py-stack-lg flex flex-col gap-stack-sm">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Omar T.</h3>
+<div class="flex text-primary text-sm">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-base">star</span>
+</div>
+</div>
+<span class="font-meta-mono text-meta-mono text-tertiary">Sep 15, 2024</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-body-md text-body-md text-secondary text-sm">Verified Purchase</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2 leading-relaxed max-w-prose">
+                        Beautiful flowers, but delivery was slightly delayed. The recipient was still very happy, and the quality of the blooms was undeniable.
+                    </p>
+<div class="mt-4">
+<button class="btn-active-scale flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container border border-outline-variant/50 text-tertiary font-meta-mono text-meta-mono hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-sm">thumb_up</span>
+                            Helpful (1)
+                        </button>
+</div>
+</article>
+<div class="pt-stack-md flex justify-center border-t border-outline-variant/30">
+<button class="font-headline-sm text-headline-sm text-primary hover:text-primary-container transition-colors border-b border-primary hover:border-primary-container pb-1">
+                        Load more reviews
+                    </button>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer (Rendered via JSON directive) -->
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest full-width bg-surface-container-low dark:bg-surface-container-lowest flat no shadows grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop py-stack-xl max-w-max-width mx-auto mt-stack-xl">
+<div class="flex flex-col gap-4">
+<span class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed-dim">Rosette</span>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant text-sm mt-auto opacity-70">
+                 © 2024 Rosette Atelier. Crafted in Cairo.
+             </p>
+</div>
+<div class="flex flex-col gap-3">
+<a class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">City Selector</a>
+<a class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Gift Services</a>
+</div>
+<div class="flex flex-col gap-3">
+<a class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Shipping Policy</a>
+<a class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Our Story</a>
+</div>
+<div class="flex flex-col gap-3">
+<a class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Contact Us</a>
+<a class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Privacy</a>
+</div>
+</footer>
+</body></html>

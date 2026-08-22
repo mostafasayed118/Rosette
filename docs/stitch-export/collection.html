@@ -1,0 +1,377 @@
+<!DOCTYPE html><html class="light" dir="ltr" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>The collection · 24 gestures - Rosette</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&amp;family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "on-primary-fixed-variant": "#881642",
+                  "on-error": "#ffffff",
+                  "on-secondary-container": "#4d6c4c",
+                  "tertiary-container": "#777168",
+                  "inverse-on-surface": "#f7efe9",
+                  "surface-container-high": "#eee7e1",
+                  "on-error-container": "#93000a",
+                  "error": "#ba1a1a",
+                  "inverse-surface": "#33302c",
+                  "on-tertiary-fixed": "#1e1b15",
+                  "surface-container-low": "#faf2ec",
+                  "on-tertiary-fixed-variant": "#4b463e",
+                  "surface-bright": "#fff8f3",
+                  "primary-container": "#c2456d",
+                  "tertiary-fixed": "#e9e1d6",
+                  "surface-container-highest": "#e8e1db",
+                  "primary-fixed-dim": "#ffb1c3",
+                  "surface-dim": "#e0d9d3",
+                  "on-tertiary-container": "#fff7ec",
+                  "outline": "#897175",
+                  "primary-fixed": "#ffd9e0",
+                  "tertiary-fixed-dim": "#cdc5bb",
+                  "tertiary": "#5e5950",
+                  "outline-variant": "#ddbfc4",
+                  "on-background": "#1e1b17",
+                  "secondary-container": "#c9ecc4",
+                  "on-secondary-fixed": "#042109",
+                  "primary": "#a22c55",
+                  "on-secondary": "#ffffff",
+                  "inverse-primary": "#ffb1c3",
+                  "on-tertiary": "#ffffff",
+                  "background": "#fff8f3",
+                  "secondary-fixed": "#c9ecc4",
+                  "on-primary-container": "#fff7f7",
+                  "error-container": "#ffdad6",
+                  "on-secondary-fixed-variant": "#304e31",
+                  "on-primary": "#ffffff",
+                  "surface-container-lowest": "#ffffff",
+                  "secondary": "#476647",
+                  "surface-variant": "#e8e1db",
+                  "surface-container": "#f4ede6",
+                  "surface-tint": "#a83159",
+                  "surface": "#fff8f3",
+                  "on-primary-fixed": "#3f0019",
+                  "on-surface-variant": "#564146",
+                  "on-surface": "#1e1b17",
+                  "secondary-fixed-dim": "#add0aa"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "margin-desktop": "64px",
+                  "stack-lg": "32px",
+                  "stack-md": "16px",
+                  "gutter": "24px",
+                  "stack-xl": "64px",
+                  "stack-sm": "8px",
+                  "margin-mobile": "20px",
+                  "max-width": "1280px"
+          },
+          "fontFamily": {
+                  "body-md": [
+                          "Outfit"
+                  ],
+                  "arabic-body": [
+                          "IBM Plex Sans Arabic"
+                  ],
+                  "body-lg": [
+                          "Outfit"
+                  ],
+                  "headline-lg": [
+                          "Fraunces"
+                  ],
+                  "meta-mono": [
+                          "JetBrains Mono"
+                  ],
+                  "display-xl": [
+                          "Fraunces"
+                  ],
+                  "display-xl-mobile": [
+                          "Fraunces"
+                  ],
+                  "headline-sm": [
+                          "Fraunces"
+                  ]
+          },
+          "fontSize": {
+                  "body-md": [
+                          "16px",
+                          {
+                                  "lineHeight": "1.5",
+                                  "fontWeight": "400"
+                          }
+                  ],
+                  "arabic-body": [
+                          "17px",
+                          {
+                                  "lineHeight": "1.7",
+                                  "fontWeight": "400"
+                          }
+                  ],
+                  "body-lg": [
+                          "18px",
+                          {
+                                  "lineHeight": "1.6",
+                                  "fontWeight": "400"
+                          }
+                  ],
+                  "headline-lg": [
+                          "32px",
+                          {
+                                  "lineHeight": "1.2",
+                                  "fontWeight": "500"
+                          }
+                  ],
+                  "meta-mono": [
+                          "14px",
+                          {
+                                  "lineHeight": "1.0",
+                                  "letterSpacing": "0.05em",
+                                  "fontWeight": "400"
+                          }
+                  ],
+                  "display-xl": [
+                          "64px",
+                          {
+                                  "lineHeight": "1.1",
+                                  "letterSpacing": "-0.02em",
+                                  "fontWeight": "600"
+                          }
+                  ],
+                  "display-xl-mobile": [
+                          "42px",
+                          {
+                                  "lineHeight": "1.1",
+                                  "fontWeight": "600"
+                          }
+                  ],
+                  "headline-sm": [
+                          "24px",
+                          {
+                                  "lineHeight": "1.3",
+                                  "fontWeight": "500"
+                          }
+                  ]
+          }
+        },
+      }
+    }
+  </script>
+<style>
+    /* Minimalist-Tactile specific utilities */
+    .ambient-glow:hover {
+      box-shadow: 0 24px 48px -12px rgba(94, 89, 80, 0.06);
+      transform: translateY(-2px);
+    }
+    
+    .tactile-input:focus-within {
+      box-shadow: 0 0 0 2px #f4ede6, 0 0 0 5px #e9e1d6;
+    }
+    
+    .chip-active {
+      background-color: theme('colors.primary');
+      color: theme('colors.on-primary');
+    }
+    
+    .chip-inactive {
+      background-color: theme('colors.surface-container');
+      color: theme('colors.on-surface');
+    }
+
+    /* Asymmetric Masonry */
+    .masonry-col-1 .product-card:nth-child(even) {
+      margin-top: theme('spacing.stack-xl');
+    }
+    .masonry-col-2 .product-card:nth-child(odd) {
+      margin-top: theme('spacing.stack-xl');
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col">
+<!-- Navigation Shell (TopNavBar) -->
+<nav class="bg-surface dark:bg-surface border-b border-outline-variant/30 dark:border-outline-variant/10 w-full top-0 sticky z-50">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-stack-md max-w-max-width mx-auto">
+<div class="flex items-center gap-gutter">
+<a class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed-dim tracking-tight" href="#">Rosette</a>
+</div>
+<div class="hidden md:flex items-center gap-gutter">
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">Collections</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">Bespoke</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">Atelier</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">Gifts</a>
+</div>
+<div class="flex items-center gap-stack-md">
+<button aria-label="Search" class="text-primary dark:text-primary-fixed-dim hover:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+<button class="font-headline-sm text-headline-sm dark:text-surface-bright text-primary dark:text-primary-fixed-dim hover:text-primary transition-colors duration-300">
+          EN/AR
+        </button>
+<button class="font-headline-sm text-headline-sm dark:text-surface-bright text-primary dark:text-primary-fixed-dim hover:text-primary transition-colors duration-300">
+          Bag
+        </button>
+</div>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="flex-grow flex flex-col items-center w-full pb-stack-xl">
+<!-- Hero / Header -->
+<header class="w-full max-w-max-width px-margin-mobile md:px-margin-desktop py-stack-xl md:py-margin-desktop flex flex-col md:flex-row md:justify-between md:items-end gap-stack-lg border-b border-surface-variant">
+<div class="max-w-2xl">
+<p class="font-meta-mono text-meta-mono text-tertiary uppercase mb-stack-sm tracking-widest">The collection · 24 gestures</p>
+<h1 class="font-display-xl-mobile md:font-display-xl text-display-xl-mobile md:text-display-xl text-on-surface">Something for the feeling.</h1>
+</div>
+<div class="md:text-right max-w-md">
+<p class="font-body-lg text-body-lg text-on-surface-variant">Artisanal arrangements curated to express what words often cannot. Crafted with seasonal blooms sourced from our local partners.</p>
+</div>
+</header>
+<!-- Sticky Filter Bar -->
+<section class="w-full sticky top-[73px] z-40 bg-background/90 backdrop-blur-md border-b border-surface-variant py-stack-md px-margin-mobile md:px-margin-desktop shadow-sm shadow-surface-variant/20">
+<div class="max-w-max-width mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-stack-md">
+<!-- Search & Filters -->
+<div class="flex flex-wrap items-center gap-stack-md w-full md:w-auto">
+<!-- Search Pill -->
+<div class="relative tactile-input rounded-full bg-surface-container overflow-hidden w-full md:w-64">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" data-icon="search">search</span>
+<input class="w-full bg-transparent border-none pl-12 pr-4 py-3 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant focus:ring-0" placeholder="Find a feeling..." type="text">
+</div>
+<!-- Category Chips -->
+<div class="flex gap-2 overflow-x-auto pb-1 w-full md:w-auto scrollbar-hide snap-x">
+<button class="chip-active rounded-full px-5 py-2 font-body-md text-body-md whitespace-nowrap snap-start transition-colors duration-200">Bouquets</button>
+<button class="chip-inactive hover:bg-outline-variant/20 rounded-full px-5 py-2 font-body-md text-body-md whitespace-nowrap snap-start transition-colors duration-200">Plants</button>
+<button class="chip-inactive hover:bg-outline-variant/20 rounded-full px-5 py-2 font-body-md text-body-md whitespace-nowrap snap-start transition-colors duration-200">Dried</button>
+<button class="chip-inactive hover:bg-outline-variant/20 rounded-full px-5 py-2 font-body-md text-body-md whitespace-nowrap snap-start transition-colors duration-200">Extras</button>
+</div>
+<!-- Divider -->
+<div class="hidden md:block w-px h-6 bg-outline-variant/50 mx-2"></div>
+<!-- Occasion Chips -->
+<div class="flex gap-2 overflow-x-auto pb-1 w-full md:w-auto scrollbar-hide snap-x">
+<button class="chip-inactive hover:bg-outline-variant/20 rounded-full px-5 py-2 font-body-md text-body-md whitespace-nowrap snap-start transition-colors duration-200">Love</button>
+<button class="chip-inactive hover:bg-outline-variant/20 rounded-full px-5 py-2 font-body-md text-body-md whitespace-nowrap snap-start transition-colors duration-200">Birthday</button>
+<button class="chip-inactive hover:bg-outline-variant/20 rounded-full px-5 py-2 font-body-md text-body-md whitespace-nowrap snap-start transition-colors duration-200">Congratulations</button>
+<button class="chip-inactive hover:bg-outline-variant/20 rounded-full px-5 py-2 font-body-md text-body-md whitespace-nowrap snap-start transition-colors duration-200">Sympathy</button>
+</div>
+</div>
+<!-- Sort -->
+<div class="flex items-center gap-2 mt-2 md:mt-0 ml-auto">
+<label class="font-body-md text-body-md text-on-surface-variant hidden md:block">Sort by:</label>
+<select class="bg-transparent border-none font-body-md text-body-md text-on-surface font-medium cursor-pointer focus:ring-0 pl-0 pr-8 py-2 appearance-none">
+<option>Featured</option>
+<option>Price: Low to High</option>
+<option>Price: High to Low</option>
+<option>Newest</option>
+</select>
+<span class="material-symbols-outlined text-on-surface pointer-events-none -ml-8" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</section>
+<!-- Product Grid (Asymmetric) -->
+<section class="w-full max-w-max-width px-margin-mobile md:px-margin-desktop py-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter md:gap-margin-desktop items-start md:gap-y-stack-xl">
+<!-- Column 1 -->
+<div class="masonry-col-1 flex flex-col gap-margin-desktop gap-y-stack-xl">
+<!-- Product Card 1 -->
+<article class="product-card group cursor-pointer">
+<div class="relative overflow-hidden rounded-sm bg-surface-container aspect-[3/4] mb-stack-md ambient-glow transition-all duration-500 ease-out border border-outline-variant/30">
+<img class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A meticulously arranged bouquet of white peonies, ranunculus, and delicate green foliage presented in a sleek, minimalist frosted glass vase. The setting is a bright, airy atelier studio with soft, diffused natural daylight casting gentle shadows on a warm linen textured background. The aesthetic is high-end, editorial, and softly romantic, embodying a premium floral design style with muted greens and crisp whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuEAIM-Xc4UN8ANPbdXMFYy9kmp7E95DpXSxiSQ32vQOrUTGnx4QenDTdTdn6JegIJUse8pEFLf_s-f3jGEr07Rh0NXL-5oYEIa6XQQ7cBeXjpp8wwI_EMx1i3uX6vWqa4g4u3_4NGU8keGaTsk2SOY_y9SZiA64xV5P1iO8JmevPgmmoCZZylaSkb73g9FIl8TIFCQQ3g5UD-D3TVEA134eHPN_coADsIGdBbdezvpCQN3y_pYcIRgQ">
+<div class="absolute top-4 left-4">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-surface-container/90 backdrop-blur-sm border border-surface-variant font-meta-mono text-meta-mono text-tertiary uppercase text-[10px]">Same-Day</span>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">The Serene White</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Peonies &amp; Ranunculus</p>
+</div>
+<p class="font-meta-mono text-meta-mono text-on-surface">EGP 1,250</p>
+</div>
+</article>
+<!-- Product Card 3 (Tall) -->
+<article class="product-card group cursor-pointer">
+<div class="relative overflow-hidden rounded-sm bg-surface-container aspect-[2/3] mb-stack-md ambient-glow transition-all duration-500 ease-out border border-outline-variant/30">
+<img class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A striking, asymmetrical floral arrangement featuring deep burgundy calla lilies, dark scabiosa, and twisted willow branches. Set against an off-white plaster wall in a modern gallery space, the lighting is dramatic yet soft, highlighting the sculptural quality of the blooms. The mood is moody, sophisticated, and quietly unforgettable, using a palette of deep reds, blacks, and creams." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4VeZ8yDvTdUyFgUYhA0xLNo5Vca6-Vv-afhheDs8jNMKyRMMJ76ae9XiMWvrQmbREVoSTNEZ8YmBkaPGRwvhDYi-dwZ7VFjP7gLKFsh-LkocoF1yFj43uiJXydkr6rYZLv1EOWJvBwV958_s-TehW4IKJ6XGlLJsgt1AX4uijKHKgd2XUtATt-bgyUR2UGfGK-Jo3Ph9eUa84HeJe9eD7j9JOu5DdGth6w0JuTr1HeU-VNnpL5SJXqA">
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Midnight Silhouette</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Calla Lilies &amp; Scabiosa</p>
+</div>
+<p class="font-meta-mono text-meta-mono text-on-surface">EGP 1,800</p>
+</div>
+</article>
+</div>
+<!-- Column 2 (Staggered offset applied via CSS) -->
+<div class="masonry-col-2 flex flex-col gap-margin-desktop gap-y-stack-xl md:pt-stack-xl">
+<!-- Product Card 2 (Square-ish) -->
+<article class="product-card group cursor-pointer">
+<div class="relative overflow-hidden rounded-sm bg-surface-container aspect-square mb-stack-md ambient-glow transition-all duration-500 ease-out border border-outline-variant/30">
+<img class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="A lush, compact posy of blush pink garden roses, dusty miller, and sweet peas resting casually on a stack of premium textured paper. Shot from a slightly high angle in a sunlit room, the warm cream canvas background enhances the tactile, romantic feel. The visual style is Kinfolk-inspired, utilizing soft pastel tones and a gentle, natural lighting scheme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAx5PcJAZAqtzpDvbrYcYo2TkdpK2OI3QUzyNlsoDgMvm_NLzC7AeR4EFZH2Ncdg58FsUCJbXgpJJhWkP1I6IZq8l73WtSKT9lKpHxFJ1Ef-vwFpO2Fih2C17P1_J8q11sBRjs14k2qUG6TQC_up4BgrlWoyc_NA_OsOqYKTXm3_h0vWLQ-8RPw5ewORW0bs5t60Svex4SqyAV50DdDAyN-dqZiurLt8S7_rSpcD_CCGRhPOiKo5odfFg">
+<div class="absolute top-4 left-4">
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-surface-container/90 backdrop-blur-sm border border-surface-variant font-meta-mono text-meta-mono text-tertiary uppercase text-[10px]">Next-Day</span>
+</div>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Blush &amp; Paper</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Garden Roses</p>
+</div>
+<p class="font-meta-mono text-meta-mono text-on-surface">EGP 950</p>
+</div>
+</article>
+<!-- Product Card 4 -->
+<article class="product-card group cursor-pointer">
+<div class="relative overflow-hidden rounded-sm bg-surface-container aspect-[3/4] mb-stack-md ambient-glow transition-all duration-500 ease-out border border-outline-variant/30">
+<img class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-in-out" data-alt="An ethereal arrangement of dried lunaria (honesty), bleached ferns, and fluffy pampas grass in a textured ceramic vessel. The background is a warm, muted stone color, providing a neutral backdrop for the translucent, silvery seed pods. The aesthetic is highly textural, minimalist, and serene, focusing on organic shapes and a monochromatic beige/white color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDw4-doqB1UKFdfn4QaNGRFutPZi5TgWrS1zGmRsNm1FWw14K9y93XEHZv9I3F7r8KuM6GwHeUCbZPovtqfXOHsIpDl--ag95IaQPjBtZQqii7e6rQGP9pR1rWm_7azbQcaEa5qVnf0P3g6OqIrkX6QYgI1AVcQhLC3IIDQqaGsextWiBRy4FtuBBTcEPM-vookx_31wwTAP9ydz_N-yBuqSJYZILlfnXxymEXhL7EaFCugnHCSn8oSNw">
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Eternal Moon</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Dried Lunaria &amp; Ferns</p>
+</div>
+<p class="font-meta-mono text-meta-mono text-on-surface">EGP 1,100</p>
+</div>
+</article>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer (Generated from JSON Anchor) -->
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest full-width">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-mobile md:px-margin-desktop py-stack-xl max-w-max-width mx-auto">
+<!-- Brand -->
+<div class="col-span-1 md:col-span-2 mb-stack-lg md:mb-0">
+<p class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed-dim mb-4">Rosette</p>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant max-w-sm">
+          Quietly unforgettable botanical arrangements, crafted with care in our studio.
+        </p>
+</div>
+<!-- Links Col 1 -->
+<div class="flex flex-col gap-4">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">City Selector</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Gift Services</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Shipping Policy</a>
+</div>
+<!-- Links Col 2 -->
+<div class="flex flex-col gap-4">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Our Story</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Contact Us</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Privacy</a>
+</div>
+<!-- Copyright -->
+<div class="col-span-1 md:col-span-4 mt-stack-lg pt-stack-md border-t border-outline-variant/30">
+<p class="text-tertiary dark:text-tertiary-fixed-dim font-body-md text-body-md">© 2024 Rosette Atelier. Crafted in Cairo.</p>
+</div>
+</div>
+</footer>
+
+
+</body></html>

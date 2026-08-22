@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Email Preferences - Rosette</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;500;600&amp;family=IBM+Plex+Sans+Arabic:wght@400;500&amp;family=JetBrains+Mono:wght@400&amp;family=Outfit:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#fff8f3",
+                    "on-tertiary-container": "#fff7ec",
+                    "tertiary-fixed": "#e9e1d6",
+                    "on-error": "#ffffff",
+                    "on-secondary-container": "#4d6c4c",
+                    "on-background": "#1e1b17",
+                    "inverse-on-surface": "#f7efe9",
+                    "secondary-fixed": "#c9ecc4",
+                    "primary-fixed": "#ffd9e0",
+                    "secondary-container": "#c9ecc4",
+                    "primary": "#a22c55",
+                    "tertiary-fixed-dim": "#cdc5bb",
+                    "primary-fixed-dim": "#ffb1c3",
+                    "inverse-surface": "#33302c",
+                    "surface-container": "#f4ede6",
+                    "outline": "#897175",
+                    "on-tertiary-fixed-variant": "#4b463e",
+                    "on-secondary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#881642",
+                    "error-container": "#ffdad6",
+                    "surface-container-highest": "#e8e1db",
+                    "on-error-container": "#93000a",
+                    "background": "#fff8f3",
+                    "on-tertiary-fixed": "#1e1b15",
+                    "surface-variant": "#e8e1db",
+                    "primary-container": "#c2456d",
+                    "outline-variant": "#ddbfc4",
+                    "on-tertiary": "#ffffff",
+                    "surface-tint": "#a83159",
+                    "inverse-primary": "#ffb1c3",
+                    "secondary-fixed-dim": "#add0aa",
+                    "surface-dim": "#e0d9d3",
+                    "tertiary-container": "#777168",
+                    "on-secondary-fixed": "#042109",
+                    "surface": "#fff8f3",
+                    "on-surface": "#1e1b17",
+                    "on-secondary-fixed-variant": "#304e31",
+                    "on-primary": "#ffffff",
+                    "tertiary": "#5e5950",
+                    "secondary": "#476647",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#564146",
+                    "surface-container-high": "#eee7e1",
+                    "on-primary-fixed": "#3f0019",
+                    "surface-container-low": "#faf2ec",
+                    "on-primary-container": "#fff7f7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "max-width": "1280px",
+                    "margin-desktop": "64px",
+                    "stack-xl": "64px",
+                    "margin-mobile": "20px",
+                    "stack-sm": "8px",
+                    "stack-md": "16px",
+                    "stack-lg": "32px"
+            },
+            "fontFamily": {
+                    "display-xl": ["Fraunces"],
+                    "body-lg": ["Outfit"],
+                    "headline-sm": ["Fraunces"],
+                    "meta-mono": ["JetBrains Mono"],
+                    "display-xl-mobile": ["Fraunces"],
+                    "body-md": ["Outfit"],
+                    "headline-lg": ["Fraunces"],
+                    "arabic-body": ["IBM Plex Sans Arabic"]
+            },
+            "fontSize": {
+                    "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-sm": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "meta-mono": ["14px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "400"}],
+                    "display-xl-mobile": ["42px", {"lineHeight": "1.1", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "arabic-body": ["17px", {"lineHeight": "1.7", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #a22c55; /* primary */
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #a22c55; /* primary */
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-surface dark:bg-surface border-b border-outline-variant/30 dark:border-outline-variant/10 flat no shadows docked full-width top-0 z-50">
+<div class="flex justify-between items-center w-full px-margin-desktop py-stack-md max-w-max-width mx-auto">
+<nav class="hidden md:flex space-x-gutter">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Collections</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Bespoke</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Atelier</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Gifts</a>
+</nav>
+<div class="flex-shrink-0">
+<a class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed-dim tracking-tight" href="/">Rosette</a>
+</div>
+<div class="flex items-center space-x-gutter">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">search</span>
+</button>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">EN/AR</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Bag</a>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-stack-xl flex flex-col md:flex-row gap-gutter">
+<!-- Left Sidebar -->
+<aside class="w-full md:w-64 flex-shrink-0 mb-stack-lg md:mb-0">
+<nav class="flex flex-col space-y-2">
+<a class="px-4 py-3 text-on-surface-variant font-body-md hover:text-primary transition-colors rounded-full" href="#">Orders</a>
+<a class="px-4 py-3 text-on-surface-variant font-body-md hover:text-primary transition-colors rounded-full" href="#">Wishlist</a>
+<a class="px-4 py-3 text-on-surface-variant font-body-md hover:text-primary transition-colors rounded-full" href="#">Reviews</a>
+<a class="px-4 py-3 bg-primary-container text-on-primary-container font-body-md rounded-full font-medium" href="#">Email preferences</a>
+<a class="px-4 py-3 text-on-surface-variant font-body-md hover:text-primary transition-colors rounded-full" href="#">Profile</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-grow max-w-3xl">
+<div class="mb-stack-xl">
+<p class="font-meta-mono text-meta-mono text-on-surface-variant uppercase tracking-widest mb-stack-sm">Email preferences</p>
+<h1 class="font-display-xl-mobile md:font-display-xl text-display-xl-mobile md:text-display-xl text-on-surface">How we reach you.</h1>
+</div>
+<!-- Master Toggle Section -->
+<div class="bg-surface-container-low rounded-xl p-stack-lg mb-stack-xl border border-outline-variant/30 flex items-start justify-between">
+<div class="pr-gutter">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-2">Engagement emails</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Occasional notes about flowers you saved, orders in motion, and moments worth marking.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in mt-1 flex-shrink-0">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 top-0 left-0 transition-transform duration-200" id="toggle-master" name="toggle-master" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200" for="toggle-master"></label>
+</div>
+</div>
+<!-- Grouped Preference Rows -->
+<div class="border-t border-outline-variant/30">
+<!-- Row: Order updates (Locked) -->
+<div class="py-stack-md border-b border-outline-variant/30 flex items-start justify-between opacity-70">
+<div class="pr-gutter">
+<h3 class="font-body-lg text-body-lg text-on-surface font-medium flex items-center gap-2">
+                            Order updates
+                            <span class="material-symbols-outlined text-secondary" style="font-size: 16px;">lock</span>
+</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Essential info about your active orders.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none mt-1 flex-shrink-0 opacity-50 cursor-not-allowed">
+<input checked="" class="absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none z-10 top-0 right-0 border-primary cursor-not-allowed" disabled="" type="checkbox"/>
+<label class="block overflow-hidden h-6 rounded-full bg-primary"></label>
+</div>
+</div>
+<!-- Row: Abandoned bag -->
+<div class="py-stack-md border-b border-outline-variant/30 flex items-start justify-between">
+<div class="pr-gutter">
+<h3 class="font-body-lg text-body-lg text-on-surface font-medium">Abandoned bag reminder</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">A gentle nudge when you leave stems in your bag.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in mt-1 flex-shrink-0">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 top-0 left-0 transition-transform duration-200" id="toggle-1" name="toggle-1" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200" for="toggle-1"></label>
+</div>
+</div>
+<!-- Row: Wishlist drops -->
+<div class="py-stack-md border-b border-outline-variant/30 flex items-start justify-between">
+<div class="pr-gutter">
+<h3 class="font-body-lg text-body-lg text-on-surface font-medium">Wishlist price drops</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Be the first to know when your favorites are curated for less.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in mt-1 flex-shrink-0">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 top-0 left-0 transition-transform duration-200" id="toggle-2" name="toggle-2" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200" for="toggle-2"></label>
+</div>
+</div>
+<!-- Row: Back-in-stock -->
+<div class="py-stack-md border-b border-outline-variant/30 flex items-start justify-between">
+<div class="pr-gutter">
+<h3 class="font-body-lg text-body-lg text-on-surface font-medium">Back-in-stock alerts</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Alerts for when seasonal blooms return to the studio.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in mt-1 flex-shrink-0">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 top-0 left-0 transition-transform duration-200" id="toggle-3" name="toggle-3" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200" for="toggle-3"></label>
+</div>
+</div>
+<!-- Row: Seasonal -->
+<div class="py-stack-md border-b border-outline-variant/30 flex items-start justify-between">
+<div class="pr-gutter">
+<h3 class="font-body-lg text-body-lg text-on-surface font-medium">Seasonal collection notes</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Editorial stories and early access to new gestures.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in mt-1 flex-shrink-0">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 top-0 left-0 transition-transform duration-200" id="toggle-4" name="toggle-4" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-variant cursor-pointer transition-colors duration-200" for="toggle-4"></label>
+</div>
+</div>
+</div>
+<!-- Inline Success -->
+<div class="mt-4 flex items-center text-secondary">
+<span class="material-symbols-outlined mr-2" style="font-size: 18px;">check_circle</span>
+<span class="font-body-md text-body-md">Preferences saved with care.</span>
+</div>
+<!-- Language Preference -->
+<div class="mt-stack-xl pt-stack-xl border-t border-outline-variant/30">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Correspondence language</h3>
+<div class="flex flex-wrap gap-4">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="language" type="radio" value="en"/>
+<span class="px-6 py-2 rounded-full border border-outline-variant/50 text-on-surface-variant peer-checked:bg-primary-container peer-checked:text-on-primary-container peer-checked:border-primary-container transition-colors inline-block">English</span>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="language" type="radio" value="ar"/>
+<span class="px-6 py-2 rounded-full border border-outline-variant/50 text-on-surface-variant peer-checked:bg-primary-container peer-checked:text-on-primary-container peer-checked:border-primary-container transition-colors inline-block font-arabic-body">العربية</span>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="language" type="radio" value="fr"/>
+<span class="px-6 py-2 rounded-full border border-outline-variant/50 text-on-surface-variant peer-checked:bg-primary-container peer-checked:text-on-primary-container peer-checked:border-primary-container transition-colors inline-block">Français</span>
+</label>
+</div>
+</div>
+<!-- Actions -->
+<div class="mt-stack-xl flex justify-end">
+<button class="bg-primary text-on-primary px-8 py-3 rounded-DEFAULT font-body-md text-body-md font-medium hover:bg-surface-tint active:scale-[0.98] transition-all duration-200 shadow-sm">
+                    Save changes
+                </button>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest mt-auto border-t border-surface-container-low dark:border-surface-container-lowest">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-desktop py-stack-xl max-w-max-width mx-auto">
+<div class="col-span-1">
+<h2 class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed-dim mb-4">Rosette</h2>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant opacity-80">© 2024 Rosette Atelier. Crafted in Cairo.</p>
+</div>
+<div class="col-span-1 md:col-span-3 flex flex-wrap gap-x-8 gap-y-4 md:justify-end items-center">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">City Selector</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Gift Services</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Shipping Policy</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Our Story</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Contact Us</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Privacy</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for master toggle
+        const masterToggle = document.getElementById('toggle-master');
+        const childToggles = document.querySelectorAll('input[type="checkbox"]:not(#toggle-master):not([disabled])');
+        
+        masterToggle.addEventListener('change', (e) => {
+            childToggles.forEach(toggle => {
+                toggle.checked = e.target.checked;
+            });
+        });
+    </script>
+</body></html>

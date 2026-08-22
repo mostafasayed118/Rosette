@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" dir="ltr" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Cairo Sunset - Rosette Atelier</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&amp;family=IBM+Plex+Sans+Arabic:wght@100;200;300;400;500;600;700&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;family=Outfit:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed-variant": "#881642",
+                    "on-error": "#ffffff",
+                    "on-secondary-container": "#4d6c4c",
+                    "tertiary-container": "#777168",
+                    "inverse-on-surface": "#f7efe9",
+                    "surface-container-high": "#eee7e1",
+                    "on-error-container": "#93000a",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#33302c",
+                    "on-tertiary-fixed": "#1e1b15",
+                    "surface-container-low": "#faf2ec",
+                    "on-tertiary-fixed-variant": "#4b463e",
+                    "surface-bright": "#fff8f3",
+                    "primary-container": "#c2456d",
+                    "tertiary-fixed": "#e9e1d6",
+                    "surface-container-highest": "#e8e1db",
+                    "primary-fixed-dim": "#ffb1c3",
+                    "surface-dim": "#e0d9d3",
+                    "on-tertiary-container": "#fff7ec",
+                    "outline": "#897175",
+                    "primary-fixed": "#ffd9e0",
+                    "tertiary-fixed-dim": "#cdc5bb",
+                    "tertiary": "#5e5950",
+                    "outline-variant": "#ddbfc4",
+                    "on-background": "#1e1b17",
+                    "secondary-container": "#c9ecc4",
+                    "on-secondary-fixed": "#042109",
+                    "primary": "#a22c55",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#ffb1c3",
+                    "on-tertiary": "#ffffff",
+                    "background": "#fff8f3",
+                    "secondary-fixed": "#c9ecc4",
+                    "on-primary-container": "#fff7f7",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#304e31",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#476647",
+                    "surface-variant": "#e8e1db",
+                    "surface-container": "#f4ede6",
+                    "surface-tint": "#a83159",
+                    "surface": "#fff8f3",
+                    "on-primary-fixed": "#3f0019",
+                    "on-surface-variant": "#564146",
+                    "on-surface": "#1e1b17",
+                    "secondary-fixed-dim": "#add0aa"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "64px",
+                    "stack-lg": "32px",
+                    "stack-md": "16px",
+                    "gutter": "24px",
+                    "stack-xl": "64px",
+                    "stack-sm": "8px",
+                    "margin-mobile": "20px",
+                    "max-width": "1280px"
+            },
+            "fontFamily": {
+                    "body-md": [
+                            "Outfit"
+                    ],
+                    "arabic-body": [
+                            "IBM Plex Sans Arabic"
+                    ],
+                    "body-lg": [
+                            "Outfit"
+                    ],
+                    "headline-lg": [
+                            "Fraunces"
+                    ],
+                    "meta-mono": [
+                            "JetBrains Mono"
+                    ],
+                    "display-xl": [
+                            "Fraunces"
+                    ],
+                    "display-xl-mobile": [
+                            "Fraunces"
+                    ],
+                    "headline-sm": [
+                            "Fraunces"
+                    ]
+            },
+            "fontSize": {
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "arabic-body": [
+                            "17px",
+                            {
+                                    "lineHeight": "1.7",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "meta-mono": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.0",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-xl": [
+                            "64px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-xl-mobile": [
+                            "42px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-sm": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "500"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 300,
+          'GRAD' 0,
+          'opsz' 24
+        }
+        
+        .shadow-ambient {
+            box-shadow: 0 10px 48px -12px rgba(94, 89, 80, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md antialiased selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top Navigation from Shared Components JSON -->
+<nav class="bg-surface dark:bg-surface border-b border-outline-variant/30 dark:border-outline-variant/10 w-full top-0 z-50 sticky transition-all duration-300">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-stack-md max-w-max-width mx-auto">
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-on-surface-variant hover:text-primary transition-colors duration-300">
+<span class="material-symbols-outlined text-[28px]" data-icon="menu">menu</span>
+</button>
+<a class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed-dim tracking-tight hover:opacity-80 transition-opacity" href="/">Rosette</a>
+<div class="hidden md:flex gap-8">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="/collections">Collections</a>
+<!-- Active State Example (Bespoke) -->
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="/bespoke">Bespoke</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="/atelier">Atelier</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="/gifts">Gifts</a>
+</div>
+<div class="flex gap-6 items-center">
+<button class="hidden md:block text-on-surface-variant hover:text-primary transition-colors duration-300 font-meta-mono text-meta-mono">EN/AR</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-300 flex items-center gap-2 group">
+<span class="material-symbols-outlined text-[24px] group-hover:scale-110 transition-transform" data-icon="shopping_bag">shopping_bag</span>
+<span class="hidden md:inline font-meta-mono text-meta-mono">Bag</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-stack-xl">
+<!-- Split Column Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter lg:gap-stack-xl items-start">
+<!-- Left: Gallery -->
+<div class="md:col-span-7 flex flex-col-reverse md:flex-row gap-4 sticky top-stack-xl">
+<!-- Thumbnail Rail -->
+<div class="flex md:flex-col gap-4 overflow-x-auto md:overflow-visible pb-2 md:pb-0 scrollbar-hide md:w-24 shrink-0">
+<button class="w-20 h-24 md:w-24 md:h-32 shrink-0 border-2 border-primary rounded-DEFAULT overflow-hidden opacity-100 transition-opacity">
+<img alt="Thumbnail 1" class="w-full h-full object-cover" data-alt="Close up shot of a warm peach and sunset orange bouquet of roses and ranunculus on a textured cream backdrop. Soft natural lighting emphasizing the delicate petals. Editorial kinfolk aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAbOru4byjhG3YiPO9_8P1MQNGfULWhzapajzWVafes8Zl18BYoM16o4dhbn77sDRVaeJM5B6C6CwoMZcWBZ2z0gDcg43B6tWja7WwuDj1VyMVPkmot3jL1LzxwKWA6bD66MYcMXZy50TvzUC-evt07NxrN7dsNqTgmStvUP4qXL_psGlWfYWGZMq--QqphkmkRetvy4a1sfquftCv59EQlqLVbqxHNMFj8B_SewA5Oek_vOvT7Dm00A"/>
+</button>
+<button class="w-20 h-24 md:w-24 md:h-32 shrink-0 border border-outline-variant/50 rounded-DEFAULT overflow-hidden opacity-60 hover:opacity-100 transition-opacity">
+<img alt="Thumbnail 2" class="w-full h-full object-cover" data-alt="Wide lifestyle shot of a large sunset orange floral arrangement in a minimalist ceramic vase on a wooden pedestal table against a white wall. High key lighting, organic shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWm7I5XzV_5j9PIjGKXXn00yeYg3ZRWKmwVsz7HCACrJmyNtwAtjFFVdFpZh6v8blUVeuS33dp8M7oc2D5bnaO8-s29JoE6TasGLn-j7z10TB8DBwdY1yl2esVr8Epzx6a10VQU1VTzrNCiUWaVTEdrovozJ6cqpPiyeheYzCm9Z2MCrOAWDk6yajb87TQJYK769_-MfqyOxG1ce_Xg_0pdXLPy2jlH3Amhbh6C8VXhoXqSWb3xsljtQ"/>
+</button>
+<button class="w-20 h-24 md:w-24 md:h-32 shrink-0 border border-outline-variant/50 rounded-DEFAULT overflow-hidden opacity-60 hover:opacity-100 transition-opacity">
+<img alt="Thumbnail 3" class="w-full h-full object-cover" data-alt="Detail shot of hands tying a ribbon around a bouquet of peach roses and warm foliage. Focus on the texture of the linen ribbon and the florist's craft. Warm soft lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDY7m5wnygecloqMsIe2kr7E2PL6zr9mRaXKY_2b1XWbatdVcnnxgK45M57UH6-9To-maRDaCz6GZKKJCruqsVKnBPV0Xz6AV5Y6rrssFhNDdIgf_cBv4hEjUukkcQz-lijf5QYAZG1VpS9-kKnDOmN2FobifVp_XLdXdZo61-hJRbPg2f4R3imQpBazWvJ0p1DBEcMQ6PmDdqhWB8ubzX0H-LWncCL4qxZHcD_Eh_MmrKibZ6KwUvTTQ"/>
+</button>
+</div>
+<!-- Main Image -->
+<div class="w-full aspect-[4/5] md:aspect-[3/4] rounded-lg overflow-hidden border border-outline-variant/30 shadow-ambient bg-surface-container-low">
+<img alt="The Cairo Sunset Bouquet Main Image" class="w-full h-full object-cover" data-alt="A stunning premium bouquet of peach, terracotta, and soft pink roses, ranunculus, and delicate filler flowers, arranged asymmetrically. Photographed head-on against a warm cream canvas background. Editorial, high-end florist style, soft natural lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD684wW_hi6t64UWvTcYYalFtTBI70qeOW047gKBoFgPBYqblu9cpHxRdRIVfAZDSf08zQ56SVs2iYw7SlEJRraxgwdeiRZrEy8apCZfqz64UcYume_cayzR3iuFqW8vTWdKHSUnhvJpzDDQH08YvnoBvgylNf2JGDhGevRqGJHaoud_Gef0JU-yGn7eib3-4VnHmfYYWe4qFFdIN8sp-09cHWxaMVTHBgsER_F3pwBI2HtzXvN_BxIkg"/>
+</div>
+</div>
+<!-- Right: Details & Actions -->
+<div class="md:col-span-5 flex flex-col gap-stack-lg pt-4 md:pt-0">
+<!-- Header Info -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<h1 class="font-display-xl-mobile md:font-display-xl text-display-xl-mobile md:text-display-xl text-on-surface">The Cairo Sunset</h1>
+</div>
+<p class="font-meta-mono text-meta-mono text-on-surface-variant text-lg">EGP 1,850 – EGP 3,200</p>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-4 max-w-prose">
+                        Inspired by the warm, lingering hues over the Nile. A textured, asymmetric arrangement featuring premium imported ranunculus, quicksand roses, and seasonal foliage.
+                    </p>
+</div>
+<!-- Size Selector -->
+<div class="flex flex-col gap-4">
+<label class="font-meta-mono text-meta-mono text-on-surface-variant uppercase tracking-widest">Select Size</label>
+<div class="flex flex-wrap gap-3">
+<button class="px-6 py-3 rounded-full border border-outline-variant/50 font-body-md text-body-md text-on-surface bg-surface hover:bg-surface-container transition-colors">
+                            Petite <span class="text-on-surface-variant ml-1 font-meta-mono text-[12px]">EGP 1,850</span>
+</button>
+<button class="px-6 py-3 rounded-full border-2 border-primary bg-primary-fixed/20 font-body-md text-body-md text-on-surface transition-colors">
+                            Classic <span class="text-on-surface-variant ml-1 font-meta-mono text-[12px]">EGP 2,400</span>
+</button>
+<button class="px-6 py-3 rounded-full border border-outline-variant/50 font-body-md text-body-md text-on-surface bg-surface hover:bg-surface-container transition-colors">
+                            Grand <span class="text-on-surface-variant ml-1 font-meta-mono text-[12px]">EGP 3,200</span>
+</button>
+</div>
+</div>
+<!-- Gift Note -->
+<div class="flex flex-col gap-4 pt-4 border-t border-outline-variant/30">
+<label class="font-arabic-body text-arabic-body text-on-surface-variant flex justify-between" for="gift-note">
+<span>رسالة الهدية</span>
+<span class="font-meta-mono text-[12px] opacity-60">optional</span>
+</label>
+<textarea class="w-full bg-surface-container-low border-b border-outline-variant/50 border-x-0 border-t-0 focus:ring-0 focus:border-primary font-body-md text-body-md text-on-surface resize-none p-3 placeholder:text-on-surface-variant/50 transition-colors" id="gift-note" placeholder="Write your message here..." rows="3"></textarea>
+</div>
+<!-- Delivery Date -->
+<div class="flex flex-col gap-4">
+<label class="font-meta-mono text-meta-mono text-on-surface-variant uppercase tracking-widest">Delivery Date</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border border-outline-variant/50 rounded-DEFAULT focus:ring-2 focus:ring-secondary/20 focus:border-secondary font-body-md text-body-md text-on-surface p-3 transition-shadow appearance-none" type="date"/>
+</div>
+</div>
+<!-- Add to Bag Action -->
+<button class="w-full bg-primary hover:bg-surface-tint text-on-primary font-body-lg text-body-lg py-4 rounded-DEFAULT transition-all duration-200 active:scale-[0.98] mt-4 flex items-center justify-center gap-2">
+<span>Add to Bag</span>
+<span class="font-meta-mono text-[14px] opacity-80 pl-2 border-l border-on-primary/30">EGP 2,400</span>
+</button>
+<!-- Trust Row -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-stack-md mt-2">
+<div class="flex flex-col items-center text-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[28px]" data-icon="local_shipping">local_shipping</span>
+<span class="font-body-md text-[14px] text-on-surface-variant leading-tight">Same-day delivery before 3pm</span>
+</div>
+<div class="flex flex-col items-center text-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[28px]" data-icon="yard">yard</span>
+<span class="font-body-md text-[14px] text-on-surface-variant leading-tight">Hand-tied fresh daily</span>
+</div>
+<div class="flex flex-col items-center text-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[28px]" data-icon="water_drop">water_drop</span>
+<span class="font-body-md text-[14px] text-on-surface-variant leading-tight">Care instructions included</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer from Shared Components JSON -->
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest mt-stack-xl">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-mobile md:px-margin-desktop py-stack-xl max-w-max-width mx-auto">
+<div class="col-span-1 md:col-span-1 flex flex-col gap-4">
+<span class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed-dim">Rosette</span>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant opacity-70">
+                    © 2024 Rosette Atelier. Crafted in Cairo.
+                </p>
+</div>
+<div class="col-span-1 md:col-span-3 flex flex-wrap gap-x-8 gap-y-4 md:justify-end items-start mt-6 md:mt-0">
+<a class="text-tertiary dark:text-tertiary-fixed-dim font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">City Selector</a>
+<a class="text-tertiary dark:text-tertiary-fixed-dim font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Gift Services</a>
+<a class="text-tertiary dark:text-tertiary-fixed-dim font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Shipping Policy</a>
+<a class="text-tertiary dark:text-tertiary-fixed-dim font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Our Story</a>
+<a class="text-tertiary dark:text-tertiary-fixed-dim font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Contact Us</a>
+<a class="text-tertiary dark:text-tertiary-fixed-dim font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-colors" href="#">Privacy</a>
+</div>
+</div>
+</footer>
+</body></html>

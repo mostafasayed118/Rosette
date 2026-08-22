@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html dir="ltr" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rosette - Destination Gate</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&amp;family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;family=Outfit:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Brand Anchors -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#881642",
+                        "on-error": "#ffffff",
+                        "on-secondary-container": "#4d6c4c",
+                        "tertiary-container": "#777168",
+                        "inverse-on-surface": "#f7efe9",
+                        "surface-container-high": "#eee7e1",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#33302c",
+                        "on-tertiary-fixed": "#1e1b15",
+                        "surface-container-low": "#faf2ec",
+                        "on-tertiary-fixed-variant": "#4b463e",
+                        "surface-bright": "#fff8f3",
+                        "primary-container": "#c2456d",
+                        "tertiary-fixed": "#e9e1d6",
+                        "surface-container-highest": "#e8e1db",
+                        "primary-fixed-dim": "#ffb1c3",
+                        "surface-dim": "#e0d9d3",
+                        "on-tertiary-container": "#fff7ec",
+                        "outline": "#897175",
+                        "primary-fixed": "#ffd9e0",
+                        "tertiary-fixed-dim": "#cdc5bb",
+                        "tertiary": "#5e5950",
+                        "outline-variant": "#ddbfc4",
+                        "on-background": "#1e1b17",
+                        "secondary-container": "#c9ecc4",
+                        "on-secondary-fixed": "#042109",
+                        "primary": "#a22c55",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#ffb1c3",
+                        "on-tertiary": "#ffffff",
+                        "background": "#fff8f3",
+                        "secondary-fixed": "#c9ecc4",
+                        "on-primary-container": "#fff7f7",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#304e31",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#476647",
+                        "surface-variant": "#e8e1db",
+                        "surface-container": "#f4ede6",
+                        "surface-tint": "#a83159",
+                        "surface": "#fff8f3",
+                        "on-primary-fixed": "#3f0019",
+                        "on-surface-variant": "#564146",
+                        "on-surface": "#1e1b17",
+                        "secondary-fixed-dim": "#add0aa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "64px",
+                        "stack-lg": "32px",
+                        "stack-md": "16px",
+                        "gutter": "24px",
+                        "stack-xl": "64px",
+                        "stack-sm": "8px",
+                        "margin-mobile": "20px",
+                        "max-width": "1280px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Outfit"],
+                        "arabic-body": ["IBM Plex Sans Arabic"],
+                        "body-lg": ["Outfit"],
+                        "headline-lg": ["Fraunces"],
+                        "meta-mono": ["JetBrains Mono"],
+                        "display-xl": ["Fraunces"],
+                        "display-xl-mobile": ["Fraunces"],
+                        "headline-sm": ["Fraunces"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "arabic-body": ["17px", { "lineHeight": "1.7", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "500" }],
+                        "meta-mono": ["14px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "400" }],
+                        "display-xl": ["64px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-xl-mobile": ["42px", { "lineHeight": "1.1", "fontWeight": "600" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.3", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Hide default select arrow and use custom styling */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex items-center justify-center selection:bg-primary-fixed selection:text-on-primary-fixed overflow-x-hidden">
+<!-- 
+      Navigation is intentionally suppressed here as this is a 
+      linear/transactional onboarding "Gate" screen. 
+    -->
+<main class="w-full max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-stack-xl md:py-[102px]">
+<!-- Asymmetric 12-column grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-center">
+<!-- Left Content Block: Offset by 1 column, spans 4 columns for editorial whitespace -->
+<div class="md:col-span-5 md:col-start-2 flex flex-col gap-stack-lg z-10 py-12 order-2 md:order-1">
+<div class="flex flex-col gap-stack-sm">
+<span class="font-meta-mono text-meta-mono text-tertiary">A little joy, delivered</span>
+<h1 class="font-display-xl-mobile text-display-xl-mobile md:font-display-xl md:text-display-xl text-on-surface text-balance">
+                        Choose where the feeling is going.
+                    </h1>
+</div>
+<form action="#" class="flex flex-col gap-stack-md mt-4 w-full md:w-[90%]" method="GET">
+<!-- Country Dropdown -->
+<div class="relative w-full group">
+<select class="w-full bg-surface-container-low border border-outline-variant rounded-full py-4 pl-6 pr-12 font-body-lg text-body-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 focus:ring-offset-surface transition-all duration-300 hover:border-outline cursor-pointer appearance-none" name="country">
+<option selected="" value="egypt">Egypt</option>
+<!-- Other options would populate here -->
+</select>
+<div class="absolute inset-y-0 right-6 flex items-center pointer-events-none text-tertiary group-hover:text-primary transition-colors">
+<span aria-hidden="true" class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+<!-- City Dropdown -->
+<div class="relative w-full group">
+<select class="w-full bg-surface-container-low border border-outline-variant rounded-full py-4 pl-6 pr-12 font-body-lg text-body-lg text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 focus:ring-offset-surface transition-all duration-300 hover:border-outline cursor-pointer appearance-none" name="city">
+<option disabled="" selected="" value="">Select a city</option>
+<option value="cairo">Cairo</option>
+<option value="alexandria">Alexandria</option>
+<option value="giza">Giza</option>
+</select>
+<div class="absolute inset-y-0 right-6 flex items-center pointer-events-none text-tertiary group-hover:text-primary transition-colors">
+<span aria-hidden="true" class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+<!-- Primary CTA -->
+<button class="w-full bg-primary text-on-primary rounded-full py-4 px-8 mt-2 font-body-lg text-body-lg text-center transition-transform duration-200 active:scale-[0.98] hover:bg-surface-tint shadow-sm hover:shadow-md flex items-center justify-center gap-2" type="submit">
+                        Continue to the collection
+                        <span class="material-symbols-outlined text-[1.2em]">arrow_forward</span>
+</button>
+</form>
+<!-- Meta Link -->
+<div class="mt-2">
+<a class="font-body-md text-body-md text-tertiary underline decoration-outline-variant hover:text-primary transition-colors duration-300" href="#">
+                        Can't find your country? Request us to start there.
+                    </a>
+</div>
+</div>
+<!-- Right Image Block: Spans 6 columns, slight right alignment -->
+<div class="md:col-span-5 md:col-start-8 h-[614px] md:h-[768px] w-full relative rounded-lg overflow-hidden order-1 md:order-2">
+<img alt="" class="absolute inset-0 w-full h-full object-cover rounded-lg mix-blend-multiply opacity-90 transition-transform duration-1000 hover:scale-105" data-alt="A high-end, soft botanical photograph of a vintage courier bicycle basket overflowing with fresh, artisanal florist blooms like ranunculus and lilies. The scene is bathed in warm, airy, editorial natural light, evocative of Kinfolk magazine. The color palette features warm creamy neutrals, muted petal pinks, and subtle sage greens, reflecting a premium, tactile, and 'quietly unforgettable' aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvPr3cHMVc8OxmgOH3zDhRDQP1C74BiCSSYCUnTZqhyQeRMUJ18i6TVkIC5soy8c8IPmtuscRdS1rukTQjU-539UXM6lr3OOyEsS4W1swNJPr7FHMii7drnW8f4Ybt04n5788s3QXn6hUYruEeoSHIO8N31ATBAuLyCo7crEjeWCpPBqDKG73W8X0o-Jla7aPqROAzbr4iKbMQjAHQzhNK9PaEypQ1nehtharAosSa0SgK_6qXdDahJQ"/>
+<!-- Subtle ambient glow/shadow overlay to blend with the canvas -->
+<div class="absolute inset-0 shadow-[inset_0_0_80px_rgba(255,248,243,0.5)] pointer-events-none rounded-lg"></div>
+<!-- Hairline border frame typical of the paper-on-paper aesthetic -->
+<div class="absolute inset-0 border border-outline-variant/30 rounded-lg pointer-events-none"></div>
+</div>
+</div>
+</main>
+</body></html>

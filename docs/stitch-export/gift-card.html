@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+
+<html class="light" dir="ltr" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rosette - Gift Card</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&amp;family=IBM+Plex+Sans+Arabic:wght@300;400;500&amp;family=JetBrains+Mono:wght@400;500&amp;family=Outfit:wght@300;400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed-variant": "#881642",
+                      "on-error": "#ffffff",
+                      "on-secondary-container": "#4d6c4c",
+                      "tertiary-container": "#777168",
+                      "inverse-on-surface": "#f7efe9",
+                      "surface-container-high": "#eee7e1",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "inverse-surface": "#33302c",
+                      "on-tertiary-fixed": "#1e1b15",
+                      "surface-container-low": "#faf2ec",
+                      "on-tertiary-fixed-variant": "#4b463e",
+                      "surface-bright": "#fff8f3",
+                      "primary-container": "#c2456d",
+                      "tertiary-fixed": "#e9e1d6",
+                      "surface-container-highest": "#e8e1db",
+                      "primary-fixed-dim": "#ffb1c3",
+                      "surface-dim": "#e0d9d3",
+                      "on-tertiary-container": "#fff7ec",
+                      "outline": "#897175",
+                      "primary-fixed": "#ffd9e0",
+                      "tertiary-fixed-dim": "#cdc5bb",
+                      "tertiary": "#5e5950",
+                      "outline-variant": "#ddbfc4",
+                      "on-background": "#1e1b17",
+                      "secondary-container": "#c9ecc4",
+                      "on-secondary-fixed": "#042109",
+                      "primary": "#a22c55",
+                      "on-secondary": "#ffffff",
+                      "inverse-primary": "#ffb1c3",
+                      "on-tertiary": "#ffffff",
+                      "background": "#fff8f3",
+                      "secondary-fixed": "#c9ecc4",
+                      "on-primary-container": "#fff7f7",
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed-variant": "#304e31",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary": "#476647",
+                      "surface-variant": "#e8e1db",
+                      "surface-container": "#f4ede6",
+                      "surface-tint": "#a83159",
+                      "surface": "#fff8f3",
+                      "on-primary-fixed": "#3f0019",
+                      "on-surface-variant": "#564146",
+                      "on-surface": "#1e1b17",
+                      "secondary-fixed-dim": "#add0aa"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "stack-lg": "32px",
+                      "stack-md": "16px",
+                      "gutter": "24px",
+                      "stack-xl": "64px",
+                      "stack-sm": "8px",
+                      "margin-mobile": "20px",
+                      "max-width": "1280px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Outfit"
+                      ],
+                      "arabic-body": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "body-lg": [
+                              "Outfit"
+                      ],
+                      "headline-lg": [
+                              "Fraunces"
+                      ],
+                      "meta-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "display-xl": [
+                              "Fraunces"
+                      ],
+                      "display-xl-mobile": [
+                              "Fraunces"
+                      ],
+                      "headline-sm": [
+                              "Fraunces"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "arabic-body": [
+                              "17px",
+                              {
+                                      "lineHeight": "1.7",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "meta-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-xl": [
+                              "64px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-xl-mobile": [
+                              "42px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        /* Ambient Glow Shadow for Cards */
+        .shadow-ambient-glow {
+            box-shadow: 0 24px 48px -12px rgba(119, 113, 104, 0.08);
+        }
+        
+        /* Focus Halo Effect */
+        .focus-halo:focus-within {
+            outline: none;
+            box-shadow: 0 0 0 3px #fff8f3, 0 0 0 5px #c9ecc4; /* surface, secondary-container */
+        }
+
+        /* Hide scrollbar for amount chips container on mobile */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col selection:bg-primary/20 selection:text-primary">
+<!-- TopNavBar Component -->
+<header class="bg-surface w-full z-50 sticky top-0 border-b border-outline-variant/30 transition-all duration-300 backdrop-blur-md bg-surface/90">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-stack-md max-w-max-width mx-auto">
+<!-- Mobile Menu Toggle (Left) -->
+<button class="md:hidden text-primary flex items-center justify-center p-2 hover:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<!-- Navigation Links (Left side on desktop) -->
+<nav class="hidden md:flex gap-gutter items-center">
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">Collections</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">Bespoke</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300" href="#">Atelier</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md" href="#">Gifts</a>
+</nav>
+<!-- Brand Logo (Center) -->
+<a class="font-headline-lg text-headline-lg text-primary tracking-tight absolute left-1/2 -translate-x-1/2" href="/">Rosette</a>
+<!-- Actions (Right) -->
+<div class="flex items-center gap-stack-sm md:gap-stack-md">
+<button class="hidden md:flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors duration-300 hover:scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">search</span>
+</button>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors duration-300 hidden md:block" href="#">EN/AR</a>
+<button class="flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors duration-300 hover:scale-95 relative p-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
+<!-- Optional bag badge could go here -->
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-grow w-full relative z-10 pt-stack-lg pb-stack-xl md:py-stack-xl">
+<div class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop grid grid-cols-1 lg:grid-cols-12 gap-stack-xl lg:gap-margin-desktop items-start">
+<!-- Left Column: Live Preview (Asymmetric staggering) -->
+<section class="lg:col-span-5 lg:sticky lg:top-[140px] order-2 lg:order-1 flex justify-center lg:justify-start">
+<!-- The Digital Gift Card -->
+<div class="w-full max-w-[400px] lg:max-w-full aspect-[4/5] bg-primary text-on-primary rounded-xl p-stack-lg flex flex-col justify-between shadow-ambient-glow relative overflow-hidden transition-all duration-500 hover:shadow-[0_32px_64px_-16px_rgba(162,44,85,0.2)]">
+<!-- Decorative subtle element in background of card -->
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-fixed-dim/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-12 -left-12 w-48 h-48 bg-surface-tint/20 rounded-full blur-2xl pointer-events-none"></div>
+<!-- Top -->
+<div class="flex justify-between items-start relative z-10">
+<span class="font-headline-lg text-headline-lg tracking-tight">Rosette</span>
+<span class="material-symbols-outlined opacity-70" style="font-variation-settings: 'FILL' 0;">redeem</span>
+</div>
+<!-- Middle: Recipient & Message -->
+<div class="flex-grow flex flex-col justify-center py-stack-md relative z-10 gap-stack-md">
+<div>
+<span class="block text-primary-fixed-dim font-meta-mono text-meta-mono mb-1 uppercase tracking-wider text-[11px]">Especially For</span>
+<span class="font-headline-sm text-headline-sm block truncate" id="preview-name">Nour Hassan</span>
+</div>
+<div class="mt-4 flex-grow relative">
+<p class="font-arabic-body text-arabic-body leading-relaxed opacity-90 break-words line-clamp-4" id="preview-message">
+                                أطيب التمنيات بيوم جميل يليق بك.
+                             </p>
+</div>
+</div>
+<!-- Bottom: Amount & Sender -->
+<div class="flex justify-between items-end border-t border-primary-fixed-dim/30 pt-stack-md relative z-10">
+<div>
+<span class="block text-primary-fixed-dim font-meta-mono text-meta-mono mb-1 uppercase tracking-wider text-[11px]">From</span>
+<span class="font-body-md text-body-md block truncate max-w-[120px]" id="preview-sender">A Friend</span>
+</div>
+<div class="text-right">
+<span class="block text-primary-fixed-dim font-meta-mono text-meta-mono mb-1 uppercase tracking-wider text-[11px]">Value</span>
+<span class="font-meta-mono text-meta-mono text-lg block" id="preview-amount">EGP 500</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Form Area -->
+<section class="lg:col-span-7 lg:pl-stack-xl order-1 lg:order-2 flex flex-col justify-center min-h-[716px]">
+<div class="mb-stack-xl">
+<h1 class="font-display-xl-mobile md:font-display-xl text-display-xl-mobile md:text-display-xl text-on-surface mb-stack-sm tracking-tight">
+                        A Gesture of<br/><span class="text-primary italic">Thoughtfulness</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md mt-4">
+                        Send a beautifully curated digital experience, allowing them to choose their perfect botanical arrangement.
+                    </p>
+</div>
+<form class="space-y-stack-xl" id="gift-card-form">
+<!-- Amount Selection -->
+<div>
+<fieldset>
+<legend class="font-meta-mono text-meta-mono text-on-surface-variant uppercase tracking-wider mb-stack-md">Select Amount (EGP)</legend>
+<div class="flex overflow-x-auto no-scrollbar gap-stack-sm pb-2 -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0 md:flex-wrap">
+<label class="cursor-pointer flex-shrink-0">
+<input class="peer sr-only" name="amount" type="radio" value="300"/>
+<div class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-low text-on-surface font-meta-mono text-meta-mono peer-checked:bg-primary peer-checked:border-primary peer-checked:text-on-primary hover:bg-surface-variant transition-colors duration-200">
+                                        300
+                                    </div>
+</label>
+<label class="cursor-pointer flex-shrink-0">
+<input checked="" class="peer sr-only" name="amount" type="radio" value="500"/>
+<div class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-low text-on-surface font-meta-mono text-meta-mono peer-checked:bg-primary peer-checked:border-primary peer-checked:text-on-primary hover:bg-surface-variant transition-colors duration-200">
+                                        500
+                                    </div>
+</label>
+<label class="cursor-pointer flex-shrink-0">
+<input class="peer sr-only" name="amount" type="radio" value="1000"/>
+<div class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-low text-on-surface font-meta-mono text-meta-mono peer-checked:bg-primary peer-checked:border-primary peer-checked:text-on-primary hover:bg-surface-variant transition-colors duration-200">
+                                        1000
+                                    </div>
+</label>
+<label class="cursor-pointer flex-shrink-0 relative focus-halo rounded-full">
+<input class="peer sr-only" id="custom-amount-radio" name="amount" type="radio" value="custom"/>
+<div class="px-6 py-3 rounded-full border border-outline-variant bg-surface-container-low text-on-surface font-meta-mono text-meta-mono peer-checked:bg-primary peer-checked:border-primary peer-checked:text-on-primary transition-colors duration-200 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">edit</span>
+                                        Custom
+                                    </div>
+</label>
+</div>
+<!-- Hidden custom amount input -->
+<div class="hidden mt-stack-md transition-all duration-300 opacity-0 -translate-y-2" id="custom-amount-wrapper">
+<div class="relative focus-halo border-b border-outline-variant group">
+<span class="absolute left-0 top-1/2 -translate-y-1/2 font-meta-mono text-meta-mono text-on-surface-variant">EGP</span>
+<input class="w-full bg-transparent border-none py-3 pl-12 pr-4 font-meta-mono text-meta-mono text-on-surface placeholder:text-outline focus:ring-0 focus:outline-none" id="custom-amount-input" min="100" placeholder="0" step="50" type="number"/>
+</div>
+</div>
+</fieldset>
+</div>
+<!-- Details Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-lg gap-x-gutter">
+<!-- Recipient Name -->
+<div class="focus-halo border-b border-outline-variant group relative transition-colors duration-300">
+<label class="block font-meta-mono text-meta-mono text-on-surface-variant text-[11px] uppercase tracking-wider mb-1" for="recipientName">Recipient's Name</label>
+<input class="w-full bg-transparent border-none py-2 px-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline focus:ring-0 focus:outline-none" id="recipientName" type="text" value="Nour Hassan"/>
+</div>
+<!-- Recipient Email -->
+<div class="focus-halo border-b border-outline-variant group relative transition-colors duration-300">
+<label class="block font-meta-mono text-meta-mono text-on-surface-variant text-[11px] uppercase tracking-wider mb-1" for="recipientEmail">Recipient's Email</label>
+<input class="w-full bg-transparent border-none py-2 px-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline focus:ring-0 focus:outline-none" id="recipientEmail" placeholder="nour@example.com" type="email"/>
+</div>
+<!-- Sender Name -->
+<div class="focus-halo border-b border-outline-variant group relative transition-colors duration-300 md:col-span-2">
+<label class="block font-meta-mono text-meta-mono text-on-surface-variant text-[11px] uppercase tracking-wider mb-1" for="senderName">Your Name</label>
+<input class="w-full bg-transparent border-none py-2 px-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline focus:ring-0 focus:outline-none" id="senderName" type="text" value="A Friend"/>
+</div>
+<!-- Message -->
+<div class="focus-halo border-b border-outline-variant group relative transition-colors duration-300 md:col-span-2">
+<label class="block font-meta-mono text-meta-mono text-on-surface-variant text-[11px] uppercase tracking-wider mb-1 flex justify-between" for="giftMessage">
+<span>Personal Message</span>
+<span class="lowercase">Arabic Supported</span>
+</label>
+<textarea class="w-full bg-transparent border-none py-2 px-0 font-arabic-body text-arabic-body text-on-surface placeholder:text-outline focus:ring-0 focus:outline-none resize-none" id="giftMessage" rows="3">أطيب التمنيات بيوم جميل يليق بك.</textarea>
+</div>
+</div>
+<!-- Actions & Trust -->
+<div class="pt-stack-md flex flex-col gap-stack-md items-center">
+<button class="w-full bg-primary text-on-primary py-4 px-8 rounded-sm font-body-lg text-body-lg text-center hover:scale-[0.98] hover:bg-surface-tint active:scale-[0.95] transition-all duration-200 shadow-ambient-glow" type="button">
+                            Send this gesture
+                        </button>
+<div class="flex items-center justify-center gap-stack-lg w-full mt-4 border-t border-outline-variant/30 pt-stack-md">
+<div class="flex items-center gap-2 text-on-surface-variant font-meta-mono text-meta-mono text-[12px]">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 0;">all_inclusive</span>
+                                Never expires
+                            </div>
+<div class="flex items-center gap-2 text-on-surface-variant font-meta-mono text-meta-mono text-[12px]">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 0;">storefront</span>
+                                Redeemable sitewide
+                            </div>
+</div>
+</div>
+</form>
+</section>
+</div>
+</main>
+<!-- Footer Component -->
+<footer class="bg-surface-container-low w-full mt-auto">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-mobile md:px-margin-desktop py-stack-xl max-w-max-width mx-auto">
+<!-- Brand Column -->
+<div class="flex flex-col items-start gap-stack-md col-span-1 md:col-span-2">
+<span class="font-headline-sm text-headline-sm text-primary">Rosette</span>
+<p class="font-body-md text-body-md text-on-surface max-w-sm mt-2">
+                    Crafting quiet, unforgettable moments through the art of high-end floral design.
+                </p>
+<span class="font-meta-mono text-meta-mono text-tertiary mt-stack-md text-[12px] uppercase tracking-wider">
+                    © 2024 Rosette Atelier. Crafted in Cairo.
+                </span>
+</div>
+<!-- Links Column 1 -->
+<div class="flex flex-col gap-stack-sm">
+<h4 class="font-meta-mono text-meta-mono text-on-surface-variant uppercase tracking-wider mb-2 text-[12px]">Services</h4>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary underline decoration-transparent hover:decoration-outline-variant transition-all duration-300" href="#">City Selector</a>
+<a class="text-primary font-bold font-body-md text-body-md hover:opacity-80 transition-opacity" href="#">Gift Services</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary underline decoration-transparent hover:decoration-outline-variant transition-all duration-300" href="#">Shipping Policy</a>
+</div>
+<!-- Links Column 2 -->
+<div class="flex flex-col gap-stack-sm">
+<h4 class="font-meta-mono text-meta-mono text-on-surface-variant uppercase tracking-wider mb-2 text-[12px]">Company</h4>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary underline decoration-transparent hover:decoration-outline-variant transition-all duration-300" href="#">Our Story</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary underline decoration-transparent hover:decoration-outline-variant transition-all duration-300" href="#">Contact Us</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary underline decoration-transparent hover:decoration-outline-variant transition-all duration-300" href="#">Privacy</a>
+</div>
+</div>
+</footer>
+<!-- Interactive Logic -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Live Preview Elements
+            const previewName = document.getElementById('preview-name');
+            const previewMessage = document.getElementById('preview-message');
+            const previewSender = document.getElementById('preview-sender');
+            const previewAmount = document.getElementById('preview-amount');
+
+            // Form Inputs
+            const inputName = document.getElementById('recipientName');
+            const inputMessage = document.getElementById('giftMessage');
+            const inputSender = document.getElementById('senderName');
+            const radioAmounts = document.querySelectorAll('input[name="amount"]');
+            const customAmountRadio = document.getElementById('custom-amount-radio');
+            const customAmountWrapper = document.getElementById('custom-amount-wrapper');
+            const customAmountInput = document.getElementById('custom-amount-input');
+
+            // Update Text Function
+            const updateText = (element, value, fallback) => {
+                element.textContent = value.trim() ? value : fallback;
+            };
+
+            // Event Listeners for Text Inputs
+            inputName.addEventListener('input', (e) => updateText(previewName, e.target.value, '[Recipient Name]'));
+            inputSender.addEventListener('input', (e) => updateText(previewSender, e.target.value, '[Your Name]'));
+            inputMessage.addEventListener('input', (e) => updateText(previewMessage, e.target.value, ''));
+
+            // Amount Logic
+            const updateAmountDisplay = (val) => {
+                if(val && !isNaN(val)) {
+                    previewAmount.textContent = `EGP ${parseInt(val).toLocaleString()}`;
+                } else {
+                    previewAmount.textContent = `EGP 0`;
+                }
+            };
+
+            radioAmounts.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.value === 'custom') {
+                        // Show custom input
+                        customAmountWrapper.classList.remove('hidden');
+                        // Small timeout to allow display:block to apply before animating opacity
+                        setTimeout(() => {
+                            customAmountWrapper.classList.remove('opacity-0', '-translate-y-2');
+                            customAmountWrapper.classList.add('opacity-100', 'translate-y-0');
+                        }, 10);
+                        customAmountInput.focus();
+                        updateAmountDisplay(customAmountInput.value || 0);
+                    } else {
+                        // Hide custom input
+                        customAmountWrapper.classList.remove('opacity-100', 'translate-y-0');
+                        customAmountWrapper.classList.add('opacity-0', '-translate-y-2');
+                        setTimeout(() => {
+                            customAmountWrapper.classList.add('hidden');
+                        }, 300); // match duration
+                        
+                        updateAmountDisplay(e.target.value);
+                    }
+                });
+            });
+
+            customAmountInput.addEventListener('input', (e) => {
+                if(customAmountRadio.checked) {
+                    updateAmountDisplay(e.target.value);
+                }
+            });
+
+            // Prevent form submission on enter for custom amount field
+            customAmountInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+</body></html>

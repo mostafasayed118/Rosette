@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html class="light" dir="ltr" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Tracking - Rosette Atelier</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&amp;family=IBM+Plex+Sans+Arabic:wght@400;500;600&amp;family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed-variant": "#881642",
+                    "on-error": "#ffffff",
+                    "on-secondary-container": "#4d6c4c",
+                    "tertiary-container": "#777168",
+                    "inverse-on-surface": "#f7efe9",
+                    "surface-container-high": "#eee7e1",
+                    "on-error-container": "#93000a",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#33302c",
+                    "on-tertiary-fixed": "#1e1b15",
+                    "surface-container-low": "#faf2ec",
+                    "on-tertiary-fixed-variant": "#4b463e",
+                    "surface-bright": "#fff8f3",
+                    "primary-container": "#c2456d",
+                    "tertiary-fixed": "#e9e1d6",
+                    "surface-container-highest": "#e8e1db",
+                    "primary-fixed-dim": "#ffb1c3",
+                    "surface-dim": "#e0d9d3",
+                    "on-tertiary-container": "#fff7ec",
+                    "outline": "#897175",
+                    "primary-fixed": "#ffd9e0",
+                    "tertiary-fixed-dim": "#cdc5bb",
+                    "tertiary": "#5e5950",
+                    "outline-variant": "#ddbfc4",
+                    "on-background": "#1e1b17",
+                    "secondary-container": "#c9ecc4",
+                    "on-secondary-fixed": "#042109",
+                    "primary": "#a22c55",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#ffb1c3",
+                    "on-tertiary": "#ffffff",
+                    "background": "#fff8f3",
+                    "secondary-fixed": "#c9ecc4",
+                    "on-primary-container": "#fff7f7",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#304e31",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#476647",
+                    "surface-variant": "#e8e1db",
+                    "surface-container": "#f4ede6",
+                    "surface-tint": "#a83159",
+                    "surface": "#fff8f3",
+                    "on-primary-fixed": "#3f0019",
+                    "on-surface-variant": "#564146",
+                    "on-surface": "#1e1b17",
+                    "secondary-fixed-dim": "#add0aa"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "64px",
+                    "stack-lg": "32px",
+                    "stack-md": "16px",
+                    "gutter": "24px",
+                    "stack-xl": "64px",
+                    "stack-sm": "8px",
+                    "margin-mobile": "20px",
+                    "max-width": "1280px"
+            },
+            "fontFamily": {
+                    "body-md": [
+                            "Outfit"
+                    ],
+                    "arabic-body": [
+                            "IBM Plex Sans Arabic"
+                    ],
+                    "body-lg": [
+                            "Outfit"
+                    ],
+                    "headline-lg": [
+                            "Fraunces"
+                    ],
+                    "meta-mono": [
+                            "JetBrains Mono"
+                    ],
+                    "display-xl": [
+                            "Fraunces"
+                    ],
+                    "display-xl-mobile": [
+                            "Fraunces"
+                    ],
+                    "headline-sm": [
+                            "Fraunces"
+                    ]
+            },
+            "fontSize": {
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "arabic-body": [
+                            "17px",
+                            {
+                                    "lineHeight": "1.7",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "meta-mono": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.0",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-xl": [
+                            "64px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-xl-mobile": [
+                            "42px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-sm": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "500"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            80%, 100% { transform: scale(2); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface border-b border-outline-variant/30 dark:border-outline-variant/10 w-full top-0 z-50">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-stack-md max-w-max-width mx-auto">
+<div class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed-dim tracking-tight">
+                Rosette
+            </div>
+<nav class="hidden md:flex gap-gutter items-center">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Collections</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Bespoke</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Atelier</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim transition-colors duration-300" href="#">Gifts</a>
+</nav>
+<div class="flex items-center gap-stack-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md hidden md:block">EN/AR</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-body-md text-body-md">Bag</button>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full px-margin-mobile md:px-margin-desktop py-stack-xl max-w-max-width mx-auto">
+<!-- Header -->
+<div class="mb-stack-xl md:w-2/3">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-stack-sm md:text-display-xl">
+                Order Tracking
+            </h1>
+<div class="flex flex-col md:flex-row md:items-baseline gap-2 mt-4">
+<span class="font-meta-mono text-meta-mono text-tertiary">#29384</span>
+<span class="text-secondary font-body-md text-body-md">Estimated Delivery: Today, 2:00 PM - 4:00 PM</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter md:gap-margin-desktop">
+<!-- Timeline -->
+<div class="md:col-span-7 lg:col-span-6 relative">
+<div class="absolute left-[15px] top-4 bottom-4 w-[1px] bg-outline-variant"></div>
+<div class="flex flex-col gap-stack-lg">
+<!-- Stage 1: Completed -->
+<div class="flex items-start gap-stack-md relative z-10">
+<div class="w-8 h-8 rounded-full bg-surface border border-primary flex items-center justify-center shrink-0 mt-1">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Confirmed</span>
+<span class="font-meta-mono text-meta-mono text-tertiary mt-1">10:15 AM</span>
+<p class="mt-2 text-on-surface-variant font-body-md text-body-md">Your order has been received by our atelier.</p>
+</div>
+</div>
+<!-- Stage 2: Current (Pulsing) -->
+<div class="flex items-start gap-stack-md relative z-10">
+<div class="w-8 h-8 rounded-full bg-surface border border-primary flex items-center justify-center shrink-0 mt-1 relative">
+<div class="absolute inset-0 rounded-full border border-primary pulse-ring"></div>
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Hand-tied</span>
+<span class="font-meta-mono text-meta-mono text-tertiary mt-1">11:30 AM</span>
+<p class="mt-2 text-on-surface-variant font-body-md text-body-md">Our florists are carefully composing your arrangement.</p>
+</div>
+</div>
+<!-- Stage 3: Future -->
+<div class="flex items-start gap-stack-md relative z-10 opacity-60">
+<div class="w-8 h-8 rounded-full bg-surface border border-outline-variant flex items-center justify-center shrink-0 mt-1">
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Out for delivery</span>
+<span class="font-meta-mono text-meta-mono text-tertiary mt-1">--:--</span>
+</div>
+</div>
+<!-- Stage 4: Future -->
+<div class="flex items-start gap-stack-md relative z-10 opacity-60">
+<div class="w-8 h-8 rounded-full bg-surface border border-outline-variant flex items-center justify-center shrink-0 mt-1">
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">Delivered</span>
+<span class="font-meta-mono text-meta-mono text-tertiary mt-1">--:--</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Order Summary Card -->
+<div class="md:col-span-5 lg:col-span-4 lg:col-start-8 mt-stack-xl md:mt-0">
+<div class="bg-surface-container-lowest border border-outline-variant/30 rounded p-stack-md md:p-stack-lg shadow-[0_8px_32px_-4px_rgba(119,113,104,0.06)] sticky top-32">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md border-b border-outline-variant/30 pb-4">Order Summary</h3>
+<div class="flex gap-stack-md items-center mb-stack-lg">
+<div class="w-20 h-24 bg-surface-container shrink-0 overflow-hidden rounded relative">
+<img class="object-cover w-full h-full absolute inset-0" data-alt="A luxurious, minimalist photograph of a bespoke floral arrangement featuring creamy white ranunculus and blush pink peonies in a soft, bright, light-mode studio setting. The lighting is diffused and ethereal, highlighting the organic textures of the petals against a pristine warm cream background. High-end editorial aesthetic, Kinfolk style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVLF2Lt9fS4Msx2C_LoF8BCIHPzVBmPymwhjIfb-jox7piowD4vKjJ4CIzFNfZkJ767Y8QdZUefY8uEWE_lnocdOEf4Wi0UfwXTjMoDNm4LLGxDsV0dNXKTW2Cq_9LGBqNVo7j9W7X9S22yxeaUKH7yF6GY2JsLi_OCfhXKNSDxUv7mdHcI9ZcirDF2hYue7nJrC9aLVYrhpikdRtCoB7lGvBdY2DXxjeNyaECwgcaENvSY7oY5u3GKg"/>
+</div>
+<div>
+<p class="font-headline-sm text-headline-sm text-on-surface">The White Peony Collection</p>
+<p class="font-meta-mono text-meta-mono text-tertiary mt-1">Qty: 1</p>
+</div>
+</div>
+<div class="pt-stack-md border-t border-outline-variant/30 space-y-2">
+<div class="flex justify-between">
+<span class="text-on-surface-variant">Subtotal</span>
+<span class="font-meta-mono">EGP 2,450</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant">Delivery</span>
+<span class="font-meta-mono">EGP 150</span>
+</div>
+<div class="flex justify-between font-bold pt-2">
+<span class="text-on-surface">Total</span>
+<span class="font-meta-mono text-on-surface">EGP 2,600</span>
+</div>
+</div>
+<div class="mt-stack-xl text-center">
+<a class="inline-flex items-center gap-2 text-primary hover:text-on-primary-fixed-variant transition-colors duration-300 font-body-md text-body-md group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:-translate-y-0.5 transition-transform">chat_bubble</span>
+                            Need assistance? Chat with our atelier
+                        </a>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest mt-auto w-full">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-mobile md:px-margin-desktop py-stack-xl max-w-max-width mx-auto">
+<div class="col-span-1 flex flex-col gap-4">
+<span class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed-dim">Rosette</span>
+<p class="font-body-md text-body-md text-on-surface dark:text-on-surface-variant">© 2024 Rosette Atelier. Crafted in Cairo.</p>
+</div>
+<div class="col-span-1 md:col-span-3 flex flex-wrap gap-x-gutter gap-y-4 md:justify-end items-center">
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">City Selector</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Gift Services</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Shipping Policy</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Our Story</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Contact Us</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant font-body-md text-body-md hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant transition-opacity hover:opacity-80" href="#">Privacy</a>
+</div>
+</div>
+</footer>
+</body></html>

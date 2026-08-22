@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" dir="ltr" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Checkout | Rosette Atelier</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;family=IBM+Plex+Sans+Arabic:wght@400&amp;family=JetBrains+Mono:wght@400&amp;family=Outfit:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed-variant": "#881642",
+                      "on-error": "#ffffff",
+                      "on-secondary-container": "#4d6c4c",
+                      "tertiary-container": "#777168",
+                      "inverse-on-surface": "#f7efe9",
+                      "surface-container-high": "#eee7e1",
+                      "on-error-container": "#93000a",
+                      "error": "#ba1a1a",
+                      "inverse-surface": "#33302c",
+                      "on-tertiary-fixed": "#1e1b15",
+                      "surface-container-low": "#faf2ec",
+                      "on-tertiary-fixed-variant": "#4b463e",
+                      "surface-bright": "#fff8f3",
+                      "primary-container": "#c2456d",
+                      "tertiary-fixed": "#e9e1d6",
+                      "surface-container-highest": "#e8e1db",
+                      "primary-fixed-dim": "#ffb1c3",
+                      "surface-dim": "#e0d9d3",
+                      "on-tertiary-container": "#fff7ec",
+                      "outline": "#897175",
+                      "primary-fixed": "#ffd9e0",
+                      "tertiary-fixed-dim": "#cdc5bb",
+                      "tertiary": "#5e5950",
+                      "outline-variant": "#ddbfc4",
+                      "on-background": "#1e1b17",
+                      "secondary-container": "#c9ecc4",
+                      "on-secondary-fixed": "#042109",
+                      "primary": "#a22c55",
+                      "on-secondary": "#ffffff",
+                      "inverse-primary": "#ffb1c3",
+                      "on-tertiary": "#ffffff",
+                      "background": "#fff8f3",
+                      "secondary-fixed": "#c9ecc4",
+                      "on-primary-container": "#fff7f7",
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed-variant": "#304e31",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary": "#476647",
+                      "surface-variant": "#e8e1db",
+                      "surface-container": "#f4ede6",
+                      "surface-tint": "#a83159",
+                      "surface": "#fff8f3",
+                      "on-primary-fixed": "#3f0019",
+                      "on-surface-variant": "#564146",
+                      "on-surface": "#1e1b17",
+                      "secondary-fixed-dim": "#add0aa"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "stack-lg": "32px",
+                      "stack-md": "16px",
+                      "gutter": "24px",
+                      "stack-xl": "64px",
+                      "stack-sm": "8px",
+                      "margin-mobile": "20px",
+                      "max-width": "1280px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Outfit"
+                      ],
+                      "arabic-body": [
+                              "IBM Plex Sans Arabic"
+                      ],
+                      "body-lg": [
+                              "Outfit"
+                      ],
+                      "headline-lg": [
+                              "Fraunces"
+                      ],
+                      "meta-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "display-xl": [
+                              "Fraunces"
+                      ],
+                      "display-xl-mobile": [
+                              "Fraunces"
+                      ],
+                      "headline-sm": [
+                              "Fraunces"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "arabic-body": [
+                              "17px",
+                              {
+                                      "lineHeight": "1.7",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "meta-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-xl": [
+                              "64px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-xl-mobile": [
+                              "42px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "500"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: theme('colors.surface'); 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant'); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline'); 
+        }
+        
+        .ambient-shadow {
+            box-shadow: 0 10px 48px -12px rgba(94, 89, 80, 0.06);
+        }
+        
+        input[type="radio"]:checked + div {
+            border-color: theme('colors.primary');
+            background-color: theme('colors.surface-container-low');
+        }
+        input[type="radio"]:checked + div .radio-inner {
+            background-color: theme('colors.primary');
+            transform: scale(1);
+        }
+        
+        .btn-active:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col font-body-md text-body-md text-on-background bg-background">
+<!-- Top Navigation (Simplified for Checkout) -->
+<header class="bg-surface dark:bg-surface border-b border-outline-variant/30 dark:border-outline-variant/10 w-full px-margin-mobile md:px-margin-desktop py-stack-md flex justify-between items-center z-50 sticky top-0 transition-colors duration-300">
+<div class="flex items-center space-x-4">
+<a class="font-headline-lg text-headline-lg text-primary dark:text-primary-fixed-dim tracking-tight hidden md:block" href="#">Rosette</a>
+<a class="font-headline-lg-mobile text-headline-lg-mobile text-primary dark:text-primary-fixed-dim tracking-tight md:hidden" href="#">Rosette</a>
+</div>
+<div class="flex items-center space-x-gutter">
+<span class="text-on-surface-variant font-body-md text-body-md hidden md:inline-block cursor-pointer hover:text-primary transition-colors duration-300">EN/AR</span>
+<button aria-label="Bag" class="text-on-surface-variant hover:text-primary transition-colors duration-300 flex items-center gap-2 group">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">shopping_bag</span>
+<span class="font-meta-mono text-meta-mono hidden sm:inline">2</span>
+</button>
+</div>
+</header>
+<main class="flex-grow w-full max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-stack-xl">
+<!-- Progress Indicator -->
+<div class="mb-stack-xl flex items-center justify-center space-x-4 md:space-x-8 max-w-2xl mx-auto">
+<div class="flex flex-col items-center group cursor-pointer transition-opacity">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-meta-mono text-meta-mono mb-2">1</div>
+<span class="font-body-md text-body-md text-primary font-medium">Bag</span>
+</div>
+<div class="h-[1px] w-12 md:w-24 bg-outline-variant/50 self-start mt-4"></div>
+<div class="flex flex-col items-center opacity-100 cursor-pointer">
+<div class="w-8 h-8 rounded-full border border-primary text-primary flex items-center justify-center font-meta-mono text-meta-mono mb-2">2</div>
+<span class="font-body-md text-body-md text-on-surface">Delivery</span>
+</div>
+<div class="h-[1px] w-12 md:w-24 bg-outline-variant/50 self-start mt-4"></div>
+<div class="flex flex-col items-center opacity-50 cursor-not-allowed">
+<div class="w-8 h-8 rounded-full border border-outline-variant text-outline-variant flex items-center justify-center font-meta-mono text-meta-mono mb-2">3</div>
+<span class="font-body-md text-body-md text-on-surface-variant">Payment</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Left Column: Delivery Form -->
+<div class="lg:col-span-7 xl:col-span-8 flex flex-col space-y-stack-xl order-2 lg:order-1 mt-stack-lg lg:mt-0">
+<section class="bg-surface-container-lowest p-margin-mobile md:p-stack-lg rounded-xl border border-outline-variant/30 ambient-shadow">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Delivery Details</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-stack-lg max-w-md">Please provide the delivery address and preferred date for your botanical arrangement.</p>
+<form class="space-y-stack-md">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+<div class="flex flex-col space-y-2">
+<label class="font-body-md text-body-md text-on-surface-variant" for="firstName">First Name</label>
+<input class="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-md font-body-md text-body-md text-on-surface transition-colors duration-200" id="firstName" placeholder="e.g. Nour" type="text" value="Nour"/>
+</div>
+<div class="flex flex-col space-y-2">
+<label class="font-body-md text-body-md text-on-surface-variant" for="lastName">Last Name</label>
+<input class="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-md font-body-md text-body-md text-on-surface transition-colors duration-200" id="lastName" placeholder="e.g. Hassan" type="text" value="Hassan"/>
+</div>
+</div>
+<div class="flex flex-col space-y-2">
+<label class="font-body-md text-body-md text-on-surface-variant" for="address">Street Address</label>
+<input class="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-md font-body-md text-body-md text-on-surface transition-colors duration-200" id="address" placeholder="Street name, building number" type="text"/>
+<p class="text-error font-body-md text-[14px] mt-1 hidden" id="address-error">Address is required for delivery.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+<div class="flex flex-col space-y-2">
+<label class="font-body-md text-body-md text-on-surface-variant" for="city">City / District</label>
+<select class="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-md font-body-md text-body-md text-on-surface transition-colors duration-200 appearance-none cursor-pointer" id="city">
+<option disabled="" selected="" value="">Select a city</option>
+<option value="maadi">Maadi</option>
+<option value="zayed">Sheikh Zayed</option>
+<option value="tagamoa">New Cairo (Tagamoa)</option>
+<option value="zamalek">Zamalek</option>
+</select>
+</div>
+<div class="flex flex-col space-y-2">
+<label class="font-body-md text-body-md text-on-surface-variant" for="phone">Phone Number</label>
+<input class="w-full bg-surface-container-low border-b border-outline-variant focus:border-primary focus:ring-0 px-4 py-3 rounded-t-md font-body-md text-body-md text-on-surface transition-colors duration-200" id="phone" placeholder="+20 1XX XXX XXXX" type="tel" value="+20"/>
+</div>
+</div>
+</form>
+</section>
+<section class="bg-surface-container-lowest p-margin-mobile md:p-stack-lg rounded-xl border border-outline-variant/30 ambient-shadow">
+<div class="flex items-center justify-between mb-stack-md">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Delivery Date</h2>
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 0;">calendar_today</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+<button class="flex flex-col items-center justify-center p-4 border border-outline-variant/50 rounded-lg hover:border-primary hover:bg-surface-container-low transition-all duration-200">
+<span class="font-body-md text-body-md text-on-surface-variant mb-1">Today</span>
+<span class="font-meta-mono text-meta-mono text-on-surface">Oct 24</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 border-2 border-primary bg-surface-container-low rounded-lg transition-all duration-200 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-8 h-8 bg-primary transform translate-x-4 -translate-y-4 rotate-45"></div>
+<span class="material-symbols-outlined absolute top-1 right-1 text-on-primary text-[14px]" style="font-variation-settings: 'FILL' 1;">check</span>
+<span class="font-body-md text-body-md text-primary mb-1">Tomorrow</span>
+<span class="font-meta-mono text-meta-mono text-on-surface">Oct 25</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 border border-outline-variant/50 rounded-lg hover:border-primary hover:bg-surface-container-low transition-all duration-200">
+<span class="font-body-md text-body-md text-on-surface-variant mb-1">Sat</span>
+<span class="font-meta-mono text-meta-mono text-on-surface">Oct 26</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 border border-outline-variant/50 rounded-lg hover:border-primary hover:bg-surface-container-low transition-all duration-200 border-dashed">
+<span class="material-symbols-outlined text-on-surface-variant mb-1" style="font-variation-settings: 'FILL' 0;">calendar_month</span>
+<span class="font-meta-mono text-meta-mono text-on-surface-variant">Custom</span>
+</button>
+</div>
+</section>
+<section class="bg-surface-container-lowest p-margin-mobile md:p-stack-lg rounded-xl border border-outline-variant/30 ambient-shadow">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md">Payment Method</h2>
+<div class="space-y-4">
+<label class="relative flex cursor-pointer rounded-lg border bg-surface-container-lowest p-4 hover:bg-surface-container-low transition-colors duration-200">
+<input checked="" class="peer sr-only" name="payment" type="radio" value="card"/>
+<div class="flex w-full items-center justify-between border-2 border-transparent rounded-lg absolute inset-0 pointer-events-none transition-colors duration-200">
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant ml-4 flex items-center justify-center">
+<div class="radio-inner w-2.5 h-2.5 rounded-full bg-transparent transform scale-0 transition-transform duration-200"></div>
+</div>
+</div>
+<div class="ml-10 flex items-center gap-4 w-full justify-between z-10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">credit_card</span>
+<span class="font-body-md text-body-md text-on-surface font-medium">Card via Paymob</span>
+</div>
+<div class="flex gap-2">
+<!-- Placeholder icons for cards -->
+<div class="w-8 h-5 bg-surface-dim rounded flex items-center justify-center text-[10px] text-on-surface-variant font-bold">VISA</div>
+<div class="w-8 h-5 bg-surface-dim rounded flex items-center justify-center text-[10px] text-on-surface-variant font-bold">MC</div>
+</div>
+</div>
+</label>
+<label class="relative flex cursor-pointer rounded-lg border bg-surface-container-lowest p-4 hover:bg-surface-container-low transition-colors duration-200">
+<input class="peer sr-only" name="payment" type="radio" value="cash"/>
+<div class="flex w-full items-center justify-between border-2 border-transparent rounded-lg absolute inset-0 pointer-events-none transition-colors duration-200">
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant ml-4 flex items-center justify-center">
+<div class="radio-inner w-2.5 h-2.5 rounded-full bg-transparent transform scale-0 transition-transform duration-200"></div>
+</div>
+</div>
+<div class="ml-10 flex items-center gap-4 w-full justify-between z-10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">payments</span>
+<span class="font-body-md text-body-md text-on-surface font-medium">Cash on Delivery</span>
+</div>
+</div>
+</label>
+</div>
+</section>
+<div class="flex justify-end pt-4">
+<button class="btn-active bg-primary hover:bg-surface-tint text-on-primary font-body-md text-body-md px-8 py-4 rounded-lg transition-all duration-300 w-full sm:w-auto">
+                        Place Order
+                    </button>
+</div>
+</div>
+<!-- Right Column: Order Summary & Bag -->
+<div class="lg:col-span-5 xl:col-span-4 order-1 lg:order-2">
+<div class="sticky top-[100px] bg-surface-container-low p-margin-mobile md:p-stack-lg rounded-xl border border-outline-variant/30 ambient-shadow">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-stack-md border-b border-outline-variant/20 pb-4">Bag Summary</h3>
+<!-- Line Items -->
+<div class="space-y-6 mb-stack-lg border-b border-outline-variant/20 pb-6">
+<!-- Item 1 -->
+<div class="flex gap-4 items-start group">
+<div class="w-20 h-20 shrink-0 rounded-md overflow-hidden bg-surface-dim relative border border-outline-variant/30">
+<img alt="Ranunculus Bouquet" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A close-up, high-end editorial shot of a lush, asymmetrical floral arrangement featuring deep burgundy ranunculus and pale pink peonies, resting on a textured linen surface in a bright, minimalist gallery setting. The lighting is soft and warm." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8Qwmoi74zHie5xDKVeIX-wlVVpMGnT_z9HOVl3HdyXCjrOss0ak9J-00VVid2cH5P8DSilPKTTjWKVKIdFAV1jfWJNdbJOeMxZV7Dk4Qv1BvtknKFmeSj160sEBffWOMmubBGAtmpazTtohGNxWpBwcqBywcdtMFMO9tfJ-5XGVprR43UOM3U6gy4npN939HiQwpUSvAQTvzND8B3mj2i6QWsWzT_CdB1pr2bjDPnXmNxScQDFEFKgA"/>
+</div>
+<div class="flex-grow flex flex-col justify-between h-20 py-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-lg text-[18px] text-on-surface leading-tight">The Cairo Peony</h4>
+<p class="font-body-md text-[14px] text-on-surface-variant mt-1">Size: Grand</p>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors text-[12px] underline decoration-outline-variant/50 underline-offset-2">Remove</button>
+</div>
+<div class="flex justify-between items-end mt-auto">
+<div class="flex items-center border border-outline-variant rounded-md overflow-hidden bg-surface-container-lowest">
+<button aria-label="Decrease quantity" class="px-2 py-0.5 hover:bg-surface-variant text-on-surface-variant transition-colors">-</button>
+<span class="font-meta-mono text-[12px] px-2 text-on-surface border-x border-outline-variant/50">1</span>
+<button aria-label="Increase quantity" class="px-2 py-0.5 hover:bg-surface-variant text-on-surface-variant transition-colors">+</button>
+</div>
+<span class="font-meta-mono text-meta-mono text-on-surface">EGP 1,250</span>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex gap-4 items-start group">
+<div class="w-20 h-20 shrink-0 rounded-md overflow-hidden bg-surface-dim relative border border-outline-variant/30">
+<img alt="Ceramic Vase" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A refined, minimalist ceramic vase holding delicate dried eucalyptus branches and a single white calla lily, set against a warm cream canvas backdrop. High-key lighting emphasizing textural details and artisanal craftsmanship." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5P2XEFwk1G6xeLixuD97xXBS70xuI2ZMMoHuPYm4l4kGrNBURBvOWHG81ifAns1brzsDzaChQbIESsR3YpbymEUxosiK0LCoXZYUfqmWcT53HIlmSX605YfzDEsXs80Wi7dPp9CUOdGPpRKcl_l1Vlm921iyf7Aw973JZRYY6x5wCnml-3nWVo5Xc8j0ar78wBcISl07UWjjXjQwwIgiUHr3t5nawXZvSO5PV5HYV-5q2HpXSLZYWCw"/>
+</div>
+<div class="flex-grow flex flex-col justify-between h-20 py-1">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-lg text-[18px] text-on-surface leading-tight">Artisan Vase</h4>
+<p class="font-body-md text-[14px] text-on-surface-variant mt-1">Ceramic, White</p>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors text-[12px] underline decoration-outline-variant/50 underline-offset-2">Remove</button>
+</div>
+<div class="flex justify-between items-end mt-auto">
+<div class="flex items-center border border-outline-variant rounded-md overflow-hidden bg-surface-container-lowest">
+<button aria-label="Decrease quantity" class="px-2 py-0.5 hover:bg-surface-variant text-on-surface-variant transition-colors">-</button>
+<span class="font-meta-mono text-[12px] px-2 text-on-surface border-x border-outline-variant/50">1</span>
+<button aria-label="Increase quantity" class="px-2 py-0.5 hover:bg-surface-variant text-on-surface-variant transition-colors">+</button>
+</div>
+<span class="font-meta-mono text-meta-mono text-on-surface">EGP 450</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Gift Note Preview -->
+<div class="mb-stack-lg bg-surface-bright border border-outline-variant/40 rounded-lg p-4 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-primary-fixed/20 rounded-bl-full -mr-8 -mt-8"></div>
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-[18px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-body-md text-[14px] font-medium text-on-surface">Gift Note Included</span>
+</div>
+<p class="font-headline-lg text-[16px] italic text-on-surface-variant pl-4 border-l-2 border-outline-variant/50">
+                            "Dearest Nour, wishing you the most beautiful birthday filled with joy. - Love, Amina"
+                        </p>
+</div>
+<!-- Totals -->
+<div class="space-y-3 font-body-md text-body-md text-on-surface-variant">
+<div class="flex justify-between">
+<span>Subtotal</span>
+<span class="font-meta-mono text-meta-mono text-on-surface">EGP 1,700</span>
+</div>
+<div class="flex justify-between">
+<span>Delivery to Maadi</span>
+<span class="font-meta-mono text-meta-mono text-on-surface">EGP 85</span>
+</div>
+<div class="pt-4 mt-2 border-t border-outline-variant/30 flex justify-between items-end">
+<span class="font-body-md text-[18px] text-on-surface font-medium">Total</span>
+<span class="font-meta-mono text-[20px] text-primary font-bold">EGP 1,785</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest mt-auto border-t border-outline-variant/20">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-mobile md:px-margin-desktop py-stack-xl max-w-max-width mx-auto">
+<div class="md:col-span-1">
+<span class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed-dim block mb-4">Rosette</span>
+<p class="font-body-md text-body-md text-tertiary dark:text-tertiary-fixed-dim text-sm max-w-xs">
+                    © 2024 Rosette Atelier. Crafted in Cairo.
+                </p>
+</div>
+<div class="md:col-span-3 grid grid-cols-2 sm:grid-cols-3 gap-8">
+<ul class="space-y-3 font-body-md text-body-md">
+<li><a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant/0 hover:decoration-outline-variant transition-all duration-300" href="#">City Selector</a></li>
+<li><a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant/0 hover:decoration-outline-variant transition-all duration-300" href="#">Gift Services</a></li>
+</ul>
+<ul class="space-y-3 font-body-md text-body-md">
+<li><a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant/0 hover:decoration-outline-variant transition-all duration-300" href="#">Shipping Policy</a></li>
+<li><a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant/0 hover:decoration-outline-variant transition-all duration-300" href="#">Our Story</a></li>
+</ul>
+<ul class="space-y-3 font-body-md text-body-md">
+<li><a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant/0 hover:decoration-outline-variant transition-all duration-300" href="#">Contact Us</a></li>
+<li><a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim underline decoration-outline-variant/0 hover:decoration-outline-variant transition-all duration-300" href="#">Privacy</a></li>
+</ul>
+</div>
+</div>
+</footer>
+<script>
+        // Simple inline validation script example
+        const addressInput = document.getElementById('address');
+        const addressError = document.getElementById('address-error');
+        
+        if(addressInput) {
+            addressInput.addEventListener('blur', function() {
+                if(this.value.trim() === '') {
+                    this.classList.add('border-error');
+                    this.classList.remove('border-outline-variant', 'focus:border-primary');
+                    addressError.classList.remove('hidden');
+                } else {
+                    this.classList.remove('border-error');
+                    this.classList.add('border-outline-variant', 'focus:border-primary');
+                    addressError.classList.add('hidden');
+                }
+            });
+            
+            addressInput.addEventListener('input', function() {
+                this.classList.remove('border-error');
+                this.classList.add('border-outline-variant', 'focus:border-primary');
+                addressError.classList.add('hidden');
+            });
+        }
+    </script>
+</body></html>
