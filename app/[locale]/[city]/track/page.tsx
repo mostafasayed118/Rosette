@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { SiteFooter } from '@/components/layout/SiteFooter';
+import { SiteHeader } from '@/components/layout/SiteHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusMessage } from '@/components/ui/status-message';
@@ -50,7 +52,9 @@ export default async function TrackPage({
   const localeForDate = locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-EG';
 
   return (
-    <main className="mx-auto max-w-[1280px] px-5 md:px-[64px] py-[64px]">
+    <div className="flex min-h-screen flex-col bg-background">
+      <SiteHeader />
+      <main className="mx-auto max-w-[1280px] flex-grow px-5 md:px-[64px] py-[64px]">
       {/* Header — Stitch: title + mono order number + sage delivery — max-w-[1280px] mx-auto px-5 md:px-[64px] */}
       <div className="mb-8 md:mb-[64px] md:w-2/3">
         <p className="font-meta-mono text-meta-mono uppercase tracking-[.16em] text-sage">{t('trackOrder')}</p>
@@ -215,6 +219,8 @@ export default async function TrackPage({
           </Link>
         </p>
       ) : null}
-    </main>
+      </main>
+      <SiteFooter locale={localeSegment} city={city} />
+    </div>
   );
 }
