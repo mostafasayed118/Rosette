@@ -4,27 +4,49 @@ import { SiteHeader } from '@/components/layout/SiteHeader';
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ locale: 'en', city: 'greater-cairo' }),
-  usePathname: () => '/en/greater-cairo',
+  usePathname: () => '/en/greater-cairo/shop',
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 import { CartProvider } from '@/features/cart/CartProvider';
 import { WishlistProvider } from '@/features/wishlist/WishlistProvider';
 import { renderWithProviders } from '../test-utils';
 
+function renderHeader() {
+  return renderWithProviders(<CartProvider><WishlistProvider><SiteHeader /></WishlistProvider></CartProvider>);
+}
+
 describe('SiteHeader', () => {
-  it('renders shop, track, and bag links', () => {
-    renderWithProviders(<CartProvider><WishlistProvider><SiteHeader /></WishlistProvider></CartProvider>);
-    expect(screen.getAllByRole('link', { name: /shop the collection/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: /track order/i }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: /bag/i }).length).toBeGreaterThan(0);
+  it('renders the Stitch center nav with mapped routes', () => {
+    renderHeader();
+    expect(screen.getByRole('link', { name: 'Collections' })).toHaveAttribute('href', '/en/greater-cairo/shop');
+    expect(screen.getByRole('link', { name: 'Bespoke' })).toHaveAttribute('href', '/en/greater-cairo/shop?category=vase-arrangement');
+    expect(screen.getByRole('link', { name: 'Atelier' })).toHaveAttribute('href', '/en/greater-cairo/blog');
+    expect(screen.getByRole('link', { name: 'Gifts' })).toHaveAttribute('href', '/en/greater-cairo/gift-cards');
   });
 
-  it('opens the mobile menu with navigation and controls', async () => {
-    renderWithProviders(<CartProvider><WishlistProvider><SiteHeader /></WishlistProvider></CartProvider>);
+  it('keeps the utility cluster: bag, wishlist, language, account, theme', () => {
+    renderHeader();
+    expect(screen.getAllByRole('link', { name: /bag/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('link', { name: /wishlist|saved/i }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Toggle theme' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
+  });
+
+  it('marks the active section with the rose underline', () => {
+    renderHeader();
+    const collections = screen.getByRole('link', { name: 'Collections' });
+    expect(collections.className).toContain('border-primary');
+    const gifts = screen.getByRole('link', { name: 'Gifts' });
+    expect(gifts.className).not.toContain('border-primary');
+  });
+
+  it('opens the mobile menu with the Stitch nav items', async () => {
+    renderHeader();
     fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
     const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByRole('link', { name: /shop the collection/i })).toBeInTheDocument();
+    expect(within(dialog).getByRole('link', { name: 'Collections' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('link', { name: 'Gifts' })).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'Toggle theme' })).toBeInTheDocument();
   });
 });
