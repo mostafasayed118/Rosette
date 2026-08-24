@@ -1,4 +1,4 @@
-# Stitch Design Alignment Implementation Plan
+﻿# Stitch Design Alignment Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -76,9 +76,9 @@ Expected: a count greater than 0 (the DB currently holds 26 variant rows). If 0,
 
 - [ ] **Step 4: Verify in the running app**
 
-With the dev server running on port 3210, fetch `http://localhost:3210/en/cairo/shop/rose-hour` and confirm the HTML contains a size-selector legend ("Choose size") — the server-rendered product page includes it when variants exist.
+With the dev server running on port 3210, fetch `http://localhost:3210/en/cairo/shop/rose-hour` and confirm the HTML contains a size-selector legend ("Choose a size") — the server-rendered product page includes it when variants exist.
 
-Run: `Invoke-WebRequest -Uri "http://localhost:3210/en/cairo/shop/rose-hour" -UseBasicParsing | Select-Object -ExpandProperty Content | Select-String -Pattern "Choose size" -Quiet`
+Run: `Invoke-WebRequest -Uri "http://localhost:3210/en/cairo/shop/rose-hour" -UseBasicParsing | Select-Object -ExpandProperty Content | Select-String -Pattern "Choose a size" -Quiet`
 Expected: `True`
 
 - [ ] **Step 5: Commit**
@@ -872,7 +872,7 @@ it('shows the Stitch header nav and full footer on the storefront', async () => 
 
 it('renders the size selector once variants are readable', async () => {
   await page.goto(`${getBaseUrl()}/en/cairo/shop/rose-hour`, { waitUntil: 'domcontentloaded' });
-  await expect(page.getByText(/choose size/i)).toBeVisible();
+  await expect(page.getByText(/choose a size/i)).toBeVisible();
 });
 
 it('renders the tracking page inside site chrome', async () => {
