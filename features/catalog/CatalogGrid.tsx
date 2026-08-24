@@ -1,26 +1,28 @@
 'use client';
 
+import Link from 'next/link';
 import { StatusMessage } from '@/components/ui/status-message';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
 import { ProductCard } from './ProductCard';
 import type { Product } from './types';
-import Link from 'next/link';
+
+const ASPECTS = ['aspect-[4/5]', 'aspect-square', 'aspect-[4/5]'] as const;
 
 export function CatalogGrid({ products }: { products: Product[] }) {
   const { t } = useI18n();
   const { href } = useStorePath();
   if (products.length === 0) return <StatusMessage title={t('emptyTitle')}>{t('emptyHint')} <Link className="text-primary underline underline-offset-4" href={href('/shop')}>{t('resetCollection')}</Link>.</StatusMessage>;
-  const col1 = products.filter((_, index) => index % 2 === 0);
-  const col2 = products.filter((_, index) => index % 2 === 1);
   return (
-    <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-12 items-start">
-      <div className="masonry-col-1 flex flex-col gap-12">
-        {col1.map((product) => <ProductCard key={product.slug} product={product} />)}
-      </div>
-      <div className="masonry-col-2 flex flex-col gap-12 md:pt-12">
-        {col2.map((product) => <ProductCard key={product.slug} product={product} />)}
-      </div>
+    <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-2 md:gap-12 lg:grid-cols-3">
+      {products.map((product, index) => (
+        <ProductCard
+          key={product.slug}
+          product={product}
+          aspectClass={ASPECTS[index % 3]}
+          className={index % 3 === 1 ? 'lg:mt-16' : ''}
+        />
+      ))}
     </div>
   );
 }

@@ -7,7 +7,6 @@ import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
 import { pickLocalized } from '@/features/i18n/pick';
 import { formatMoney } from '@/features/money';
-import { categoryMessageKeys } from './catalog-labels';
 import type { Product } from './types';
 
 type ProductCardProps = {
@@ -15,17 +14,17 @@ type ProductCardProps = {
   aspectClass?: string;
   statusPill?: { label: string; variant: 'sage' | 'neutral' } | null;
   imageClassName?: string;
+  className?: string;
 };
 
-export function ProductCard({ product, aspectClass = 'aspect-[3/4]', statusPill, imageClassName }: ProductCardProps) {
+export function ProductCard({ product, aspectClass = 'aspect-[3/4]', statusPill, imageClassName, className = '' }: ProductCardProps) {
   const { locale, t } = useI18n();
   const { href } = useStorePath();
   const name = pickLocalized(locale, { en: product.name, ar: product.nameAr, fr: product.nameFr });
   const description = pickLocalized(locale, { en: product.description, ar: product.descriptionAr, fr: product.descriptionFr });
-  const delivery = product.delivery.startsWith('Same-day') ? t('sameDay') : t('nextDay');
   const badgeLabel = product.delivery.startsWith('Same-day') ? 'Same-Day' : 'Next-Day';
   return (
-    <article className="product-card stagger-item group cursor-pointer">
+    <article className={`product-card stagger-item group cursor-pointer ${className}`}>
       <div className="relative overflow-hidden rounded-[1rem] border border-outline-variant/30 bg-surface-container ambient-glow">
         <Link href={href(`/shop/${product.slug}`)} className={`block overflow-hidden ${aspectClass}`}>
           <ProductVisual
@@ -51,11 +50,9 @@ export function ProductCard({ product, aspectClass = 'aspect-[3/4]', statusPill,
         ) : null}
       </div>
       <Link href={href(`/shop/${product.slug}`)} className="mt-4 flex items-start justify-between gap-4">
-        <span>
-          <span className="block text-xs font-bold uppercase tracking-[0.14em] text-sage">{t(categoryMessageKeys[product.category] ?? 'category')}</span>
-          <span className="mt-1.5 block font-display text-[22px] leading-tight text-on-surface transition-colors group-hover:text-primary">{name}</span>
-          <span className="mt-1.5 block max-w-[24ch] text-sm leading-relaxed text-on-surface-variant">{description}</span>
-          <span className="mt-1.5 block text-xs text-muted-foreground">{delivery}</span>
+        <span className="min-w-0">
+          <span className="block font-display text-[22px] leading-tight text-on-surface transition-colors group-hover:text-primary">{name}</span>
+          <span className="mt-1 block truncate text-sm text-on-surface-variant">{description}</span>
         </span>
         <span className="price shrink-0 text-sm font-semibold text-on-surface">{t('from')} {formatMoney(product.price, locale)}</span>
       </Link>
