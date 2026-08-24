@@ -13,10 +13,9 @@ The Rosette storefront already runs the Stitch design tokens (`app/globals.css` 
 1. Global header and footer match the Stitch screens' structure and hierarchy.
 2. Every storefront page renders inside full site chrome (header + footer).
 3. Collection page uses the 3-column staggered editorial grid with Stitch card faces.
-4. Product size variants render as Stitch size pills on the product page.
-5. Destination gate pre-selects Egypt.
-6. Footer links all resolve to real pages.
-7. No functional regressions: cart, checkout, wishlist, auth, i18n (EN/AR/FR), RTL mirroring all keep working.
+4. Product size variants render as Stitch size pills on the product page (unblocked via an RLS migration granting public reads on `product_variants` and `inventory`).
+5. Footer links all resolve to real pages.
+6. No functional regressions: cart, checkout, wishlist, auth, i18n (EN/AR/FR), RTL mirroring all keep working.
 
 ## Non-goals
 
@@ -26,21 +25,26 @@ The Rosette storefront already runs the Stitch design tokens (`app/globals.css` 
 - Dark mode stays as-is (tokens already define it; Stitch screens are light-only).
 - Admin surfaces are out of scope.
 
-## Audit findings (verified 2026-08-24)
+## Audit findings (verified 2026-08-24, corrected during planning)
 
 | # | Area | Finding | Severity |
 |---|------|---------|----------|
 | 1 | Header | Utility nav (Shop the collection / Track order / Sign in / Delivering to / Bag / ♡ / العربية / theme) instead of Stitch brand-center-nav layout | High |
 | 2 | Footer | Minimal one-row footer instead of Stitch full footer with link columns and copyright | High |
 | 3 | Track page | Renders without SiteHeader/SiteFooter | High |
-| 4 | Destination gate | Country select renders empty; Stitch shows "Egypt" pre-selected | Medium |
-| 5 | Collection | 2-column grid; target is 3-column staggered; card face shows description + delivery line instead of name + subtitle + price | High |
-| 6 | Collection data | Most product images are dead `googleusercontent.com/aida-public` URLs (gray placeholders) | High (data) |
-| 7 | Product detail | Variant size pills exist in `ProductDetail.tsx` but seeded products lack variants, so the selector never renders | Medium (data) |
-| 8 | Product detail | Trust-row icons render faint (low visual weight vs. Stitch) | Low |
-| 9 | Checkout | Gift-note preview card missing from Bag Summary | Low |
-| 10 | Homepage | Structure matches; hero imagery is content-level | None (layout) |
-| 11 | Account dashboard, Email preferences, Wishlist, Gift card, Fulfillment timeline | Match Stitch | None |
+| 4 | Collection | 2-column grid; target is 3-column staggered; card face shows description + delivery line instead of name + subtitle + price | High |
+| 5 | Product detail | Size pills never render: RLS on `product_variants`/`inventory` denies the anon key (verified: anon sees 0 rows, service role sees 26 variants), so the API maps `variants: []` | High (DB) |
+| 6 | Product detail | Trust-row icons render faint (low visual weight vs. Stitch) | Low |
+| 7 | Homepage | Structure matches; hero imagery is content-level | None (layout) |
+| 8 | Account dashboard, Email preferences, Wishlist, Gift card, Fulfillment timeline | Match Stitch | None |
+
+### Planning corrections (2026-08-24)
+
+Three initial findings were false positives, disproven by deeper verification:
+
+- **Destination gate "empty country select"** — caused by a dev-server hydration block (`allowedDevOrigins` blocked `127.0.0.1` chunks during the first capture). Re-capture via `localhost` shows "Egypt" correctly pre-selected. No code change needed.
+- **"Dead product image URLs"** — all 16 storage image URLs return HTTP 200. Gray cards in the audit capture were a lazy-load screenshot race (below-fold images not loaded when the full-page shot was taken). No data change needed.
+- **"Products lack variant data" / "gift-note preview missing"** — the DB has 26 variant rows and `CheckoutForm.tsx` already renders the gift-note preview (italic serif quote). The real blocker for size pills is the RLS denial in finding 5.
 
 ## Design
 
@@ -71,9 +75,9 @@ Three minimal on-brand pages (editorial headline + prose, SiteHeader/SiteFooter 
 
 Wrap existing content with `SiteHeader` + `SiteFooter` (same pattern as cart/checkout pages).
 
-### 5. Destination gate fix — `features/destination/DestinationGate.tsx`
+### 5. Product variant visibility — new RLS migration `022_variant_inventory_public_reads.sql`
 
-Country select defaults to "Egypt" (localized label) instead of rendering empty; city select behavior unchanged.
+`001_commerce.sql` never created SELECT policies for `product_variants` or `inventory`, and the live project has RLS enabled on them (dashboard toggle), so the anon key reads 0 rows and the storefront maps `variants: []`. The migration idempotently enables RLS on both tables and adds permissive public SELECT policies. Storefront stock exposure is unchanged in kind — the UI already displays inventory-derived availability.
 
 ### 6. Collection grid — `features/catalog/CatalogGrid.tsx` + `ProductCard.tsx`
 
@@ -81,30 +85,18 @@ Country select defaults to "Egypt" (localized label) instead of rendering empty;
 - Card face per Stitch: image (with same-day/next-day sage pill overlay, kept), name (font-display) + subtitle (flower notes) left, price in mono right-aligned. Remove description paragraph and delivery sentence from the card face (they remain on the product page).
 - Keep pagination, filters, and empty state as-is.
 
-### 7. Product variant data — seed/migration
-
-Add Petite/Classic/Grand variants (with `price_delta`) to seeded products so `ProductDetail.tsx` renders the Stitch size-pill selector. Verify one product keeps no variants only if intentionally single-size.
-
-### 8. Dead image URLs — seed/migration
-
-Replace dead `googleusercontent.com/aida-public` product image URLs with working Supabase storage URLs (the bucket already hosts `rose-hour.jpg`, `quiet-orchid.jpg`, etc.). Homepage FEATURED/FEELINGS constants get the same treatment where they reference dead URLs.
-
-### 9. Checkout gift-note preview — `features/cart/CartSummary.tsx` (or checkout summary component)
-
-When any bag line has a gift message, render the Stitch "Gift Note Included" card (heart icon, italic serif quote of the message) above the totals in Bag Summary.
-
-### 10. Trust-row icon contrast — `features/product/ProductDetail.tsx`
+### 7. Trust-row icon contrast — `features/product/ProductDetail.tsx`
 
 Bump trust icons from `h-7 w-7 text-secondary` to a weight/size that reads at Stitch contrast (verify against screen; likely `h-8 w-8` + `text-secondary` darkened via `text-on-surface-variant` pairing or explicit sage).
 
 ## Testing
 
-- **Unit (vitest):** header nav mapping (active states, hrefs), footer link table, destination-gate default, catalog grid class contract, gift-note preview conditional.
-- **E2E (existing Playwright specs):** hero → shop → product → add to bag → checkout flow must stay green; add assertions for header nav links and footer links presence.
-- **Visual verification:** re-run the screenshot capture for all routes and compare against the 13 Stitch screens; diff before/after.
+- **Unit (vitest):** header nav mapping (active states, hrefs), footer link table, catalog grid class contract, product card face contract.
+- **E2E (existing Playwright specs):** hero → shop → product → add to bag → checkout flow must stay green; add assertions for header nav links, footer links, track-page chrome, and size-pill visibility after the RLS migration.
+- **Visual verification:** re-run the screenshot capture for all routes (scrolling before capture so lazy images resolve) and compare against the 13 Stitch screens; diff before/after.
 
 ## Risks
 
 - i18n: all new copy must go through the dictionary (EN/AR/FR) — no hardcoded strings; RTL mirroring must be checked for the new header/footer.
-- The Bespoke query-string filter must work with the existing shop filter state (verify `category=vase-arrangement` matches the actual category key).
-- Seeding variants/images touches data used by tests (`purchase-flow.test.tsx` expects `rose-hour` Classic variant) — keep `rose-hour`'s variant IDs stable.
+- The Bespoke query-string filter must work with the existing shop filter state (`?category=vase-arrangement` — verified supported by `parseCatalogQuery`).
+- The RLS migration must remain read-only in scope: SELECT policies only, no writes exposed to anon; `service_role` (admin client, crons, security-definer functions) bypasses RLS and is unaffected.
