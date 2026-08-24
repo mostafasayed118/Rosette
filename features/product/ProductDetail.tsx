@@ -113,9 +113,9 @@ export function ProductDetail({ product }: { product: Product }) {
         </form>
 
         <div className="grid grid-cols-3 gap-6 border-t border-outline-variant/20 pt-6">
-          <span className="flex flex-col items-center gap-2 text-center"><Truck className="h-7 w-7 text-secondary" /><span className="text-xs leading-tight text-on-surface-variant">Same-day delivery before 3pm</span></span>
-          <span className="flex flex-col items-center gap-2 text-center"><Flower2 className="h-7 w-7 text-secondary" /><span className="text-xs leading-tight text-on-surface-variant">Hand-tied fresh daily</span></span>
-          <span className="flex flex-col items-center gap-2 text-center"><Droplets className="h-7 w-7 text-secondary" /><span className="text-xs leading-tight text-on-surface-variant">Care instructions included</span></span>
+          <span className="flex flex-col items-center gap-2 text-center"><Truck className="h-8 w-8 text-secondary" strokeWidth={1.75} /><span className="text-xs leading-tight text-on-surface-variant">Same-day delivery before 3pm</span></span>
+          <span className="flex flex-col items-center gap-2 text-center"><Flower2 className="h-8 w-8 text-secondary" strokeWidth={1.75} /><span className="text-xs leading-tight text-on-surface-variant">Hand-tied fresh daily</span></span>
+          <span className="flex flex-col items-center gap-2 text-center"><Droplets className="h-8 w-8 text-secondary" strokeWidth={1.75} /><span className="text-xs leading-tight text-on-surface-variant">Care instructions included</span></span>
         </div>
       </div>
     </div>
