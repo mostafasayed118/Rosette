@@ -2,8 +2,31 @@
 
 import Link from 'next/link';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { useStorePath } from '@/features/i18n/use-store-path';
 
 export function SiteFooter({ locale = 'en', city = 'cairo' }: { locale?: string; city?: string }) {
   const { t } = useI18n();
-  return <footer className="mx-auto flex w-[min(calc(100%-3rem),80rem)] justify-between gap-8 border-t py-8 text-sm text-muted-foreground max-md:flex-col"><div><span className="font-display text-3xl tracking-tight text-primary">Rosette</span><p className="mt-1.5">{t('brandTagline')}</p><p>{t('photoCredit')}</p></div><div className="flex flex-wrap items-start gap-5"><span>{t('footerDelivery')}</span><span>{t('footerNotes')}</span><Link className="hover:text-primary" href={`/${locale}/${city}/blog`}>{t('blogTitle')}</Link><span>{t('footerDemo')}</span></div></footer>;
+  const { href } = useStorePath();
+  const year = new Date().getFullYear();
+  return (
+    <footer className="border-t border-outline-variant/30 bg-surface-container-low">
+      <div className="mx-auto grid w-[min(calc(100%-3rem),80rem)] gap-10 py-12 text-sm md:grid-cols-[2fr_1fr_1fr] md:py-16">
+        <div className="flex flex-col gap-2">
+          <span className="font-display text-3xl tracking-tight text-primary">Rosette</span>
+          <p className="max-w-[36ch] leading-relaxed text-on-surface-variant">{t('brandTagline')}</p>
+          <p className="mt-4 font-mono text-xs tracking-[0.05em] text-on-surface-variant">{t('footerCopyright', { year })}</p>
+        </div>
+        <nav className="flex flex-col gap-3" aria-label="Footer">
+          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={`/${locale}`}>{t('footerCitySelector')}</Link>
+          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/gift-cards')}>{t('footerGiftServices')}</Link>
+          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/delivery')}>{t('footerShippingPolicy')}</Link>
+        </nav>
+        <nav className="flex flex-col gap-3" aria-label="Company">
+          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/about')}>{t('footerOurStory')}</Link>
+          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/contact')}>{t('footerContactUs')}</Link>
+          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/privacy')}>{t('footerPrivacy')}</Link>
+        </nav>
+      </div>
+    </footer>
+  );
 }
