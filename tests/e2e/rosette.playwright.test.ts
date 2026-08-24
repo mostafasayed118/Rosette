@@ -52,4 +52,12 @@ describe('Rosette storefront (Playwright deterministic E2E)', () => {
     const firstCardText = await cards.first().textContent();
     expect(firstCardText).toMatch(/EGP/i);
   });
+
+  it('renders the static pages linked from the footer', async () => {
+    for (const path of ['/about', '/contact', '/privacy']) {
+      await page.goto(`${getBaseUrl()}/en/cairo${path}`, { waitUntil: 'domcontentloaded' });
+      await page.getByRole('heading', { level: 1 }).waitFor({ state: 'visible', timeout: 10_000 });
+      await page.getByRole('contentinfo').waitFor({ state: 'visible', timeout: 10_000 });
+    }
+  });
 });
