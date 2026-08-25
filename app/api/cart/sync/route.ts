@@ -3,11 +3,15 @@ import { upsertCart } from '@/features/cart/cart-sync';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { logRouteError } from '@/lib/api';
+import { enforceRateLimit } from '@/lib/rate-limit-guard';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
-const recent = new Map<string, number>();
+const CART_SYNC_EMAIL = { bucket: 'cart-sync-email', limit: 5, windowMs: 12_000 };
 
 export async function POST(request: Request) {
   try {
+    const ipLimited = enforceRateLimit(request, { bucket: 'cart-sync-ip', limit: 30, windowMs: 60_000, error: 'Too many requests' });
+    if (ipLimited) return ipLimited;
     const customer = await getCurrentCustomer();
     const body = (await request.json().catch(() => null)) as { email?: unknown; locale?: unknown; city?: unknown; lines?: unknown } | null;
     if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
@@ -15,9 +19,10 @@ export async function POST(request: Request) {
     const locale = body.locale === 'ar' || body.locale === 'fr' ? body.locale : 'en';
     const city = typeof body.city === 'string' && body.city.length > 0 ? body.city.slice(0, 40) : 'cairo';
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
-    const now = Date.now();
-    if (now - (recent.get(email) ?? 0) < 12_000) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-    recent.set(email, now);
+    // Per-email throttle (self-pruning) on top of the per-IP guard so distinct
+    // spoofed emails cannot each open a fresh write window.
+    const emailResult = checkRateLimit({ ...CART_SYNC_EMAIL, identifier: `${getClientIp(request)}:${email}` });
+    if (!emailResult.allowed) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     const result = await upsertCart(getAdminSupabase(), { email, customerId: customer?.id ?? null, locale, city, lines: (body.lines as never) ?? [] });
     if (result.status === 'invalid') return NextResponse.json({ error: 'Invalid cart' }, { status: 400 });
     if (result.status === 'failure') return NextResponse.json({ error: 'Could not save the cart' }, { status: 500 });
