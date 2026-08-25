@@ -79,6 +79,48 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
     setErrors((current) => ({ ...current, [key]: undefined }));
   }
 
+  function commitAndNavigate(after: () => void) {
+    clearCart();
+    after();
+  }
+
+  async function submitPaymob() {
+    const destination = { countryCode: 'EG', cityCode };
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cart, destination, checkout: { ...input, promoCode: promo.state === 'valid' ? promo.code.trim() : undefined }, locale }),
+    });
+    const data = (await response.json()) as OrderApiResponse;
+    if (!response.ok || !data.orderId) {
+      setMessage(data.error ?? t('orderCreateFailed'));
+      return;
+    }
+    if (!data.checkoutUrl) {
+      setMessage(t('onlinePaymentNotConfigured'));
+      return;
+    }
+    commitAndNavigate(() => window.location.assign(data.checkoutUrl!));
+  }
+
+  function submitLocal() {
+    const destination = { countryCode: 'EG', cityCode };
+    const result = createLocalOrder({
+      cart,
+      destination,
+      recipient: { name: input.recipientName, phone: input.recipientPhone },
+      sender: { name: input.senderName, email: input.senderEmail },
+      delivery: { address: input.address, date: input.deliveryDate, window: input.deliveryWindow },
+      paymentMethod: input.paymentMethod,
+      simulatePaymentFailure: simulateFailure,
+    });
+    if (!result.ok) {
+      setMessage(t('demoPaymentFailed'));
+      return;
+    }
+    commitAndNavigate(() => router.push(href(`/orders/${result.value.id}`)));
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateCheckout(input);
@@ -90,44 +132,9 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
     }
     setSubmitting(true);
     setMessage('');
-    const destination = { countryCode: 'EG', cityCode };
-
     try {
-      if (input.paymentMethod === 'paymob') {
-        const response = await fetch('/api/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cart, destination, checkout: { ...input, promoCode: promo.state === 'valid' ? promo.code.trim() : undefined }, locale }),
-        });
-        const data = (await response.json()) as OrderApiResponse;
-        if (!response.ok || !data.orderId) {
-          setMessage(data.error ?? t('orderCreateFailed'));
-          return;
-        }
-        if (!data.checkoutUrl) {
-          setMessage(t('onlinePaymentNotConfigured'));
-          return;
-        }
-        clearCart();
-        window.location.assign(data.checkoutUrl);
-        return;
-      }
-
-      const result = createLocalOrder({
-        cart,
-        destination,
-        recipient: { name: input.recipientName, phone: input.recipientPhone },
-        sender: { name: input.senderName, email: input.senderEmail },
-        delivery: { address: input.address, date: input.deliveryDate, window: input.deliveryWindow },
-        paymentMethod: input.paymentMethod,
-        simulatePaymentFailure: simulateFailure,
-      });
-      if (!result.ok) {
-        setMessage(t('demoPaymentFailed'));
-        return;
-      }
-      clearCart();
-      router.push(href(`/orders/${result.value.id}`));
+      if (input.paymentMethod === 'paymob') await submitPaymob();
+      else submitLocal();
     } catch {
       setMessage(t('temporaryError'));
     } finally {
