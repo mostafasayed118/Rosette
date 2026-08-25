@@ -3,3 +3,10 @@ export type CartLine = { id: string; productSlug: string; productName: string; p
 export type Cart = { lines: CartLine[] };
 export type OrderTotals = { subtotal: number; deliveryFee: number; discountMinor?: number; total: number };
 export type AddCartLineInput = CartLine;
+
+/**
+ * Maximum quantity the cart will accept on a single line. The cap exists to
+ * prevent accidental 1000-item adds and to bound server-side cost on a single
+ * checkout. UI surfaces this as a soft cap on the product detail.
+ */
+export const MAX_LINE_QUANTITY = 20;

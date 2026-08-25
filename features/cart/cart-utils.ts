@@ -1,4 +1,5 @@
 import type { AddCartLineInput, Cart } from './types';
+import { MAX_LINE_QUANTITY } from './types';
 
 export function addLine(cart: Cart, input: AddCartLineInput): Cart {
   const existing = cart.lines.find((line) => line.id === input.id);
@@ -8,7 +9,7 @@ export function addLine(cart: Cart, input: AddCartLineInput): Cart {
 
 export function updateLineQuantity(cart: Cart, lineId: string, quantity: number): Cart {
   if (quantity <= 0) return removeLine(cart, lineId);
-  return { lines: cart.lines.map((line) => line.id === lineId ? { ...line, quantity: Math.min(20, quantity) } : line) };
+  return { lines: cart.lines.map((line) => line.id === lineId ? { ...line, quantity: Math.min(MAX_LINE_QUANTITY, quantity) } : line) };
 }
 
 export function removeLine(cart: Cart, lineId: string): Cart {
