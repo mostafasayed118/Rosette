@@ -6,6 +6,7 @@ import { renderWithProviders } from '../test-utils';
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
   useRouter: () => ({ push }),
 }));
 

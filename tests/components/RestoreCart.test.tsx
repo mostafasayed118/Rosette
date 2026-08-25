@@ -10,6 +10,7 @@ const local: CartLine = { ...restored, id: 'l2', productSlug: 'citrus-cloud', pr
 
 const replace = vi.fn();
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
   useParams: () => ({ locale: 'en', city: 'cairo' }),
   useRouter: () => ({ replace }),
   useSearchParams: () => new URLSearchParams('restore=t1'),

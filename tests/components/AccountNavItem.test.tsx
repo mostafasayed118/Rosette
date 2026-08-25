@@ -7,6 +7,7 @@ vi.mock('@/lib/supabase/browser', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/',
   useParams: () => ({ locale: 'en', city: 'greater-cairo' }),
 }));
 
