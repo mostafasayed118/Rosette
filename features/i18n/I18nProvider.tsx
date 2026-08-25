@@ -28,18 +28,20 @@ export function I18nProvider({ children, initialLocale = 'en' }: { children: Rea
   };
   // URL-prefixed storefront pages are authoritative for the locale (SSR and
   // hydration agree via initialLocale); localStorage only steers non-prefixed
-  // routes like /admin where no segment exists.
+  // routes like /admin where no segment exists. Depend only on pathname so the
+  // effect does not re-run on every locale change for no-op work.
   useEffect(() => {
     const fromPath = localeFromPath(pathname);
+    if (fromPath && fromPath !== locale) {
+      window.localStorage.setItem(STORAGE_KEY, fromPath);
+      document.cookie = `rosette.locale=${fromPath}; path=/; max-age=31536000; samesite=lax`;
+      setLocaleState(fromPath);
+      return;
+    }
     if (!fromPath) {
       const saved = window.localStorage.getItem(STORAGE_KEY);
       if ((saved === 'ar' || saved === 'en' || saved === 'fr') && saved !== locale) setLocaleState(saved);
-      return;
     }
-    if (fromPath === locale) return;
-    window.localStorage.setItem(STORAGE_KEY, fromPath);
-    document.cookie = `rosette.locale=${fromPath}; path=/; max-age=31536000; samesite=lax`;
-    setLocaleState(fromPath);
   }, [pathname, locale]);
   useEffect(() => { document.documentElement.lang = locale; document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr'; }, [locale]);
   const value = useMemo<I18nContextValue>(() => ({ locale, setLocale, t: (key, values) => { let text = messages[locale][key] ?? messages.en[key] ?? key; for (const [name, value] of Object.entries(values ?? {})) text = text.replaceAll(`{${name}}`, String(value)); return text; } }), [locale]);
