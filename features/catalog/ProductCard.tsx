@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { ProductVisual } from '@/components/ui/ProductVisual';
@@ -22,7 +22,7 @@ export function ProductCard({ product, aspectClass = 'aspect-[3/4]', statusPill,
   const { href } = useStorePath();
   const name = pickLocalized(locale, { en: product.name, ar: product.nameAr, fr: product.nameFr });
   const description = pickLocalized(locale, { en: product.description, ar: product.descriptionAr, fr: product.descriptionFr });
-  const badgeLabel = product.delivery.startsWith('Same-day') ? 'Same-Day' : 'Next-Day';
+  const badgeLabel = product.delivery.startsWith('Same-day') ? t('pillSameDay') : t('pillNextDay');
   return (
     <article className={`product-card stagger-item group cursor-pointer ${className}`}>
       <div className="relative overflow-hidden rounded-[1rem] border border-outline-variant/30 bg-surface-container ambient-glow">

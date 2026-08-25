@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -53,7 +53,7 @@ export function SiteHeader({ cityName, cartCount }: SiteHeaderProps) {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex w-[min(calc(100%-3rem),80rem)] items-center justify-between gap-4 py-4">
         <Link className="font-display text-3xl tracking-tight text-primary" href={href('/')}>Rosette</Link>
-        <nav className="hidden items-center gap-7 text-sm md:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-7 text-sm md:flex" aria-label={t('navPrimary')}>
           {navItems.map((item) => (
             <Link key={item.path} className={navClasses(item.path)} href={href(item.path)}>{item.label}</Link>
           ))}
@@ -75,7 +75,7 @@ export function SiteHeader({ cityName, cartCount }: SiteHeaderProps) {
             </SheetTrigger>
             <SheetContent side="right">
               <SheetHeader><SheetTitle>{t('menu')}</SheetTitle></SheetHeader>
-              <nav className="grid gap-1 p-4" aria-label="Mobile navigation">
+              <nav className="grid gap-1 p-4" aria-label={t('navMobile')}>
                 {navItems.map((item) => (
                   <Link key={item.path} className="rounded-xl px-4 py-3 hover:bg-accent" href={href(item.path)}>{item.label}</Link>
                 ))}

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+﻿import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { getBaseUrl } from './base-url';
 
@@ -66,6 +66,9 @@ describe('Rosette storefront (Playwright deterministic E2E)', () => {
   it('renders the size selector once variants are readable', async () => {
     await page.goto(`${getBaseUrl()}/en/cairo/shop/rose-hour`, { waitUntil: 'domcontentloaded' });
     await page.getByText(/choose a size/i).first().waitFor({ state: 'visible', timeout: 15_000 });
+    const variantPills = page.locator('input[name="variant"]');
+    expect(await variantPills.count()).toBeGreaterThan(0);
+    await variantPills.first().waitFor({ state: 'attached', timeout: 10_000 });
   });
 
   it('renders the tracking page inside site chrome', async () => {
