@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getRequiredServerEnv } from '@/lib/server-env';
 import { getPublicOrigin } from '@/lib/origin';
-import { logRouteError } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { isCronAuthorized } from '@/lib/cron';
 import { runWishlistCron } from '@/features/wishlist/wishlist-cron';
@@ -18,7 +17,7 @@ async function handle(request: Request) {
     logger.info('cron.wishlist.completed', { summary });
     return NextResponse.json({ ok: true, summary });
   } catch (error) {
-    logRouteError('wishlist price watch', error);
+    logger.error('route.error', { scope: 'wishlist price watch', error });
     logger.error('cron.wishlist.failed', { error });
     return NextResponse.json({ error: 'Wishlist job failed' }, { status: 503 });
   }

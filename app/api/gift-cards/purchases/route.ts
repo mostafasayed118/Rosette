@@ -3,7 +3,7 @@ import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getPublicOrigin } from '@/lib/origin';
 import { createGiftCardPurchase } from '@/features/gift-cards/service';
 import type { GiftCardPurchaseInput } from '@/features/gift-cards/types';
-import { logRouteError } from '@/lib/api';
+import { logger } from '@/lib/logger';
 import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 
 export async function POST(request: Request) {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     if (!result.ok) return NextResponse.json({ error: result.error === 'invalid_input' ? 'Invalid gift-card details' : 'Gift-card checkout is temporarily unavailable.' }, { status: result.error === 'invalid_input' ? 400 : 503 });
     return NextResponse.json({ purchaseReference: result.value.reference, checkoutUrl: result.value.checkoutUrl });
   } catch (error) {
-    logRouteError('gift-card purchase', error);
+    logger.error('route.error', { scope: 'gift-card purchase', error });
     return NextResponse.json({ error: 'Gift-card checkout is temporarily unavailable.' }, { status: 503 });
   }
 }

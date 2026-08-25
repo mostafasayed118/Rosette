@@ -9,7 +9,7 @@ import { getAdminSupabase } from '@/lib/supabase/admin';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import { markCartConverted } from '@/features/cart/cart-sync';
 import { resolvePaymentMethodAvailability } from '@/features/checkout/payment-mode';
-import { logRouteError } from '@/lib/api';
+import { logger } from '@/lib/logger';
 import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 
 export async function POST(request: Request) {
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: 'payment_started', checkoutUrl: payment.checkoutUrl });
   } catch (error) {
-    logRouteError('order creation', error);
+    logger.error('route.error', { scope: 'order creation', error });
     return NextResponse.json({ error: 'Checkout is temporarily unavailable.' }, { status: 503 });
   }
 }

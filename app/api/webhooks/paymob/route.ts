@@ -8,7 +8,6 @@ import { parsePaymobSpecialReference } from '@/features/payment/paymob-routing';
 import { handleChangePaymentCallback } from '@/features/orders/change-request-service';
 import { activateGiftCardPurchase, settleGiftCardOrderPayment } from '@/features/gift-cards/service';
 import { getPublicOrigin } from '@/lib/origin';
-import { logRouteError } from '@/lib/api';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
@@ -53,7 +52,7 @@ export async function POST(request: Request) {
       });
       return NextResponse.json({ received: true });
     } catch (error) {
-      logRouteError('gift-card webhook', error);
+    logger.error('route.error', { scope: 'gift-card webhook', error });
       logger.error('payment.webhook.gift_card_failed', { specialReference, error });
       return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
     }
@@ -125,7 +124,7 @@ export async function POST(request: Request) {
     logger.info('payment.webhook.processed', { orderReference, providerReference, success, amountMinor });
     return NextResponse.json({ received: true });
   } catch (error) {
-    logRouteError('paymob webhook', error);
+    logger.error('route.error', { scope: 'paymob webhook', error });
     logger.error('payment.webhook.failed', { orderReference, providerReference, error });
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
   }

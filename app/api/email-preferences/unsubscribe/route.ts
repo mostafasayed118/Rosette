@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getRequiredServerEnv } from '@/lib/server-env';
-import { logRouteError } from '@/lib/api';
+import { logger } from '@/lib/logger';
 import { renderUnsubscribeConfirmation, preferenceLocale } from '@/features/email-preferences/engagement-footer';
 import { setEngagementPreference, verifyPreferenceToken } from '@/features/email-preferences/preferences-service';
 
@@ -39,7 +39,7 @@ async function handle(request: Request) {
     if (isPost) return NextResponse.json({ ok: true });
     return new Response(renderUnsubscribeConfirmation(input.locale), { status: 200, headers: { 'content-type': 'text/html; charset=utf-8' } });
   } catch (error) {
-    logRouteError('email preference unsubscribe', error);
+    logger.error('route.error', { scope: 'email preference unsubscribe', error });
     return isPost
       ? NextResponse.json({ error: 'Could not update email preference' }, { status: 503 })
       : new Response('Could not update email preference', { status: 503 });

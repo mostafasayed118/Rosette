@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { logRouteError, respond } from '@/lib/api';
+import { respond } from '@/lib/api';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -20,19 +20,5 @@ describe('respond', () => {
     const res = respond('created' as const, {}, { ok: true, id: '1' }, 201);
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({ ok: true, id: '1' });
-  });
-});
-
-describe('logRouteError', () => {
-  it('logs the scope and the error message for Error instances', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    logRouteError('order creation', new Error('boom'));
-    expect(spy).toHaveBeenCalledWith('order creation error', 'boom');
-  });
-
-  it('logs "unknown" for non-Error throwables', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    logRouteError('order creation', 'nope');
-    expect(spy).toHaveBeenCalledWith('order creation error', 'unknown');
   });
 });

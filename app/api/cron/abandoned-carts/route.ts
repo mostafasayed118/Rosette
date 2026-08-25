@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getRequiredServerEnv } from '@/lib/server-env';
 import { getPublicOrigin } from '@/lib/origin';
-import { logRouteError } from '@/lib/api';
 import { logger } from '@/lib/logger';
 import { isCronAuthorized } from '@/lib/cron';
 import { runAbandonedCartCron } from '@/features/cart/abandoned-cron';
@@ -18,7 +17,7 @@ async function handle(request: Request) {
     logger.info('cron.abandoned_carts.completed', { summary });
     return NextResponse.json({ ok: true, summary });
   } catch (error) {
-    logRouteError('abandoned-cart recovery', error);
+    logger.error('route.error', { scope: 'abandoned-cart recovery', error });
     logger.error('cron.abandoned_carts.failed', { error });
     return NextResponse.json({ error: 'Abandoned-cart job failed' }, { status: 503 });
   }

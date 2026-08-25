@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
 
-export function logRouteError(scope: string, error: unknown): void {
-  console.error(`${scope} error`, error instanceof Error ? error.message : 'unknown');
-}
-
 export function respond<T extends string>(
   result: T,
   cases: Partial<Record<T, { status: number; error: string }>>,

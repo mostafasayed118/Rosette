@@ -4,7 +4,7 @@ import { validateAuthorInput } from '@/features/admin/author-validation';
 import type { AuthorInput } from '@/features/blog/types';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { logRouteError } from '@/lib/api';
+import { logger } from '@/lib/logger';
 
 function badRequest(): NextResponse {
   return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
-    logRouteError('admin author save', error);
+    logger.error('route.error', { scope: 'admin author save', error });
     return NextResponse.json({ error: 'Could not save author' }, { status: 500 });
   }
 }

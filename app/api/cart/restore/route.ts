@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCartByRestoreToken } from '@/features/cart/cart-sync';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { logRouteError } from '@/lib/api';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: Request) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     if (result.status === 'failure') return NextResponse.json({ error: 'Could not restore the cart' }, { status: 500 });
     return NextResponse.json({ lines: result.lines }, { status: 200 });
   } catch (error) {
-    logRouteError('cart restore', error);
+    logger.error('route.error', { scope: 'cart restore', error });
     return NextResponse.json({ error: 'Cart restore is temporarily unavailable.' }, { status: 503 });
   }
 }

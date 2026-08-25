@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { upsertCart } from '@/features/cart/cart-sync';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { logRouteError } from '@/lib/api';
+import { logger } from '@/lib/logger';
 import { enforceRateLimit } from '@/lib/rate-limit-guard';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     if (result.status === 'failure') return NextResponse.json({ error: 'Could not save the cart' }, { status: 500 });
     return NextResponse.json({ restoreToken: result.restoreToken }, { status: 200 });
   } catch (error) {
-    logRouteError('cart sync', error);
+    logger.error('route.error', { scope: 'cart sync', error });
     return NextResponse.json({ error: 'Cart save is temporarily unavailable.' }, { status: 503 });
   }
 }
