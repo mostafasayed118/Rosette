@@ -18,7 +18,8 @@ export async function runWishlistCron(
   const secret = deps.secret ?? getRequiredServerEnv('EMAIL_PREFERENCES_SECRET');
   const getPreference = deps.getPreference ?? ((email: string) => getEngagementPreference(client, email));
   const summary: WishlistCronSummary = { checked: 0, sent: 0, failed: 0, suppressed: 0 };
-  const { data } = await client.from('wishlist_items').select(select);
+  // Cap each pass: rows beyond the limit are picked up on the next cron tick.
+  const { data } = await client.from('wishlist_items').select(select).limit(500);
   const rows = (data ?? []) as Array<Record<string, any>>;
 
   for (const row of rows) {
@@ -36,7 +37,10 @@ export async function runWishlistCron(
 
     summary.checked += 1;
     if (watch.type === 'none') {
-      await client.from('wishlist_items').update({ last_price_minor: price, last_available_stock: stock }).eq('id', String(row.id));
+      // Skip the refresh write until something actually moved.
+      if (price !== Number(row.last_price_minor) || stock !== Number(row.last_available_stock)) {
+        await client.from('wishlist_items').update({ last_price_minor: price, last_available_stock: stock }).eq('id', String(row.id));
+      }
       continue;
     }
 
@@ -68,7 +72,7 @@ export async function runWishlistCron(
         type,
         productName: String(product.name_en ?? 'item'),
         priceMinor: watch.type === 'price_drop' || watch.type === 'price_drop_and_back_in_stock' ? watch.newMinor : undefined,
-        productUrl: `${deps.origin.replace(/\/$/, '')}/en/cairo/shop/${String(product.slug)}`,
+        productUrl: `${deps.origin.replace(/\/$/, '')}/${locale}/cairo/shop/${String(product.slug)}`,
         unsubscribeUrl,
       });
       await client.from('wishlist_items').update({ last_price_minor: price, last_available_stock: stock }).eq('id', String(row.id));

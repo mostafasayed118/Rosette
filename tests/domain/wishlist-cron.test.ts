@@ -23,7 +23,7 @@ function makeClient(rows: unknown[], preferenceStatus: PreferenceStatus = 'enabl
   const client = {
     from: (table: string) => table === 'wishlist_items'
       ? {
-          select: () => ({ data: rows, error: null }),
+          select: () => ({ limit: () => ({ data: rows, error: null }) }),
           update: (payload: Record<string, unknown>) => ({ eq: (_col: string, id: string) => { updates.push({ id, payload }); return { error: null }; } }),
         }
       : {
@@ -82,9 +82,18 @@ describe('runWishlistCron', () => {
     expect(send).toHaveBeenCalledWith(expect.objectContaining({ type: 'wishlist_back_in_stock' }));
   });
 
-  it('records snapshots without emailing when nothing changed', async () => {
+  it('skips the snapshot write when nothing changed', async () => {
     const send = vi.fn();
     const { client, updates } = makeClient([row()]);
+    const summary = await runWishlistCron(client, { origin: 'https://example.com', secret: 'secret', send });
+    expect(summary).toEqual({ checked: 1, sent: 0, failed: 0, suppressed: 0 });
+    expect(send).not.toHaveBeenCalled();
+    expect(updates).toEqual([]);
+  });
+
+  it('records a snapshot without emailing when only the stock count moved', async () => {
+    const send = vi.fn();
+    const { client, updates } = makeClient([row({ last_available_stock: 2 })]);
     const summary = await runWishlistCron(client, { origin: 'https://example.com', secret: 'secret', send });
     expect(summary).toEqual({ checked: 1, sent: 0, failed: 0, suppressed: 0 });
     expect(send).not.toHaveBeenCalled();
