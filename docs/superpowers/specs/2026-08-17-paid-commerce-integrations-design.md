@@ -4,6 +4,8 @@
 **Status:** Approved in chat; implementation pending written-spec review  
 **Scope:** Turn the local bilingual flower storefront into a secure, provider-backed Egyptian ecommerce MVP.
 
+> **Historical note (2026-08-25):** The `/api/payments/paymob/intention` endpoint described in this spec was removed on master. The Paymob intention is now created inline in three places: `POST /api/orders` (the order checkout), the change-request delta-payment flow (`features/orders/change-request-service.ts`), and the gift-card purchase flow (`features/gift-cards/service.ts`). All three use the shared `createPaymobIntention` helper from `features/payment/paymob-client.ts`. See commits on master since `b90d135` for the migration; subsequent work added `AbortSignal.timeout(10s)` to the outbound fetch and split the webhook into a testable helper module.
+
 ## Goals
 
 - Persist catalog, inventory, customer, delivery, payment, and order data in Supabase PostgreSQL.

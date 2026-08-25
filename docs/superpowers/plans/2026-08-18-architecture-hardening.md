@@ -187,14 +187,14 @@ return respond(result, {
 **Files:**
 - Edit: `app/api/orders/route.ts`
 - Edit: `app/api/webhooks/paymob/route.ts`
-- Edit: `app/api/payments/paymob/intention/route.ts`
+- ~~Edit: `app/api/payments/paymob/intention/route.ts`~~ *(route removed 2026-08-25; see paid-commerce spec historical note)*
 - Edit: `features/chat/groq-assistant.ts`
 
 - [ ] **Step 1: `app/api/orders/route.ts`** — add `import { logRouteError } from '@/lib/api';`, replace `console.error('Order creation error', error instanceof Error ? error.message : 'unknown');` with `logRouteError('order creation', error);`.
 
 - [ ] **Step 2: `app/api/webhooks/paymob/route.ts`** — add the import, replace `console.error('Paymob webhook error', error instanceof Error ? error.message : 'unknown');` with `logRouteError('paymob webhook', error);`.
 
-- [ ] **Step 3: `app/api/payments/paymob/intention/route.ts`** — add the import, replace `console.error('Paymob intention error', error instanceof Error ? error.message : 'unknown');` with `logRouteError('paymob intention', error);`.
+- [x] ~~**Step 3: `app/api/payments/paymob/intention/route.ts`**~~ — *no longer applicable; route removed on master. The Paymob intention is now created inline in `POST /api/orders` and the change-request / gift-card purchase flows. Inline catches there already use `logRouteError`.*
 
 - [ ] **Step 4: `features/chat/groq-assistant.ts`** — add `import { logRouteError } from '@/lib/api';`, replace `console.error('[chat] assistant error:', error);` with `logRouteError('chat', error);`.
 
