@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +57,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
     address: '',
     senderName: '',
     senderEmail: '',
-    deliveryDate: defaultDeliveryDate(new Date()),
+    deliveryDate: '',
     deliveryWindow: '12-3',
     paymentMethod: availablePaymentMethods[0] ?? 'pay-on-delivery',
   }));
@@ -65,6 +65,14 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
   const [simulateFailure, setSimulateFailure] = useState(false);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [minDate, setMinDate] = useState('');
+  // Date defaults are applied after hydration so server (UTC) and client
+  // markup agree even when timezones straddle midnight.
+  useEffect(() => {
+    const now = new Date();
+    setMinDate(minDeliveryDate(now));
+    setInput((current) => current.deliveryDate ? current : { ...current, deliveryDate: defaultDeliveryDate(now) });
+  }, []);
 
   function update<K extends keyof CheckoutInput>(key: K, value: CheckoutInput[K]) {
     setInput((current) => ({ ...current, [key]: value }));
@@ -302,7 +310,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
               <Label htmlFor="deliveryDate" className={stitchLabel}>
                 {t('deliveryDate')}
               </Label>
-              <Input id="deliveryDate" type="date" min={minDeliveryDate(new Date())} value={input.deliveryDate} onChange={(e) => update('deliveryDate', e.target.value)} className={stitchInput} required />
+              <Input id="deliveryDate" type="date" min={minDate} value={input.deliveryDate} onChange={(e) => update('deliveryDate', e.target.value)} className={stitchInput} required />
               {errors.deliveryDate ? <small className="text-sm text-destructive">{errors.deliveryDate}</small> : null}
             </div>
             <div className="grid gap-1.5">

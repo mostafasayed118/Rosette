@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import Link from 'next/link';
 import { Flower2, Droplets, Truck } from 'lucide-react';
@@ -26,8 +26,16 @@ export function ProductDetail({ product }: { product: Product }) {
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? 'signature');
   const [addOnIds, setAddOnIds] = useState<string[]>([]);
   const [message, setMessage] = useState('');
-  const [deliveryDate, setDeliveryDate] = useState(defaultDeliveryDate(new Date()));
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [minDate, setMinDate] = useState('');
   const [added, setAdded] = useState(false);
+  // Date math runs after hydration so server and client render identical
+  // markup regardless of timezone (Cloudflare runs UTC, browsers do not).
+  useEffect(() => {
+    const now = new Date();
+    setMinDate(minDeliveryDate(now));
+    setDeliveryDate((current) => current || defaultDeliveryDate(now));
+  }, []);
   const variant = product.variants.find((item) => item.id === variantId);
   const addOns = product.addOns.filter((item) => addOnIds.includes(item.id));
   const unitPrice = product.price + (variant?.priceDelta ?? 0);
@@ -96,13 +104,13 @@ export function ProductDetail({ product }: { product: Product }) {
 
           <div className="grid gap-3 border-t border-outline-variant/30 pt-4">
             <label className="flex items-center justify-between text-sm text-on-surface-variant" htmlFor="message">
-              <span>{t('giftNote')}</span><span className="price text-xs opacity-60">({t('optional')}) — {locale === 'ar' ? 'رسالة الهدية' : ''}</span>
+              <span>{t('giftNote')}</span><span className="price text-xs opacity-60">({t('optional')})</span>
             </label>
             <Textarea id="message" maxLength={160} value={message} onChange={(event) => setMessage(event.target.value)} placeholder={t('notePlaceholder')} className="min-h-20 border-x-0 border-b border-t-0 border-outline-variant/50 bg-surface-container-low focus:border-primary focus:ring-0" />
           </div>
 
           <div className="grid gap-3">
-            <Field label={t('deliveryDate')} type="date" min={minDeliveryDate(new Date())} value={deliveryDate} onChange={(event) => setDeliveryDate(event.target.value)} required />
+            <Field label={t('deliveryDate')} type="date" min={minDate} value={deliveryDate} onChange={(event) => setDeliveryDate(event.target.value)} required />
           </div>
 
           <div className="flex items-center gap-3">
@@ -113,9 +121,9 @@ export function ProductDetail({ product }: { product: Product }) {
         </form>
 
         <div className="grid grid-cols-3 gap-6 border-t border-outline-variant/20 pt-6">
-          <span className="flex flex-col items-center gap-2 text-center"><Truck className="h-8 w-8 text-secondary" strokeWidth={1.75} /><span className="text-xs leading-tight text-on-surface-variant">Same-day delivery before 3pm</span></span>
-          <span className="flex flex-col items-center gap-2 text-center"><Flower2 className="h-8 w-8 text-secondary" strokeWidth={1.75} /><span className="text-xs leading-tight text-on-surface-variant">Hand-tied fresh daily</span></span>
-          <span className="flex flex-col items-center gap-2 text-center"><Droplets className="h-8 w-8 text-secondary" strokeWidth={1.75} /><span className="text-xs leading-tight text-on-surface-variant">Care instructions included</span></span>
+          <span className="flex flex-col items-center gap-2 text-center"><Truck className="h-8 w-8 text-secondary" strokeWidth={1.75} /><span className="text-xs leading-tight text-on-surface-variant">{t('badgeSameDay')}</span></span>
+          <span className="flex flex-col items-center gap-2 text-center"><Flower2 className="h-8 w-8 text-secondary" strokeWidth={1.75} /><span className="text-xs leading-tight text-on-surface-variant">{t('badgeHandTied')}</span></span>
+          <span className="flex flex-col items-center gap-2 text-center"><Droplets className="h-8 w-8 text-secondary" strokeWidth={1.75} /><span className="text-xs leading-tight text-on-surface-variant">{t('badgeCare')}</span></span>
         </div>
       </div>
     </div>
