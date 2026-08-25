@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowRight, BellRing, Package } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/features/catalog/ProductCard';
 import type { Product } from '@/features/catalog/types';
 import { useI18n } from '@/features/i18n/I18nProvider';
@@ -38,8 +38,6 @@ export function WishlistPageContent() {
   const { ready, saved } = useWishlist();
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState(false);
-  const [priceAlerts, setPriceAlerts] = useState(true);
-  const [stockAlerts, setStockAlerts] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -68,18 +66,9 @@ export function WishlistPageContent() {
   const eyebrow = t('wishlistEyebrow');
   const title = t('wishlistTitle');
 
-  const getStatusPill = (product: Product, originalIndex: number): { label: string; variant: 'sage' | 'neutral' } | null => {
+  const getStatusPill = (product: Product): { label: string; variant: 'neutral' } | null => {
+    // Only real inventory state earns a pill — never fabricate stock signals.
     if (product.inventory === 0) return { label: t('outOfStock'), variant: 'neutral' };
-    // editorial variety to mirror Stitch: cycle sage pills + blank for rhythm
-    // keep it deterministic so pixel parity is visible with multiple items
-    if (!priceAlerts && !stockAlerts) return null;
-    if (originalIndex % 4 === 0 && priceAlerts) {
-      // mimic "Dropped EGP 95" — use first variant as example
-      // if we have a real price drop signal, prefer that, otherwise show Back in stock as sage fallback
-      return { label: t('backInStock'), variant: 'sage' };
-    }
-    if (originalIndex % 4 === 1 && stockAlerts) return { label: t('backInStock'), variant: 'sage' };
-    if (originalIndex % 4 === 2) return null;
     return null;
   };
 
@@ -91,36 +80,6 @@ export function WishlistPageContent() {
       </div>
       <div className="flex flex-col items-start gap-3 md:items-end">
         <span className="font-mono text-xs tracking-[0.08em] text-on-surface-variant">{t('savedCount', { count: savedCount })}</span>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            aria-pressed={priceAlerts}
-            aria-label={t('priceDropAlerts')}
-            onClick={() => setPriceAlerts((v) => !v)}
-            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-              priceAlerts
-                ? 'border-primary-fixed bg-primary-fixed text-on-primary-fixed hover:opacity-90'
-                : 'border-outline-variant/30 bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-            }`}
-          >
-            <span>{t('priceDropAlerts')}</span>
-            <BellRing className="h-4 w-4" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-pressed={stockAlerts}
-            aria-label={t('backInStockAlerts')}
-            onClick={() => setStockAlerts((v) => !v)}
-            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-              stockAlerts
-                ? 'border-primary-fixed bg-primary-fixed text-on-primary-fixed hover:opacity-90'
-                : 'border-outline-variant/30 bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-            }`}
-          >
-            <span>{t('backInStockAlerts')}</span>
-            <Package className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
       </div>
     </section>
   );
@@ -159,7 +118,7 @@ export function WishlistPageContent() {
     colProducts.map((product) => {
       const originalIndex = products.findIndex((p) => p.slug === product.slug);
       const aspect = WISHLIST_ASPECTS[originalIndex % WISHLIST_ASPECTS.length];
-      const statusPill = getStatusPill(product, originalIndex);
+      const statusPill = getStatusPill(product);
       const isOutOfStock = product.inventory === 0;
       return (
         <div key={product.slug} className="flex flex-col gap-3">
