@@ -1,4 +1,4 @@
-import type { AddCartLineInput, Cart, CartLine } from './types';
+import type { AddCartLineInput, Cart } from './types';
 
 export function addLine(cart: Cart, input: AddCartLineInput): Cart {
   const existing = cart.lines.find((line) => line.id === input.id);
@@ -14,5 +14,3 @@ export function updateLineQuantity(cart: Cart, lineId: string, quantity: number)
 export function removeLine(cart: Cart, lineId: string): Cart {
   return { lines: cart.lines.filter((line) => line.id !== lineId) };
 }
-
-export function cloneLine(line: CartLine): CartLine { return { ...line, addOns: [...line.addOns] }; }

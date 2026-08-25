@@ -236,8 +236,4 @@ export async function restoreGiftCardForCancelledOrder(
   }
 }
 
-export function giftCardCodeForDelivery(ciphertext: string, secret: string) {
-  return decryptGiftCardCode(ciphertext, secret);
-}
-
 export { maskGiftCardCode };
