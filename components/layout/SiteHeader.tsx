@@ -59,7 +59,7 @@ export function SiteHeader({ cityName, cartCount }: SiteHeaderProps) {
           ))}
         </nav>
         <div className="hidden items-center gap-3 text-sm md:flex">
-          {cityName ? <Link className="text-xs text-muted-foreground hover:text-primary" href={`/${locale}`}>{t('deliveringTo', { city: cityName })}</Link> : null}
+          <Link className="text-xs text-muted-foreground hover:text-primary" href={`/${locale}`}>{cityName ? t('deliveringTo', { city: cityName }) : t('chooseDestination')}</Link>
           <AccountNavItem />
           {bag}
           {wishlist}

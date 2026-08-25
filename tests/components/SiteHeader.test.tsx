@@ -30,6 +30,7 @@ describe('SiteHeader', () => {
     expect(screen.getAllByRole('link', { name: /wishlist|saved/i }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Toggle theme' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Choose destination' })).toHaveAttribute('href', '/en');
   });
 
   it('marks the active section with the rose underline', () => {

@@ -15,6 +15,7 @@ describe('SiteFooter', () => {
     expect(screen.getByRole('link', { name: 'City Selector' })).toHaveAttribute('href', '/en');
     expect(screen.getByRole('link', { name: 'Gift Services' })).toHaveAttribute('href', '/en/greater-cairo/gift-cards');
     expect(screen.getByRole('link', { name: 'Shipping Policy' })).toHaveAttribute('href', '/en/greater-cairo/delivery');
+    expect(screen.getByRole('link', { name: 'Track order' })).toHaveAttribute('href', '/en/greater-cairo/track');
     expect(screen.getByRole('link', { name: 'Our Story' })).toHaveAttribute('href', '/en/greater-cairo/about');
     expect(screen.getByRole('link', { name: 'Contact Us' })).toHaveAttribute('href', '/en/greater-cairo/contact');
     expect(screen.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/en/greater-cairo/privacy');

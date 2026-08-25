@@ -20,6 +20,7 @@ export function SiteFooter({ locale = 'en', city = 'cairo' }: { locale?: string;
           <Link className="text-on-surface-variant transition-colors hover:text-primary" href={`/${locale}`}>{t('footerCitySelector')}</Link>
           <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/gift-cards')}>{t('footerGiftServices')}</Link>
           <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/delivery')}>{t('footerShippingPolicy')}</Link>
+          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/track')}>{t('trackOrder')}</Link>
         </nav>
         <nav className="flex flex-col gap-3" aria-label="Company">
           <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/about')}>{t('footerOurStory')}</Link>
