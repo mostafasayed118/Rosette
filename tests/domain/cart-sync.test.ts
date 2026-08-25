@@ -35,7 +35,7 @@ describe('upsertCart', () => {
     const result = await upsertCart(client, { email: 'a@b.com', locale: 'fr', city: 'cairo', lines: [line] });
     expect(result.status).toBe('ok');
     expect(rpcCalls).toHaveLength(1);
-    const call = rpcCalls[0];
+    const call = rpcCalls[0]!;
     expect(call.name).toBe('upsert_cart');
     expect(call.args.p_email).toBe('a@b.com');
     expect(call.args.p_locale).toBe('fr');
@@ -56,8 +56,8 @@ describe('upsertCart', () => {
     const result = await upsertCart(client, { email: 'a@b.com', locale: 'en', city: 'cairo', lines: [] });
     expect(result.status).toBe('ok');
     expect(rpcCalls).toHaveLength(1);
-    expect(rpcCalls[0].args.p_lines).toEqual([]);
-    expect(rpcCalls[0].args.p_restore_token).toBe('');
+    expect(rpcCalls[0]!.args.p_lines).toEqual([]);
+    expect(rpcCalls[0]!.args.p_restore_token).toBe('');
   });
 
   it('rejects an invalid email without calling the RPC', async () => {
@@ -78,14 +78,14 @@ describe('upsertCart', () => {
     const { client, rpcCalls } = fakeClient({ spyRpc: true });
     const result = await upsertCart(client, { email: 'a@b.com', customerId: 'cust-1', locale: 'en', city: 'cairo', lines: [line] });
     expect(result.status).toBe('ok');
-    expect(rpcCalls[0].args.p_customer_id).toBe('cust-1');
+    expect(rpcCalls[0]!.args.p_customer_id).toBe('cust-1');
   });
 
   it('passes a null customer id for guest writes so the customer-scope branch picks the anonymous path', async () => {
     const { client, rpcCalls } = fakeClient({ spyRpc: true });
     const result = await upsertCart(client, { email: 'a@b.com', customerId: null, locale: 'en', city: 'cairo', lines: [line] });
     expect(result.status).toBe('ok');
-    expect(rpcCalls[0].args.p_customer_id).toBeNull();
+    expect(rpcCalls[0]!.args.p_customer_id).toBeNull();
   });
 });
 
