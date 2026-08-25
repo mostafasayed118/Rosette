@@ -6,10 +6,9 @@ import { canTransitionFulfillment, type FulfillmentStatus } from '@/features/com
 import { refundPaymobTransaction } from '@/features/payment/paymob-refund';
 import { restoreGiftCardForCancelledOrder } from '@/features/gift-cards/service';
 import type { PaymobRefundResult } from '@/features/payment/paymob-refund';
+import { orderSelect } from '@/features/order/types';
 
 type CancelClient = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => any };
-
-const orderSelect = 'id,display_number,fulfillment_status,payment_status,customer_id,customer_email,locale,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,public_token,gift_card_id,gift_card_minor,gift_card_hold_id';
 
 type OrderRow = {
   id: string; display_number: string; fulfillment_status: string; payment_status: string;

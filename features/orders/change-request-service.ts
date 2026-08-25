@@ -5,11 +5,11 @@ import { refundPaymobTransaction, type PaymobRefundResult } from '@/features/pay
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 import { getRequiredServerEnv } from '@/lib/server-env';
 import type { CreatePaymentInput } from '@/features/payment/paymob-client';
+import { orderSelect, orderSelectWithItemsAndPayments } from '@/features/order/types';
 
 type ChangeClient = { from: (table: string) => any };
 
-const orderSelect = 'id,display_number,fulfillment_status,payment_status,customer_id,customer_email,locale,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,public_token,recipient_name,recipient_phone,delivery_address,delivery_date,delivery_window';
-const fullSelect = `${orderSelect},payments(id,provider_reference,amount_minor,status),order_items(id,unit_price_minor,quantity,gift_message)`;
+const fullSelect = orderSelectWithItemsAndPayments;
 
 type OrderRow = {
   id: string; display_number: string; fulfillment_status: string; payment_status: string;
