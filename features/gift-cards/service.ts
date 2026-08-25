@@ -3,6 +3,7 @@ import { getRequiredServerEnv } from '@/lib/server-env';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 import type { PaymentCustomer } from '@/features/payment/paymob-client';
 import { parsePaymobSpecialReference } from '@/features/payment/paymob-routing';
+import { logger } from '@/lib/logger';
 import { decryptGiftCardCode, encryptGiftCardCode, generateGiftCardCode, hashGiftCardCode, maskGiftCardCode } from './crypto';
 import type { GiftCardPurchaseInput, GiftCardQuote } from './types';
 import { validateGiftCardPurchaseInput } from './validation';
@@ -102,7 +103,12 @@ async function recoverGiftCardActivation(
     let code: string | null = null;
     try {
       code = decryptGiftCardCode(String(card.code_ciphertext), deps.secret);
-    } catch {
+    } catch (error) {
+      // KMS rotation, ciphertext corruption, or a wrong secret: the card
+      // cannot be delivered until an operator re-encrypts or restores the
+      // key. Mark delivery failed so the admin cron can retry, and surface
+      // the failure in the logs so it does not stay silent.
+      logger.error('gift_card.decrypt_failed', { cardId: String(card.id), purchaseId: String(purchase.id), error });
       code = null;
     }
     let failed = code === null ? 1 : 0;
