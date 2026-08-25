@@ -18,3 +18,6 @@ dev-restart.log
 .freebuff/
 
 .superpowers/
+
+# Stitch design export (source for /docs/stitch-export, not a build input)
+stitch_rosette_floral_e_commerce_system/
