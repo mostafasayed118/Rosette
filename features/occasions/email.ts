@@ -1,5 +1,6 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
 import { createMailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
+import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
 import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 import { renderEngagementFooter } from '@/features/email-preferences/engagement-footer';
 import type { PreferenceLocale } from '@/features/email-preferences/preferences-service';
@@ -65,9 +66,10 @@ export async function sendOccasionEmail(
 ): Promise<void> {
   if (!injectedTransport && isEmailDeliveryDisabled()) throw new Error('Email delivery disabled');
   const transport = injectedTransport ?? createMailTransport();
+  const from = injectedTransport ? (getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@example.invalid>') : getRequiredServerEnv('GMAIL_FROM');
   const { subject, text, html } = renderOccasionEmail(input);
   await transport.sendMail({
-    from: 'Rosette <rosette-occasions@localhost>',
+    from,
     to: input.to,
     subject,
     text,

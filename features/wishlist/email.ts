@@ -1,5 +1,6 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
 import { createMailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
+import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
 import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 import { renderEngagementFooter } from '@/features/email-preferences/engagement-footer';
 import type { PreferenceLocale } from '@/features/email-preferences/preferences-service';
@@ -23,7 +24,6 @@ const copy: Record<EmailLocale, { drop: (name: string, price: string) => string;
 export function renderWishlistEmail(input: { locale: EmailLocale; type: WishlistEmailType; productName: string; priceMinor?: number; productUrl: string; unsubscribeUrl?: string }) {
   const locale = input.locale;
   const name = input.productName;
-  const escapedName = escapeHtml(name);
   const url = escapeHtml(input.productUrl);
   const money = (minor: number) => new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(minor / 100);
   const price = input.priceMinor !== undefined ? money(input.priceMinor) : null;
@@ -31,7 +31,7 @@ export function renderWishlistEmail(input: { locale: EmailLocale; type: Wishlist
   const subject = subjects[locale][input.type].replace('{name}', name);
   const text = `${subject}\n${intro}\n${input.productUrl}`;
   const footer = input.unsubscribeUrl ? renderEngagementFooter(locale as PreferenceLocale, input.unsubscribeUrl) : { text: '', html: '' };
-  const html = `<!doctype html><html lang="${locale}"><body style="font-family:Arial,sans-serif"><h1>${subjects[locale][input.type]}</h1><p>${escapeHtml(intro)}</p><p><a href="${url}">${copy[locale].view}</a></p>${footer.html}</body></html>`;
+  const html = `<!doctype html><html lang="${locale}"><body style="font-family:Arial,sans-serif"><h1>${escapeHtml(subject)}</h1><p>${escapeHtml(intro)}</p><p><a href="${url}">${copy[locale].view}</a></p>${footer.html}</body></html>`;
   return { subject, text: `${text}${footer.text}`, html };
 }
 
@@ -41,9 +41,10 @@ export async function sendWishlistEmail(
 ): Promise<void> {
   if (!injectedTransport && isEmailDeliveryDisabled()) throw new Error('Email delivery disabled');
   const transport = injectedTransport ?? createMailTransport();
+  const from = injectedTransport ? (getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@example.invalid>') : getRequiredServerEnv('GMAIL_FROM');
   const { subject, text, html } = renderWishlistEmail(input);
   await transport.sendMail({
-    from: `Rosette <rosette-wishlist@localhost>`,
+    from,
     to: input.to,
     subject,
     text,
