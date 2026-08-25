@@ -31,7 +31,7 @@ describe('blog storefront repository', () => {
     const builder = {
       select: () => builder,
       eq: (col: string, val: unknown) => { eqCalls.push([col, val]); return builder; },
-      order: async () => ({ data: [row], error: null }),
+      order: () => builder, limit: async () => ({ data: [row], error: null }),
       maybeSingle: async () => ({ data: null, error: null }),
     };
     mockGetSupabase.mockResolvedValue({ from: () => builder } as never);
@@ -47,8 +47,7 @@ describe('blog storefront repository', () => {
     const builder = {
       select: () => builder,
       eq: () => builder,
-      order: async () => ({ data: [], error: null }),
-      maybeSingle: async () => ({ data: row, error: null }),
+      order: () => builder, limit: async () => ({ data: [], error: null }), maybeSingle: async () => ({ data: row, error: null }),
     };
     mockGetSupabase.mockResolvedValue({ from: () => builder } as never);
 
@@ -101,7 +100,7 @@ describe('blog storefront repository', () => {
     const builder = {
       select: () => builder,
       eq: (col: string, val: unknown) => { eqCalls.push([col, val]); return builder; },
-      order: async () => ({ data: [row], error: null }),
+      order: () => builder, limit: async () => ({ data: [row], error: null }),
       maybeSingle: async () => ({ data: null, error: null }),
     };
     mockGetSupabase.mockResolvedValue({ from: () => builder } as never);

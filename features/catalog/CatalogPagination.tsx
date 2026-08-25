@@ -41,7 +41,7 @@ export function CatalogPagination({ page, perPage, totalPages, total }: CatalogP
   const disabledClass = 'grid h-11 w-11 place-items-center rounded-full border border-outline-variant/30 bg-surface-container text-on-surface-variant/40';
 
   return (
-    <nav className="mt-16 flex flex-col items-center gap-5 border-t border-outline-variant/25 pt-10" aria-label={t('sort')}>
+    <nav className="mt-16 flex flex-col items-center gap-5 border-t border-outline-variant/25 pt-10" aria-label={t('pagination')}>
       <p className="price text-xs tracking-[0.08em] text-on-surface-variant">
         {t('showingRange', { from, to, total })}
       </p>

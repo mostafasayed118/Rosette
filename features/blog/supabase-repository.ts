@@ -64,7 +64,7 @@ export const supabaseBlogRepository: BlogRepository = {
     if (query?.type) builder = builder.eq('type', query.type);
     if (query?.cityCode) builder = builder.eq('city_code', query.cityCode);
     if (query?.authorId) builder = builder.eq('author_id', query.authorId);
-    const { data, error } = await builder.order('published_at', { ascending: false });
+    const { data, error } = await builder.order('published_at', { ascending: false }).limit(100);
     if (error) throw new Error(`Blog list query failed: ${error.message}`);
     return ((data ?? []) as BlogRow[]).map(toSummary);
   },
