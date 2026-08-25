@@ -4,20 +4,21 @@ import type { CartLine } from '@/features/cart/types';
 
 const line: CartLine = { id: 'l1', productSlug: 'rose-hour', productName: 'Rose Hour', tone: '#bc6d63', unitPrice: 12000, quantity: 1, addOns: [], message: '', deliveryDate: '2026-08-20' };
 
-function fakeClient(options: { existing?: unknown; insertError?: unknown; updateError?: unknown; deleteError?: unknown; row?: unknown } = {}) {
+function fakeClient(options: { existing?: unknown; insertError?: unknown; updateError?: unknown; deleteError?: unknown; row?: unknown; spyFilters?: boolean } = {}) {
   const calls: Array<{ table: string; op: string; payload?: unknown }> = [];
+  const filters: Array<{ op: 'eq' | 'is'; column: string; value: unknown }> = [];
   const chain = () => {
     const node: Record<string, unknown> = {};
-    node.eq = () => chain();
-    node.is = () => chain();
+    node.eq = (column: string, value: unknown) => { if (options.spyFilters) filters.push({ op: 'eq', column, value }); return chain(); };
+    node.is = (column: string, value: unknown) => { if (options.spyFilters) filters.push({ op: 'is', column, value }); return chain(); };
     node.maybeSingle = async () => ({ data: options.existing ?? options.row ?? null, error: null });
     return node;
   };
   const client = {
     from: (table: string) => ({
       select: () => ({
-        eq: () => chain(),
-        is: () => chain(),
+        eq: (column: string, value: unknown) => { if (options.spyFilters) filters.push({ op: 'eq', column, value }); return chain(); },
+        is: (column: string, value: unknown) => { if (options.spyFilters) filters.push({ op: 'is', column, value }); return chain(); },
         maybeSingle: async () => ({ data: options.row ?? null, error: null }),
       }),
       insert: (payload: unknown) => { calls.push({ table, op: 'insert', payload }); return { error: options.insertError ?? null }; },
@@ -25,7 +26,7 @@ function fakeClient(options: { existing?: unknown; insertError?: unknown; update
       delete: () => { calls.push({ table, op: 'delete' }); return { eq: () => chain() }; },
     }),
   };
-  return { client, calls };
+  return { client, calls, filters };
 }
 
 describe('upsertCart', () => {
@@ -69,6 +70,36 @@ describe('upsertCart', () => {
   it('returns failure on an insert error', async () => {
     const { client } = fakeClient({ insertError: new Error('db down') });
     expect(await upsertCart(client, { email: 'a@b.com', locale: 'en', city: 'cairo', lines: [line] })).toEqual({ status: 'failure' });
+  });
+
+  it('scopes the active-cart query to the signed-in customer', async () => {
+    const { client, filters } = fakeClient({ spyFilters: true });
+    const result = await upsertCart(client, { email: 'a@b.com', customerId: 'cust-1', locale: 'en', city: 'cairo', lines: [line] });
+    expect(result.status).toBe('ok');
+    expect(filters).toContainEqual({ op: 'eq', column: 'customer_id', value: 'cust-1' });
+    expect(filters).not.toContainEqual({ op: 'is', column: 'customer_id', value: null });
+  });
+
+  it('scopes the active-cart query to guest rows when no customer is signed in', async () => {
+    const { client, filters } = fakeClient({ spyFilters: true });
+    const result = await upsertCart(client, { email: 'a@b.com', customerId: null, locale: 'en', city: 'cairo', lines: [line] });
+    expect(result.status).toBe('ok');
+    expect(filters).toContainEqual({ op: 'is', column: 'customer_id', value: null });
+    expect(filters.find((f) => f.op === 'eq' && f.column === 'customer_id')).toBeUndefined();
+  });
+
+  it('scopes the empty-bag delete to the signed-in customer', async () => {
+    const { client, filters } = fakeClient({ spyFilters: true });
+    const result = await upsertCart(client, { email: 'a@b.com', customerId: 'cust-2', locale: 'en', city: 'cairo', lines: [] });
+    expect(result.status).toBe('ok');
+    expect(filters).toContainEqual({ op: 'eq', column: 'customer_id', value: 'cust-2' });
+  });
+
+  it('scopes the empty-bag delete to guest rows when no customer is signed in', async () => {
+    const { client, filters } = fakeClient({ spyFilters: true });
+    const result = await upsertCart(client, { email: 'a@b.com', customerId: null, locale: 'en', city: 'cairo', lines: [] });
+    expect(result.status).toBe('ok');
+    expect(filters).toContainEqual({ op: 'is', column: 'customer_id', value: null });
   });
 });
 
