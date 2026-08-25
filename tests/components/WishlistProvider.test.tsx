@@ -19,7 +19,8 @@ const auth = vi.hoisted(() => {
 });
 
 vi.mock('@/lib/supabase/browser', () => ({ getBrowserSupabase: () => auth.fakeSupabase }));
-vi.mock('next/navigation', () => ({ useParams: () => ({ locale: 'en', city: 'cairo' }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/', useParams: () => ({ locale: 'en', city: 'cairo' }) }));
 
 describe('WishlistProvider', () => {
   it('merges guest saves into the account when the user signs in', async () => {

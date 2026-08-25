@@ -5,7 +5,8 @@ import { I18nProvider } from '@/features/i18n/I18nProvider';
 import { CartProvider } from '@/features/cart/CartProvider';
 
 vi.mock('@/lib/supabase/browser', () => ({ getBrowserSupabase: vi.fn() }));
-vi.mock('next/navigation', () => ({ useParams: () => ({ locale: 'en', city: 'cairo' }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/', useParams: () => ({ locale: 'en', city: 'cairo' }) }));
 
 import { getBrowserSupabase } from '@/lib/supabase/browser';
 

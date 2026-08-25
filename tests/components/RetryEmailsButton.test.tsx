@@ -3,7 +3,8 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../test-utils';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/', useRouter: () => ({ refresh: vi.fn() }) }));
 
 import { RetryEmailsButton } from '@/components/admin/RetryEmailsButton';
 

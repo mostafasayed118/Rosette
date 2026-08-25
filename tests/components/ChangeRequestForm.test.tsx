@@ -4,7 +4,8 @@ import { ChangeRequestForm } from '@/components/account/ChangeRequestForm';
 import { renderWithProviders } from '../test-utils';
 
 const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/', useRouter: () => ({ refresh }) }));
 
 const items = [
   { id: 'i1', name: 'Rose bouquet', quantity: 1, giftMessage: '' },

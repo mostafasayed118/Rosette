@@ -4,7 +4,8 @@ import { ChangeRequestReview } from '@/components/admin/ChangeRequestReview';
 import { renderWithProviders } from '../test-utils';
 
 const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/', useRouter: () => ({ refresh }) }));
 
 beforeEach(() => refresh.mockClear());
 

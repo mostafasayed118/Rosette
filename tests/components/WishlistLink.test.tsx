@@ -5,7 +5,8 @@ import { WishlistProvider } from '@/features/wishlist/WishlistProvider';
 import { renderWithProviders } from '../test-utils';
 
 vi.mock('@/lib/supabase/browser', () => ({ getBrowserSupabase: () => null }));
-vi.mock('next/navigation', () => ({ useParams: () => ({ locale: 'en', city: 'cairo' }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/', useParams: () => ({ locale: 'en', city: 'cairo' }) }));
 
 describe('WishlistLink', () => {
   it('shows a zero count when nothing is saved', () => {

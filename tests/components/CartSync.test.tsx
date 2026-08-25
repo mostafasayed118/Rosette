@@ -21,7 +21,8 @@ const auth = vi.hoisted(() => {
 });
 
 vi.mock('@/lib/supabase/browser', () => ({ getBrowserSupabase: () => auth.supabase }));
-vi.mock('next/navigation', () => ({ useParams: () => ({ locale: 'en', city: 'cairo' }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/', useParams: () => ({ locale: 'en', city: 'cairo' }) }));
 
 describe('CartSync', () => {
   it('syncs the cart when a signed-in user signs in', async () => {

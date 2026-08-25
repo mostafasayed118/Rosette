@@ -4,7 +4,8 @@ import { CancelRequestButton } from '@/components/account/CancelRequestButton';
 import { renderWithProviders } from '../test-utils';
 
 const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/', useRouter: () => ({ refresh }) }));
 
 describe('CancelRequestButton', () => {
   it('posts a cancellation request and refreshes on success', async () => {
