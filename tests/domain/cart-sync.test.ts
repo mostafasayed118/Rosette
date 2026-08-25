@@ -6,17 +6,23 @@ const line: CartLine = { id: 'l1', productSlug: 'rose-hour', productName: 'Rose 
 
 function fakeClient(options: { existing?: unknown; insertError?: unknown; updateError?: unknown; deleteError?: unknown; row?: unknown } = {}) {
   const calls: Array<{ table: string; op: string; payload?: unknown }> = [];
+  const chain = () => {
+    const node: Record<string, unknown> = {};
+    node.eq = () => chain();
+    node.is = () => chain();
+    node.maybeSingle = async () => ({ data: options.existing ?? options.row ?? null, error: null });
+    return node;
+  };
   const client = {
     from: (table: string) => ({
       select: () => ({
-        eq: () => ({
-          is: () => ({ maybeSingle: async () => ({ data: options.existing ?? null, error: null }) }),
-          maybeSingle: async () => ({ data: options.row ?? null, error: null }),
-        }),
+        eq: () => chain(),
+        is: () => chain(),
+        maybeSingle: async () => ({ data: options.row ?? null, error: null }),
       }),
       insert: (payload: unknown) => { calls.push({ table, op: 'insert', payload }); return { error: options.insertError ?? null }; },
       update: (payload: unknown) => { calls.push({ table, op: 'update', payload }); return { eq: () => ({ is: () => ({ error: options.updateError ?? null }), error: options.updateError ?? null }) }; },
-      delete: () => { calls.push({ table, op: 'delete' }); return { eq: () => ({ is: () => ({ error: options.deleteError ?? null }) }) }; },
+      delete: () => { calls.push({ table, op: 'delete' }); return { eq: () => chain() }; },
     }),
   };
   return { client, calls };

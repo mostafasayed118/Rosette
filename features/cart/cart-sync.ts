@@ -15,15 +15,24 @@ export async function upsertCart(
   const email = input.email.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { status: 'invalid' };
   try {
+    // Ownership scope: signed-in customers only ever touch their own
+    // account-linked carts; guest writes stay confined to anonymous rows so a
+    // spoofed email cannot overwrite or delete a customer's saved bag.
     if (Array.isArray(input.lines) && input.lines.length === 0) {
-      const { error } = await client.from('carts').delete().eq('email', email).is('converted_at', null);
+      const scoped = input.customerId
+        ? client.from('carts').delete().eq('email', email).eq('customer_id', input.customerId).is('converted_at', null)
+        : client.from('carts').delete().eq('email', email).is('customer_id', null).is('converted_at', null);
+      const { error } = await scoped;
       return error ? { status: 'failure' } : { status: 'ok', restoreToken: '' };
     }
     const lines = validateCartLines(input.lines);
     if (!lines) return { status: 'invalid' };
     const restoreToken = randomUUID();
     const row = { email, customer_id: input.customerId ?? null, locale: input.locale, city: input.city, lines, restore_token: restoreToken, updated_at: new Date().toISOString() };
-    const { data: existing } = await client.from('carts').select('id').eq('email', email).is('converted_at', null).maybeSingle();
+    const existingQuery = input.customerId
+      ? client.from('carts').select('id').eq('email', email).eq('customer_id', input.customerId).is('converted_at', null)
+      : client.from('carts').select('id').eq('email', email).is('customer_id', null).is('converted_at', null);
+    const { data: existing } = await existingQuery.maybeSingle();
     if (existing) {
       const { error } = await client.from('carts').update(row).eq('id', (existing as { id: string }).id);
       if (error) return { status: 'failure' };
