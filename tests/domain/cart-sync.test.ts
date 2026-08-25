@@ -1,120 +1,106 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { getCartByRestoreToken, markCartConverted, upsertCart } from '@/features/cart/cart-sync';
 import type { CartLine } from '@/features/cart/types';
 
 const line: CartLine = { id: 'l1', productSlug: 'rose-hour', productName: 'Rose Hour', tone: '#bc6d63', unitPrice: 12000, quantity: 1, addOns: [], message: '', deliveryDate: '2026-08-20' };
 
-function fakeClient(options: { existing?: unknown; insertError?: unknown; updateError?: unknown; deleteError?: unknown; row?: unknown; spyFilters?: boolean } = {}) {
-  const calls: Array<{ table: string; op: string; payload?: unknown }> = [];
-  const filters: Array<{ op: 'eq' | 'is'; column: string; value: unknown }> = [];
-  const chain = () => {
-    const node: Record<string, unknown> = {};
-    node.eq = (column: string, value: unknown) => { if (options.spyFilters) filters.push({ op: 'eq', column, value }); return chain(); };
-    node.is = (column: string, value: unknown) => { if (options.spyFilters) filters.push({ op: 'is', column, value }); return chain(); };
-    node.maybeSingle = async () => ({ data: options.existing ?? options.row ?? null, error: null });
-    return node;
-  };
+type RpcCall = { name: string; args: Record<string, unknown> };
+type FromCall = { table: string; op: string; payload?: unknown };
+
+function fakeClient(options: { existing?: unknown; row?: unknown; rpcError?: { message: string } | null; spyRpc?: boolean } = {}) {
+  const fromCalls: FromCall[] = [];
+  const rpcCalls: RpcCall[] = [];
   const client = {
     from: (table: string) => ({
-      select: () => ({
-        eq: (column: string, value: unknown) => { if (options.spyFilters) filters.push({ op: 'eq', column, value }); return chain(); },
-        is: (column: string, value: unknown) => { if (options.spyFilters) filters.push({ op: 'is', column, value }); return chain(); },
-        maybeSingle: async () => ({ data: options.row ?? null, error: null }),
-      }),
-      insert: (payload: unknown) => { calls.push({ table, op: 'insert', payload }); return { error: options.insertError ?? null }; },
-      update: (payload: unknown) => { calls.push({ table, op: 'update', payload }); return { eq: () => ({ is: () => ({ error: options.updateError ?? null }), error: options.updateError ?? null }) }; },
-      delete: () => { calls.push({ table, op: 'delete' }); return { eq: () => chain() }; },
+      select: () => ({ eq: () => ({ is: () => ({ maybeSingle: async () => ({ data: options.row ?? null, error: null }) }), maybeSingle: async () => ({ data: options.row ?? null, error: null }) }) }),
+      insert: (payload: unknown) => { fromCalls.push({ table, op: 'insert', payload }); return { error: null }; },
+      update: (payload: unknown) => { fromCalls.push({ table, op: 'update', payload }); return { eq: () => ({ is: () => ({ error: null }) }) }; },
+      delete: () => { fromCalls.push({ table, op: 'delete' }); return { eq: () => ({ is: () => ({ error: null }) }) }; },
     }),
+    rpc: (name: string, args: Record<string, unknown>) => {
+      if (options.spyRpc) rpcCalls.push({ name, args });
+      return Promise.resolve({ data: null, error: options.rpcError ?? null });
+    },
   };
-  return { client, calls, filters };
+  return { client, fromCalls, rpcCalls };
 }
 
+beforeEach(() => {
+  vi.resetModules();
+});
+
 describe('upsertCart', () => {
-  it('inserts a new cart with a fresh restore token', async () => {
-    const { client, calls } = fakeClient();
+  it('calls upsert_cart RPC with the validated lines and a fresh restore token', async () => {
+    const { client, rpcCalls } = fakeClient({ spyRpc: true });
     const result = await upsertCart(client, { email: 'a@b.com', locale: 'fr', city: 'cairo', lines: [line] });
     expect(result.status).toBe('ok');
-    const insert = calls.find((c) => c.table === 'carts' && c.op === 'insert')?.payload as Record<string, unknown>;
-    expect(insert.email).toBe('a@b.com');
-    expect(insert.locale).toBe('fr');
-    expect(insert.lines).toEqual([line]);
-    expect(typeof insert.restore_token).toBe('string');
+    expect(rpcCalls).toHaveLength(1);
+    const call = rpcCalls[0];
+    expect(call.name).toBe('upsert_cart');
+    expect(call.args.p_email).toBe('a@b.com');
+    expect(call.args.p_locale).toBe('fr');
+    expect(call.args.p_city).toBe('cairo');
+    expect(call.args.p_lines).toEqual([line]);
+    expect(typeof call.args.p_restore_token).toBe('string');
+    expect((call.args.p_restore_token as string).length).toBeGreaterThan(0);
   });
 
-  it('updates the existing active cart and refreshes the token', async () => {
-    const { client, calls } = fakeClient({ existing: { id: 'c1' } });
+  it('returns failure when the RPC errors', async () => {
+    const { client } = fakeClient({ rpcError: { message: 'db down' } });
     const result = await upsertCart(client, { email: 'a@b.com', locale: 'en', city: 'cairo', lines: [line] });
-    expect(result.status).toBe('ok');
-    const update = calls.find((c) => c.table === 'carts' && c.op === 'update')?.payload as Record<string, unknown>;
-    expect(update.lines).toEqual([line]);
-    expect(typeof update.restore_token).toBe('string');
+    expect(result.status).toBe('failure');
   });
 
-  it('deletes the active cart when the bag is emptied', async () => {
-    const { client, calls } = fakeClient();
+  it('calls upsert_cart with empty lines when the bag is emptied', async () => {
+    const { client, rpcCalls } = fakeClient({ spyRpc: true });
     const result = await upsertCart(client, { email: 'a@b.com', locale: 'en', city: 'cairo', lines: [] });
     expect(result.status).toBe('ok');
-    expect(calls.some((c) => c.table === 'carts' && c.op === 'delete')).toBe(true);
+    expect(rpcCalls).toHaveLength(1);
+    expect(rpcCalls[0].args.p_lines).toEqual([]);
+    expect(rpcCalls[0].args.p_restore_token).toBe('');
   });
 
-  it('rejects an invalid email', async () => {
-    const { client } = fakeClient();
-    expect(await upsertCart(client, { email: 'not-an-email', locale: 'en', city: 'cairo', lines: [line] })).toEqual({ status: 'invalid' });
+  it('rejects an invalid email without calling the RPC', async () => {
+    const { client, rpcCalls } = fakeClient({ spyRpc: true });
+    const result = await upsertCart(client, { email: 'not-an-email', locale: 'en', city: 'cairo', lines: [line] });
+    expect(result.status).toBe('invalid');
+    expect(rpcCalls).toEqual([]);
   });
 
-  it('rejects malformed lines', async () => {
-    const { client } = fakeClient();
-    expect(await upsertCart(client, { email: 'a@b.com', locale: 'en', city: 'cairo', lines: [{ id: 1 } as never] })).toEqual({ status: 'invalid' });
+  it('rejects malformed lines without calling the RPC', async () => {
+    const { client, rpcCalls } = fakeClient({ spyRpc: true });
+    const result = await upsertCart(client, { email: 'a@b.com', locale: 'en', city: 'cairo', lines: [{ id: 1 } as never] });
+    expect(result.status).toBe('invalid');
+    expect(rpcCalls).toEqual([]);
   });
 
-  it('returns failure on an insert error', async () => {
-    const { client } = fakeClient({ insertError: new Error('db down') });
-    expect(await upsertCart(client, { email: 'a@b.com', locale: 'en', city: 'cairo', lines: [line] })).toEqual({ status: 'failure' });
-  });
-
-  it('scopes the active-cart query to the signed-in customer', async () => {
-    const { client, filters } = fakeClient({ spyFilters: true });
+  it('passes the customer id to the RPC so the customer-scope branch runs in the database', async () => {
+    const { client, rpcCalls } = fakeClient({ spyRpc: true });
     const result = await upsertCart(client, { email: 'a@b.com', customerId: 'cust-1', locale: 'en', city: 'cairo', lines: [line] });
     expect(result.status).toBe('ok');
-    expect(filters).toContainEqual({ op: 'eq', column: 'customer_id', value: 'cust-1' });
-    expect(filters).not.toContainEqual({ op: 'is', column: 'customer_id', value: null });
+    expect(rpcCalls[0].args.p_customer_id).toBe('cust-1');
   });
 
-  it('scopes the active-cart query to guest rows when no customer is signed in', async () => {
-    const { client, filters } = fakeClient({ spyFilters: true });
+  it('passes a null customer id for guest writes so the customer-scope branch picks the anonymous path', async () => {
+    const { client, rpcCalls } = fakeClient({ spyRpc: true });
     const result = await upsertCart(client, { email: 'a@b.com', customerId: null, locale: 'en', city: 'cairo', lines: [line] });
     expect(result.status).toBe('ok');
-    expect(filters).toContainEqual({ op: 'is', column: 'customer_id', value: null });
-    expect(filters.find((f) => f.op === 'eq' && f.column === 'customer_id')).toBeUndefined();
-  });
-
-  it('scopes the empty-bag delete to the signed-in customer', async () => {
-    const { client, filters } = fakeClient({ spyFilters: true });
-    const result = await upsertCart(client, { email: 'a@b.com', customerId: 'cust-2', locale: 'en', city: 'cairo', lines: [] });
-    expect(result.status).toBe('ok');
-    expect(filters).toContainEqual({ op: 'eq', column: 'customer_id', value: 'cust-2' });
-  });
-
-  it('scopes the empty-bag delete to guest rows when no customer is signed in', async () => {
-    const { client, filters } = fakeClient({ spyFilters: true });
-    const result = await upsertCart(client, { email: 'a@b.com', customerId: null, locale: 'en', city: 'cairo', lines: [] });
-    expect(result.status).toBe('ok');
-    expect(filters).toContainEqual({ op: 'is', column: 'customer_id', value: null });
+    expect(rpcCalls[0].args.p_customer_id).toBeNull();
   });
 });
 
 describe('markCartConverted', () => {
   it('stamps converted_at on the active cart', async () => {
-    const { client, calls } = fakeClient();
+    const { client, fromCalls } = fakeClient();
     expect(await markCartConverted(client, { email: 'a@b.com' })).toEqual({ status: 'ok' });
-    const update = calls.find((c) => c.table === 'carts' && c.op === 'update')?.payload as Record<string, unknown>;
+    const update = fromCalls.find((c) => c.table === 'carts' && c.op === 'update')?.payload as Record<string, unknown>;
     expect(typeof update.converted_at).toBe('string');
   });
 
   it('is a no-op for an empty email', async () => {
-    const { client, calls } = fakeClient();
+    const { client, fromCalls } = fakeClient();
     expect(await markCartConverted(client, { email: '  ' })).toEqual({ status: 'ok' });
-    expect(calls).toEqual([]);
+    expect(fromCalls).toEqual([]);
   });
 });
 

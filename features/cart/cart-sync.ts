@@ -2,7 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { validateCartLines } from './cart-lines';
 import type { CartLine } from './types';
 
-type CartClient = { from: (table: string) => any };
+type CartClient = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => unknown };
+
+function unwrapRpc(result: unknown): { error: { message: string } | null } {
+  if (result && typeof result === 'object' && 'error' in result) {
+    return result as { error: { message: string } | null };
+  }
+  return { error: null };
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -14,36 +21,20 @@ export async function upsertCart(
 ): Promise<UpsertCartResult> {
   const email = input.email.trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { status: 'invalid' };
-  try {
-    // Ownership scope: signed-in customers only ever touch their own
-    // account-linked carts; guest writes stay confined to anonymous rows so a
-    // spoofed email cannot overwrite or delete a customer's saved bag.
-    if (Array.isArray(input.lines) && input.lines.length === 0) {
-      const scoped = input.customerId
-        ? client.from('carts').delete().eq('email', email).eq('customer_id', input.customerId).is('converted_at', null)
-        : client.from('carts').delete().eq('email', email).is('customer_id', null).is('converted_at', null);
-      const { error } = await scoped;
-      return error ? { status: 'failure' } : { status: 'ok', restoreToken: '' };
-    }
-    const lines = validateCartLines(input.lines);
-    if (!lines) return { status: 'invalid' };
-    const restoreToken = randomUUID();
-    const row = { email, customer_id: input.customerId ?? null, locale: input.locale, city: input.city, lines, restore_token: restoreToken, updated_at: new Date().toISOString() };
-    const existingQuery = input.customerId
-      ? client.from('carts').select('id').eq('email', email).eq('customer_id', input.customerId).is('converted_at', null)
-      : client.from('carts').select('id').eq('email', email).is('customer_id', null).is('converted_at', null);
-    const { data: existing } = await existingQuery.maybeSingle();
-    if (existing) {
-      const { error } = await client.from('carts').update(row).eq('id', (existing as { id: string }).id);
-      if (error) return { status: 'failure' };
-    } else {
-      const { error } = await client.from('carts').insert(row);
-      if (error) return { status: 'failure' };
-    }
-    return { status: 'ok', restoreToken };
-  } catch {
-    return { status: 'failure' };
+  // The DB path enforces the customer-scope branch (signed-in vs guest) and
+  // atomicity. The JS path validates shape and email so the RPC receives a
+  // well-formed jsonb; the RPC is security definer and is the only writer.
+  if (Array.isArray(input.lines) && input.lines.length === 0) {
+    if (!client.rpc) return { status: 'failure' };
+    const { error } = unwrapRpc(await client.rpc('upsert_cart', { p_email: email, p_customer_id: input.customerId ?? null, p_locale: input.locale, p_city: input.city, p_lines: [], p_restore_token: '' }));
+    return error ? { status: 'failure' } : { status: 'ok', restoreToken: '' };
   }
+  const lines = validateCartLines(input.lines);
+  if (!lines) return { status: 'invalid' };
+  const restoreToken = randomUUID();
+  if (!client.rpc) return { status: 'failure' };
+  const { error } = unwrapRpc(await client.rpc('upsert_cart', { p_email: email, p_customer_id: input.customerId ?? null, p_locale: input.locale, p_city: input.city, p_lines: lines, p_restore_token: restoreToken }));
+  return error ? { status: 'failure' } : { status: 'ok', restoreToken };
 }
 
 export type MarkConvertedResult = { status: 'ok' } | { status: 'failure' };
