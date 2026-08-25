@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Star, X } from 'lucide-react';
@@ -20,11 +20,22 @@ export function ReviewForm({ productSlug, state }: { productSlug: string; state:
   const [rating, setRating] = useState(0);
   const [body, setBody] = useState('');
   const [photos, setPhotos] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<Array<string | null>>([]);
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // Build previews once per photo set and revoke the object URLs afterwards
+  // so repeated renders (typing, re-renders) never leak blob URLs.
+  useEffect(() => {
+    const created = photos.map(makePreview);
+    setPreviews(created);
+    return () => {
+      for (const url of created) if (url) URL.revokeObjectURL(url);
+    };
+  }, [photos]);
 
   if (state === 'anonymous') {
     return <p className="text-sm text-muted-foreground">{t('reviewSignInPrompt')}</p>;
@@ -76,7 +87,7 @@ export function ReviewForm({ productSlug, state }: { productSlug: string; state:
     <div className="grid gap-3">
       <div className="flex items-center gap-1" role="group" aria-label={t('rating')}>
         {[1, 2, 3, 4, 5].map((index) => (
-          <button key={index} type="button" aria-label={`${index} out of 5`} onClick={() => setRating(index)} className="p-0.5">
+          <button key={index} type="button" aria-label={`${index}/5`} onClick={() => setRating(index)} className="p-0.5">
             <Star size={20} className={index <= rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40'} />
           </button>
         ))}
@@ -87,7 +98,7 @@ export function ReviewForm({ productSlug, state }: { productSlug: string; state:
       {photos.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {photos.map((file, index) => {
-            const preview = makePreview(file);
+            const preview = previews[index] ?? null;
             return (
               <div key={`${file.name}-${index}`} className="relative">
                 {/* Local blob: URL previews are not routable by the image optimizer. */}

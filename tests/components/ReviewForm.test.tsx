@@ -4,14 +4,15 @@ import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { renderWithProviders } from '../test-utils';
 
 const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/', useRouter: () => ({ refresh }) }));
 
 describe('ReviewForm', () => {
   it('submits the selected rating and body, then shows the pending message', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
     vi.stubGlobal('fetch', fetchMock);
     renderWithProviders(<ReviewForm productSlug="rose-hour" state="can-review" />);
-    fireEvent.click(screen.getByRole('button', { name: /4 out of 5/i }));
+    fireEvent.click(screen.getByRole('button', { name: /4\/5/i }));
     fireEvent.change(screen.getByPlaceholderText(/how was it/i), { target: { value: 'Gorgeous' } });
     fireEvent.click(screen.getByRole('button', { name: /submit review/i }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/account/products/rose-hour/reviews', expect.objectContaining({ method: 'POST' })));
@@ -37,7 +38,7 @@ describe('ReviewForm', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true }) });
     vi.stubGlobal('fetch', fetchMock);
     renderWithProviders(<ReviewForm productSlug="rose-hour" state="can-review" />);
-    fireEvent.click(screen.getByRole('button', { name: /4 out of 5/i }));
+    fireEvent.click(screen.getByRole('button', { name: /4\/5/i }));
     fireEvent.change(screen.getByPlaceholderText(/how was it/i), { target: { value: 'Gorgeous' } });
     const file = new File(['abc'], 'photo.jpg', { type: 'image/jpeg' });
     fireEvent.change(screen.getByLabelText(/add photos/i), { target: { files: [file] } });
@@ -53,7 +54,7 @@ describe('ReviewForm', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'too_large' }) });
     vi.stubGlobal('fetch', fetchMock);
     renderWithProviders(<ReviewForm productSlug="rose-hour" state="can-review" />);
-    fireEvent.click(screen.getByRole('button', { name: /4 out of 5/i }));
+    fireEvent.click(screen.getByRole('button', { name: /4\/5/i }));
     fireEvent.change(screen.getByPlaceholderText(/how was it/i), { target: { value: 'Gorgeous' } });
     fireEvent.change(screen.getByLabelText(/add photos/i), { target: { files: [new File(['abc'], 'photo.jpg', { type: 'image/jpeg' })] } });
     fireEvent.click(screen.getByRole('button', { name: /submit review/i }));
