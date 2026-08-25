@@ -23,6 +23,7 @@ beforeEach(() => { deliver.mockClear(); refund.mockClear(); createIntention.mock
 function submitClient(options: { order?: unknown; pendingChange?: unknown; pendingCancel?: unknown } = {}) {
   const calls: Array<{ table: string; op: string; payload?: unknown }> = [];
   const requestId = 'req-1';
+  const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
   const client = {
     from: (table: string) => ({
       select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => {
@@ -33,8 +34,9 @@ function submitClient(options: { order?: unknown; pendingChange?: unknown; pendi
       insert: (payload: unknown) => { calls.push({ table, op: 'insert', payload }); return { select: () => ({ single: async () => ({ data: { id: requestId }, error: null }) }) }; },
       update: (payload: unknown) => { calls.push({ table, op: 'update', payload }); return { eq: () => ({ error: null }) }; },
     }),
+    rpc: async (name: string, args: Record<string, unknown>) => { rpcCalls.push({ name, args }); return { data: true, error: null }; },
   };
-  return { client, calls };
+  return { client, calls, rpcCalls };
 }
 
 describe('submitChangeRequest', () => {
@@ -54,12 +56,13 @@ describe('submitChangeRequest', () => {
   });
 
   it('auto-applies a confirmed unpaid order and emails change_approved', async () => {
-    const { client, calls } = submitClient({ order: orderRow, pendingChange: null, pendingCancel: null });
+    const { client, calls, rpcCalls } = submitClient({ order: orderRow, pendingChange: null, pendingCancel: null });
     const result = await submitChangeRequest(client, { customerId: 'c1', orderId: 'o1', changes: { items: [{ id: 'i1', quantity: 2 }] }, reason: 'more stems' }, { deliver, orderUrlBase: 'https://example.com' });
     expect(result).toEqual({ status: 'applied', deltaMinor: 6000 });
     expect(calls).toContainEqual(expect.objectContaining({ table: 'order_change_requests', op: 'insert', payload: expect.objectContaining({ status: 'applied', delta_minor: 6000, changes: { items: [{ id: 'i1', quantity: 2 }] } }) }));
-    expect(calls).toContainEqual(expect.objectContaining({ table: 'orders', op: 'update', payload: expect.objectContaining({ subtotal_minor: 16000, total_minor: 17500 }) }));
-    expect(calls).toContainEqual(expect.objectContaining({ table: 'order_items', op: 'update', payload: expect.objectContaining({ quantity: 2 }) }));
+    expect(rpcCalls).toContainEqual(expect.objectContaining({ name: 'apply_change_to_order', args: expect.objectContaining({ p_subtotal_minor: 16000, p_total_minor: 17500, p_items: expect.arrayContaining([expect.objectContaining({ id: 'i1', quantity: 2 })]) }) }));
+    expect(calls.filter((call) => call.table === 'orders' && call.op === 'update')).toEqual([]);
+    expect(calls.filter((call) => call.table === 'order_items' && call.op === 'update')).toEqual([]);
     expect(deliver).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ type: 'change_approved' }), expect.anything());
   });
 
@@ -98,6 +101,7 @@ function downRequest(overrides: Record<string, unknown> = {}) {
 
 function reviewClient(request: unknown) {
   const calls: Array<{ table: string; op: string; payload?: unknown }> = [];
+  const rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
   const client = {
     from: (table: string) => ({
       select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: request, error: null }) }) }),
@@ -106,8 +110,9 @@ function reviewClient(request: unknown) {
       // payments insert chain `.select('id').maybeSingle()`.
       insert: (payload: unknown) => { calls.push({ table, op: 'insert', payload }); return { select: () => ({ maybeSingle: async () => ({ data: { id: 'p1' }, error: null }) }) }; },
     }),
+    rpc: async (name: string, args: Record<string, unknown>) => { rpcCalls.push({ name, args }); return { data: true, error: null }; },
   };
-  return { client, calls };
+  return { client, calls, rpcCalls };
 }
 
 const reviewInput = { admin, requestId: 'req-1', action: 'approve' as const, orderUrlBase: 'https://example.com' };
@@ -134,12 +139,13 @@ describe('reviewChangeRequest', () => {
   });
 
   it('refunds the delta and applies for a paid delta<0 request', async () => {
-    const { client, calls } = reviewClient(downRequest());
+    const { client, calls, rpcCalls } = reviewClient(downRequest());
     const result = await reviewChangeRequest(client, reviewInput, { deliver, refund });
     expect(result).toEqual({ status: 'applied', deltaMinor: -4000 });
     expect(refund).toHaveBeenCalledWith({ transactionId: 'txn-1', amountMinor: 4000 });
     expect(calls).toContainEqual(expect.objectContaining({ table: 'payments', op: 'insert', payload: expect.objectContaining({ status: 'refunded', amount_minor: 4000, idempotency_key: 'change-refund:req-1' }) }));
-    expect(calls).toContainEqual(expect.objectContaining({ table: 'orders', op: 'update', payload: expect.objectContaining({ subtotal_minor: 10000, total_minor: 11500 }) }));
+    expect(rpcCalls).toContainEqual(expect.objectContaining({ name: 'apply_change_to_order', args: expect.objectContaining({ p_subtotal_minor: 10000, p_total_minor: 11500 }) }));
+    expect(calls.filter((call) => call.table === 'orders' && call.op === 'update')).toEqual([]);
     expect(calls).toContainEqual(expect.objectContaining({ table: 'order_change_requests', op: 'update', payload: expect.objectContaining({ status: 'applied', delta_minor: -4000 }) }));
     expect(deliver).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ type: 'change_approved' }), expect.anything());
   });
@@ -206,11 +212,12 @@ describe('handleChangePaymentCallback', () => {
   });
 
   it('records the delta payment, applies the change, and emails change_approved', async () => {
-    const { client, calls } = reviewClient(requestWithOrder({ status: 'approved' }));
+    const { client, calls, rpcCalls } = reviewClient(requestWithOrder({ status: 'approved' }));
     const result = await handleChangePaymentCallback(client, successTransaction, { deliver, orderUrlBase: 'https://example.com' });
     expect(result).toEqual({ handled: true });
     expect(calls).toContainEqual(expect.objectContaining({ table: 'payments', op: 'insert', payload: expect.objectContaining({ status: 'paid', amount_minor: 6000, idempotency_key: 'change-pay:pay-txn-1:success' }) }));
-    expect(calls).toContainEqual(expect.objectContaining({ table: 'orders', op: 'update', payload: expect.objectContaining({ total_minor: 17500 }) }));
+    expect(rpcCalls).toContainEqual(expect.objectContaining({ name: 'apply_change_to_order', args: expect.objectContaining({ p_total_minor: 17500 }) }));
+    expect(calls.filter((call) => call.table === 'orders' && call.op === 'update')).toEqual([]);
     expect(calls).toContainEqual(expect.objectContaining({ table: 'order_change_requests', op: 'update', payload: expect.objectContaining({ status: 'applied' }) }));
     expect(deliver).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ type: 'change_approved' }), expect.anything());
   });

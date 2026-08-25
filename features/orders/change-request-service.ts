@@ -7,7 +7,7 @@ import { getRequiredServerEnv } from '@/lib/server-env';
 import type { CreatePaymentInput } from '@/features/payment/paymob-client';
 import { orderSelect, orderSelectWithItemsAndPayments } from '@/features/order/types';
 
-type ChangeClient = { from: (table: string) => any };
+type ChangeClient = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => unknown };
 
 const fullSelect = orderSelectWithItemsAndPayments;
 
@@ -43,18 +43,23 @@ function emailBase(order: OrderRow, orderUrlBase: string) {
 async function applyChangeToOrder(client: ChangeClient, order: OrderRow, diff: ChangeRequestDiff, actorId: string | null): Promise<boolean> {
   const computed = applyChanges(order, order.items, diff);
   if (!computed.ok) return false;
-  const now = new Date().toISOString();
-  const { error: orderError } = await client.from('orders').update({ ...computed.fields, subtotal_minor: computed.subtotalMinor, total_minor: computed.totalMinor, updated_at: now }).eq('id', order.id);
-  if (orderError) return false;
-  for (const change of diff.items ?? []) {
+  if (!client.rpc) return false;
+  const itemUpdates = (diff.items ?? []).map((change) => {
     const item = computed.items.find((row) => row.id === change.id);
-    if (!item) continue;
-    const update: Record<string, unknown> = {};
-    if (change.quantity !== undefined) update.quantity = item.quantity;
-    if (change.gift_message !== undefined) update.gift_message = item.gift_message;
-    const { error: itemError } = await client.from('order_items').update(update).eq('id', change.id);
-    if (itemError) return false;
-  }
+    return {
+      id: change.id,
+      quantity: item?.quantity,
+      gift_message: item?.gift_message,
+    };
+  });
+  const result = await client.rpc('apply_change_to_order', {
+    p_order_id: order.id,
+    p_order_updates: computed.fields,
+    p_subtotal_minor: computed.subtotalMinor,
+    p_total_minor: computed.totalMinor,
+    p_items: itemUpdates,
+  });
+  if (result && typeof result === 'object' && 'error' in result && result.error) return false;
   const { error: eventError } = await client.from('order_events').insert({ order_id: order.id, actor_id: actorId, event_type: 'change_applied', from_status: null, to_status: null, metadata: { delta_minor: computed.deltaMinor } });
   return !eventError;
 }
