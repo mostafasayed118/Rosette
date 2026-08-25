@@ -10,6 +10,13 @@ import { logRouteError } from '@/lib/api';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
+  // Paymob callbacks should never be large. Anything over 64KB is not a real
+  // payment and we 400 immediately rather than exhausting the worker body limit.
+  const contentLength = Number(request.headers.get('content-length') ?? '0');
+  if (contentLength > 65_000) {
+    logger.warn('payment.webhook.oversized', { contentLength });
+    return NextResponse.json({ error: 'Payload too large' }, { status: 400 });
+  }
   let payload: Record<string, unknown> & { hmac?: string; obj?: Record<string, unknown> };
   try {
     payload = (await request.json()) as Record<string, unknown> & { hmac?: string; obj?: Record<string, unknown> };
@@ -62,23 +69,43 @@ export async function POST(request: Request) {
   const amountMinor = Number(transaction.amount_cents ?? 0);
   const success = transaction.success === true;
   const providerReference = String(transaction.id ?? transaction.order?.id ?? '');
-  const idempotencyKey = `paymob:${providerReference}:${success ? 'success' : 'failure'}`;
+  // Idempotency key is keyed on providerReference only. A success callback that
+  // arrives after a failure (network split, 3DS void-then-capture) reuses the
+  // same key and is treated as a state update, not a duplicate.
+  const idempotencyKey = `paymob:${providerReference}`;
   if (!orderReference || !providerReference) return NextResponse.json({ error: 'Incomplete callback' }, { status: 400 });
 
+  const supabase = getAdminSupabase();
+
+  // Quarantine a payload whose amount disagrees with the order total. Ack 2xx so
+  // Paymob stops retrying; the row sits in webhook_quarantine for an operator.
+  const { data: order } = await supabase.from('orders').select('id,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,payment_status,display_number,public_token,customer_email,locale,gift_card_id,gift_card_minor,gift_card_hold_id').eq('display_number', orderReference).maybeSingle();
+  if (!order) return NextResponse.json({ received: true });
+  if (order.total_minor !== amountMinor) {
+    await supabase.from('webhook_quarantine').insert({ provider: 'paymob', provider_reference: providerReference, payload, error_message: `amount_mismatch: order=${order.total_minor} callback=${amountMinor}` });
+    logger.warn('payment.webhook.amount_mismatch', { orderReference, providerReference, orderAmount: order.total_minor, callbackAmount: amountMinor });
+    return NextResponse.json({ received: true, quarantined: true });
+  }
+
   try {
-    const supabase = getAdminSupabase();
-    const { data: order } = await supabase.from('orders').select('id,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,payment_status,display_number,public_token,customer_email,locale,gift_card_id,gift_card_minor,gift_card_hold_id').eq('display_number', orderReference).maybeSingle();
-    if (!order) return NextResponse.json({ received: true });
-    if (order.total_minor !== amountMinor) return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
     const giftCardSettlement = await settleGiftCardOrderPayment(supabase, order, { success, providerReference });
     if (!giftCardSettlement.ok) throw new Error('Gift-card settlement failed');
 
-    const { data: inserted, error: insertError } = await supabase.from('payments').insert({ order_id: order.id, provider: 'paymob', provider_reference: providerReference, idempotency_key: idempotencyKey, amount_minor: amountMinor, currency: String(transaction.currency ?? 'EGP'), status: success ? 'paid' : 'payment_failed', raw_event: payload }).select('id').maybeSingle();
-    if (insertError && !insertError.message.toLowerCase().includes('duplicate')) throw insertError;
-    if (!inserted && insertError) return NextResponse.json({ received: true });
+    const desiredStatus = success ? 'paid' : 'payment_failed';
+    const { data: existing } = await supabase.from('payments').select('id,status').eq('provider_reference', providerReference).maybeSingle();
+    if (existing) {
+      if (existing.status !== desiredStatus) {
+        await supabase.from('payments').update({ status: desiredStatus, raw_event: payload, updated_at: new Date().toISOString() }).eq('id', existing.id);
+      }
+    } else {
+      const { error: insertError } = await supabase.from('payments').insert({ order_id: order.id, provider: 'paymob', provider_reference: providerReference, idempotency_key: idempotencyKey, amount_minor: amountMinor, currency: String(transaction.currency ?? 'EGP'), status: desiredStatus, raw_event: payload });
+      if (insertError && !insertError.message.toLowerCase().includes('duplicate')) throw insertError;
+    }
 
-    await supabase.from('orders').update({ payment_status: success ? 'paid' : 'payment_failed' }).eq('id', order.id).in('payment_status', ['pending', 'payment_started']);
-    await supabase.from('order_events').insert({ order_id: order.id, event_type: success ? 'payment_confirmed' : 'payment_failed', from_status: order.payment_status, to_status: success ? 'paid' : 'payment_failed', metadata: { providerReference } });
+    // Allow pending, payment_started, and payment_failed to flip in either direction.
+    // A late success after a recorded failure must still be honored.
+    await supabase.from('orders').update({ payment_status: desiredStatus }).eq('id', order.id).in('payment_status', ['pending', 'payment_started', 'payment_failed']);
+    await supabase.from('order_events').insert({ order_id: order.id, event_type: success ? 'payment_confirmed' : 'payment_failed', from_status: order.payment_status, to_status: desiredStatus, metadata: { providerReference } });
     if (success) {
       await deliverOrderNotification(supabase, {
         orderId: order.id,
