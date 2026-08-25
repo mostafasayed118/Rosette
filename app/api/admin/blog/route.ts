@@ -3,6 +3,7 @@ import { createBlogPost, updateBlogPost } from '@/features/admin/blog-admin';
 import type { BlogPostInput } from '@/features/blog/types';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
+import { logRouteError } from '@/lib/api';
 
 function badRequest(): NextResponse {
   return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Could not save blog post';
-    return NextResponse.json({ error: message }, { status: 500 });
+    logRouteError('admin blog save', error);
+    return NextResponse.json({ error: 'Could not save blog post' }, { status: 500 });
   }
 }
