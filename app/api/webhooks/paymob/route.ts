@@ -3,6 +3,7 @@ import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getRequiredServerEnv } from '@/lib/server-env';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import { verifyPaymobCallback } from '@/features/payment/paymob-hmac';
+import { buildPaymobIdempotencyKey, handlePaymobAmountMismatch } from '@/features/payment/paymob-webhook';
 import { handleChangePaymentCallback } from '@/features/orders/change-request-service';
 import { activateGiftCardPurchase, settleGiftCardOrderPayment } from '@/features/gift-cards/service';
 import { getPublicOrigin } from '@/lib/origin';
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
   // Idempotency key is keyed on providerReference only. A success callback that
   // arrives after a failure (network split, 3DS void-then-capture) reuses the
   // same key and is treated as a state update, not a duplicate.
-  const idempotencyKey = `paymob:${providerReference}`;
+  const idempotencyKey = buildPaymobIdempotencyKey(providerReference);
   if (!orderReference || !providerReference) return NextResponse.json({ error: 'Incomplete callback' }, { status: 400 });
 
   const supabase = getAdminSupabase();
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
   const { data: order } = await supabase.from('orders').select('id,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,payment_status,display_number,public_token,customer_email,locale,gift_card_id,gift_card_minor,gift_card_hold_id').eq('display_number', orderReference).maybeSingle();
   if (!order) return NextResponse.json({ received: true });
   if (order.total_minor !== amountMinor) {
-    await supabase.from('webhook_quarantine').insert({ provider: 'paymob', provider_reference: providerReference, payload, error_message: `amount_mismatch: order=${order.total_minor} callback=${amountMinor}` });
+    await handlePaymobAmountMismatch({ client: supabase, provider: 'paymob', providerReference, orderReference, orderTotalMinor: order.total_minor, callbackAmountMinor: amountMinor, payload });
     logger.warn('payment.webhook.amount_mismatch', { orderReference, providerReference, orderAmount: order.total_minor, callbackAmount: amountMinor });
     return NextResponse.json({ received: true, quarantined: true });
   }
