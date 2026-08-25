@@ -45,12 +45,9 @@ export async function POST(request: Request) {
     // Best-effort: an order must never fail because a cart could not be marked.
     await markCartConverted(getAdminSupabase(), { email: checkout.senderEmail });
     if (order.totalMinor === 0 && order.giftCardHoldId) {
-      const supabase = getAdminSupabase();
-      const { error: redeemError } = await supabase.rpc('redeem_gift_card_hold', { p_hold_id: order.giftCardHoldId, p_idempotency_key: `gift-card-zero:${order.id}` });
-      if (redeemError) return NextResponse.json({ error: 'Checkout is temporarily unavailable.' }, { status: 503 });
-      await supabase.from('orders').update({ payment_status: 'paid', updated_at: new Date().toISOString() }).eq('id', order.id);
-      await supabase.from('payments').insert({ order_id: order.id, provider: 'gift_card', provider_reference: null, idempotency_key: `gift-card-zero-payment:${order.id}`, amount_minor: 0, currency: 'EGP', status: 'paid' });
-      await deliverOrderNotification(supabase, { orderId: order.id, type: 'payment_confirmed', recipient: checkout.senderEmail, locale: body.locale, orderNumber: order.displayNumber, totalMinor: 0, subtotalMinor: order.subtotalMinor, deliveryFeeMinor: order.deliveryFeeMinor, discountMinor: order.discountMinor, orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}` });
+      // The create_pending_order RPC has already redeemed the hold, stamped the
+      // order paid, and inserted the zero-amount payment row atomically.
+      await deliverOrderNotification(getAdminSupabase(), { orderId: order.id, type: 'payment_confirmed', recipient: checkout.senderEmail, locale: body.locale, orderNumber: order.displayNumber, totalMinor: 0, subtotalMinor: order.subtotalMinor, deliveryFeeMinor: order.deliveryFeeMinor, discountMinor: order.discountMinor, orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}` });
       return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: 'paid', checkoutUrl: null });
     }
     const paymobConfigured = Boolean(getOptionalServerEnv('PAYMOB_API_KEY') && getOptionalServerEnv('PAYMOB_PUBLIC_KEY') && getOptionalServerEnv('PAYMOB_INTEGRATION_ID') && getOptionalServerEnv('PAYMOB_HMAC_SECRET'));
