@@ -2,6 +2,7 @@ import { cache } from 'react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { BlogPostCard } from '@/components/blog/BlogPostCard';
@@ -35,7 +36,7 @@ export default async function AuthorPage({ params }: AuthorPageParams) {
   const locale: Locale = (LOCALES as string[]).includes(localeRaw) ? (localeRaw as Locale) : 'en';
   const { t } = await getServerT(locale);
   const author = await getAuthor(slug);
-  if (!author) return <main className="mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('notFoundEyebrow')}</p><h1 className="mt-2 mb-6 max-w-[12ch] font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[.95]">{t('notFoundTitle')}</h1><Link className="text-sm text-primary underline underline-offset-4" href={`/${locale}/${city}/blog/authors`}>← {t('authorsIndexTitle')}</Link></main>;
+  if (!author) notFound();
   const name = pickLocalized(locale, { en: author.nameEn, ar: author.nameAr ?? author.nameEn, fr: author.nameFr ?? author.nameEn });
   const role = pickLocalized(locale, { en: author.roleEn ?? '', ar: author.roleAr ?? '', fr: author.roleFr ?? '' });
   const bio = pickLocalized(locale, { en: author.bioEn ?? '', ar: author.bioAr ?? author.bioEn ?? '', fr: author.bioFr ?? author.bioEn ?? '' });

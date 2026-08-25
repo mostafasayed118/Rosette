@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { AuthorByline } from '@/components/blog/AuthorByline';
@@ -35,7 +36,7 @@ export default async function BlogPostPage({ params }: BlogPostPageParams) {
   const locale: Locale = (LOCALES as string[]).includes(localeRaw) ? (localeRaw as Locale) : 'en';
   const { t } = await getServerT(locale);
   const post = await getPost(slug);
-  if (!post) return <main className="mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('notFoundEyebrow')}</p><h1 className="mt-2 mb-6 max-w-[12ch] font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[.95]">{t('notFoundTitle')}</h1><Link className="text-sm text-primary underline underline-offset-4" href={`/${locale}/${city}/blog`}>← {t('blogTitle')}</Link></main>;
+  if (!post) notFound();
   const title = pickLocalized(locale, { en: post.titleEn, ar: post.titleAr ?? post.titleEn, fr: post.titleFr ?? post.titleEn });
   const content = pickLocalized(locale, { en: post.contentEn, ar: post.contentAr ?? post.contentEn, fr: post.contentFr ?? post.contentEn });
   const minutes = estimateReadingTime(content);
