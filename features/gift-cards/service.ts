@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { getRequiredServerEnv } from '@/lib/server-env';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 import type { PaymentCustomer } from '@/features/payment/paymob-client';
+import { parsePaymobSpecialReference } from '@/features/payment/paymob-routing';
 import { decryptGiftCardCode, encryptGiftCardCode, generateGiftCardCode, hashGiftCardCode, maskGiftCardCode } from './crypto';
 import type { GiftCardPurchaseInput, GiftCardQuote } from './types';
 import { validateGiftCardPurchaseInput } from './validation';
@@ -125,8 +126,9 @@ export async function activateGiftCardPurchase(
   transaction: { specialReference: string; amountMinor: number; providerReference: string; success: boolean },
   deps: { secret?: string; now?: Date; deliver?: (input: DeliveryInput) => Promise<boolean> } = {},
 ): Promise<{ handled: true; status: 'activated' | 'already_processed' | 'failed' | 'ignored' }> {
-  if (!transaction.specialReference.startsWith('giftcard:')) return { handled: true, status: 'ignored' };
-  const reference = transaction.specialReference.slice('giftcard:'.length);
+  const parsed = parsePaymobSpecialReference(transaction.specialReference);
+  if (!parsed || parsed.kind !== 'giftcard') return { handled: true, status: 'ignored' };
+  const reference = parsed.reference;
   if (!reference) return { handled: true, status: 'ignored' };
   const { data: purchase } = await client.from('gift_card_purchases').select('*').eq('id', reference).maybeSingle();
   if (!purchase) return { handled: true, status: 'ignored' };

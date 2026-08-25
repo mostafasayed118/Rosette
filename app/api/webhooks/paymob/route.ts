@@ -4,6 +4,7 @@ import { getRequiredServerEnv } from '@/lib/server-env';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import { verifyPaymobCallback } from '@/features/payment/paymob-hmac';
 import { buildPaymobIdempotencyKey, handlePaymobAmountMismatch } from '@/features/payment/paymob-webhook';
+import { parsePaymobSpecialReference } from '@/features/payment/paymob-routing';
 import { handleChangePaymentCallback } from '@/features/orders/change-request-service';
 import { activateGiftCardPurchase, settleGiftCardOrderPayment } from '@/features/gift-cards/service';
 import { getPublicOrigin } from '@/lib/origin';
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
   if (transaction.is_refund === true || transaction.is_refunded === true || transaction.has_parent_transaction === true) return NextResponse.json({ received: true });
 
   const specialReference = String(transaction.order?.special_reference ?? transaction.special_reference ?? '');
-  if (specialReference.startsWith('giftcard:')) {
+  if (parsePaymobSpecialReference(specialReference)?.kind === 'giftcard') {
     try {
       await activateGiftCardPurchase(getAdminSupabase(), {
         specialReference,
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
   // Change-request delta payments: Paymob echoes special_reference back in the
   // callback. Match it before the order path — the order path matches
   // display_number and would 400 on these (no merchant_order_id is set).
-  if (specialReference.startsWith('change:')) {
+  if (parsePaymobSpecialReference(specialReference)?.kind === 'change') {
     await handleChangePaymentCallback(getAdminSupabase(), transaction, { orderUrlBase: getPublicOrigin(request) });
     return NextResponse.json({ received: true });
   }

@@ -6,6 +6,7 @@ import { createPaymobIntention } from '@/features/payment/paymob-client';
 import { getRequiredServerEnv } from '@/lib/server-env';
 import type { CreatePaymentInput } from '@/features/payment/paymob-client';
 import { orderSelect, orderSelectWithItemsAndPayments } from '@/features/order/types';
+import { parsePaymobSpecialReference } from '@/features/payment/paymob-routing';
 
 type ChangeClient = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => unknown };
 
@@ -189,8 +190,9 @@ export async function handleChangePaymentCallback(
 ): Promise<{ handled: boolean }> {
   const deliver = deps.deliver ?? deliverOrderNotification;
   const special = String(transaction.order?.special_reference ?? transaction.special_reference ?? '');
-  if (!special.startsWith('change:')) return { handled: false };
-  const requestId = special.slice('change:'.length);
+  const parsed = parsePaymobSpecialReference(special);
+  if (!parsed || parsed.kind !== 'change') return { handled: false };
+  const requestId = parsed.reference;
   if (!requestId || transaction.success !== true) return { handled: true };
   try {
     const { data } = await client.from('order_change_requests').select(`*,orders(${fullSelect})`).eq('id', requestId).maybeSingle();
