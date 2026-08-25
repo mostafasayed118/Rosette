@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { getRequiredServerEnv } from '@/lib/server-env';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
-import type { PaymentCustomer } from '@/features/payment/types';
+import type { PaymentCustomer } from '@/features/payment/paymob-client';
 import { decryptGiftCardCode, encryptGiftCardCode, generateGiftCardCode, hashGiftCardCode, maskGiftCardCode } from './crypto';
 import type { GiftCardPurchaseInput, GiftCardQuote } from './types';
 import { validateGiftCardPurchaseInput } from './validation';

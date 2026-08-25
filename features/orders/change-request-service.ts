@@ -4,7 +4,7 @@ import type { AdminIdentity } from '@/features/admin/authorization';
 import { refundPaymobTransaction, type PaymobRefundResult } from '@/features/payment/paymob-refund';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 import { getRequiredServerEnv } from '@/lib/server-env';
-import type { CreatePaymentInput } from '@/features/payment/types';
+import type { CreatePaymentInput } from '@/features/payment/paymob-client';
 
 type ChangeClient = { from: (table: string) => any };
 
