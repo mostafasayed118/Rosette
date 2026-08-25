@@ -225,7 +225,7 @@ type CreateDeltaIntention = (input: Omit<CreatePaymentInput, 'integrationId'>) =
 
 const defaultCreateIntention: CreateDeltaIntention = (input) => createPaymobIntention({ ...input, integrationId: Number(getRequiredServerEnv('PAYMOB_INTEGRATION_ID')) });
 
-export type PayDeltaResult = { status: 'ok'; checkoutUrl: string } | { status: 'not_found' } | { status: 'not_payable' } | { status: 'failure' };
+export type PayDeltaResult = { status: 'ok'; checkoutUrl: string } | { status: 'not_found' } | { status: 'not_payable' } | { status: 'guest_orders_unpayable' } | { status: 'failure' };
 
 export async function payChangeRequestDelta(
   client: ChangeClient,
@@ -238,6 +238,10 @@ export async function payChangeRequestDelta(
     if (!data || !data.orders) return { status: 'not_found' };
     const request = data as { id: string; status: string; delta_minor: number | null; orders: Record<string, any> };
     const order = normalizeOrder(request.orders);
+    // Guest orders (customer_id is null) cannot pay a delta through an account
+    // route. The order form would need a publicToken path; for now we surface
+    // a distinct status so the route can return a helpful message.
+    if (order.customer_id === null) return { status: 'guest_orders_unpayable' };
     if (order.customer_id !== input.customerId) return { status: 'not_found' };
     if (request.status !== 'approved' || !request.delta_minor || request.delta_minor <= 0) return { status: 'not_payable' };
     const origin = deps.origin.replace(/\/$/, '');

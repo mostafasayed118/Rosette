@@ -11,12 +11,22 @@ import { markCartConverted } from '@/features/cart/cart-sync';
 import { resolvePaymentMethodAvailability } from '@/features/checkout/payment-mode';
 import { logger } from '@/lib/logger';
 import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+const ORDERS_PER_EMAIL = { bucket: 'orders-email', limit: 5, windowMs: 10 * 60_000 };
 
 export async function POST(request: Request) {
   const limited = enforceRateLimit(request, RATE_LIMITS.orders);
   if (limited) return limited;
   try {
-    const body = await request.json() as { cart?: unknown; destination?: unknown; checkout?: unknown; locale?: unknown };
+    const body = await request.json() as { cart?: unknown; destination?: unknown; checkout?: { senderEmail?: unknown }; locale?: unknown };
+    const senderEmail = typeof body.checkout?.senderEmail === 'string' ? body.checkout.senderEmail.trim().toLowerCase() : '';
+    if (senderEmail) {
+      const emailResult = checkRateLimit({ ...ORDERS_PER_EMAIL, identifier: senderEmail });
+      if (!emailResult.allowed) {
+        return NextResponse.json({ error: 'Too many order attempts for this address. Please wait a moment.' }, { status: 429, headers: { 'Retry-After': String(emailResult.retryAfterSeconds) } });
+      }
+    }
     const validation = validateOrderRequest(body as { cart?: { lines?: unknown[] }; total?: unknown });
     if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
     if (!body.destination || !body.checkout || (body.locale !== 'ar' && body.locale !== 'en' && body.locale !== 'fr')) return NextResponse.json({ error: 'Incomplete checkout details' }, { status: 400 });
