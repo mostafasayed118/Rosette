@@ -12,7 +12,10 @@ import type { OrderRepository, CreatePendingOrderInput, Order, PendingOrder, Res
 type ProductRow = { id: string; slug: string; name_en: string; name_ar: string; name_fr?: string; price_minor: number; add_ons: Array<{ id: string; name_en: string; price_minor: number }>; product_variants: Array<{ id: string; name_en: string; price_delta_minor: number }> };
 
 function displayNumber() {
-  return `RO-${Date.now().toString(36).toUpperCase()}`;
+  // Random suffix keeps concurrent checkouts from colliding on the unique
+  // display_number column (Date.now() alone repeats within the same ms).
+  const random = randomUUID().replace(/-/g, '').slice(0, 4).toUpperCase();
+  return `RO-${Date.now().toString(36).toUpperCase()}-${random}`;
 }
 
 async function authoritativeLines(supabase: ReturnType<typeof getAdminSupabase>, lines: CartLine[]) {
