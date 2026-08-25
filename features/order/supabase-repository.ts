@@ -1,22 +1,15 @@
-import { randomUUID } from 'node:crypto';
 import { calculateCartTotals } from '@/features/cart/pricing';
 import { applyPromoToOrderTotals, validatePromo } from '@/features/promo/apply';
 import { fetchPromo } from '@/features/promo/repository';
 import { applyDeliveryRule, fetchDeliveryRule } from './delivery-rules';
-import { buildOrderInsertRow } from './order-insert';
-import { holdGiftCardForOrder, quoteGiftCardForOrder } from '@/features/gift-cards/service';
+import { quoteGiftCardForOrder } from '@/features/gift-cards/service';
+import { hashGiftCardCode } from '@/features/gift-cards/crypto';
 import { getAdminSupabase } from '@/lib/supabase/admin';
+import { getRequiredServerEnv } from '@/lib/server-env';
 import type { CartLine } from '@/features/cart/types';
 import type { OrderRepository, CreatePendingOrderInput, Order, PendingOrder, Result, OrderCreateError } from './types';
 
 type ProductRow = { id: string; slug: string; name_en: string; name_ar: string; name_fr?: string; price_minor: number; add_ons: Array<{ id: string; name_en: string; price_minor: number }>; product_variants: Array<{ id: string; name_en: string; price_delta_minor: number }> };
-
-function displayNumber() {
-  // Random suffix keeps concurrent checkouts from colliding on the unique
-  // display_number column (Date.now() alone repeats within the same ms).
-  const random = randomUUID().replace(/-/g, '').slice(0, 4).toUpperCase();
-  return `RO-${Date.now().toString(36).toUpperCase()}-${random}`;
-}
 
 async function authoritativeLines(supabase: ReturnType<typeof getAdminSupabase>, lines: CartLine[]) {
   const slugs = [...new Set(lines.map((line) => line.productSlug))];
@@ -36,6 +29,8 @@ async function authoritativeLines(supabase: ReturnType<typeof getAdminSupabase>,
     return { ...line, productName: product.name_en, productNameAr: product.name_ar, productNameFr: product.name_fr, unitPrice: product.price_minor + (variant?.price_delta_minor ?? 0), variantId: line.variantId ?? variant?.id, addOns };
   });
 }
+
+type RpcResponse = { order: { id: string; display_number: string; public_token: string; total_minor: number; subtotal_minor: number; delivery_fee_minor: number; discount_minor: number; gift_card_minor: number; gift_card_id: string | null; gift_card_hold_id: string | null; gift_card_code_last4: string | null; payment_status: 'pending' | 'paid'; fulfillment_status: 'confirmed' }; gift_card_hold_id: string | null; zero_total_redeemed: boolean };
 
 export const supabaseOrderRepository: OrderRepository = {
   async createPending(input: CreatePendingOrderInput): Promise<Result<PendingOrder, OrderCreateError>> {
@@ -66,6 +61,7 @@ export const supabaseOrderRepository: OrderRepository = {
       let giftCardMinor = 0;
       let giftCardId: string | null = null;
       let giftCardCodeLast4: string | null = null;
+      let giftCardCodeHash: string | null = null;
       const giftCardCode = input.checkout.giftCardCode?.trim();
       if (giftCardCode) {
         const quote = await quoteGiftCardForOrder(supabase, { code: giftCardCode, orderTotalMinor: totals.total });
@@ -73,63 +69,46 @@ export const supabaseOrderRepository: OrderRepository = {
         giftCardMinor = quote.value.amountAppliedMinor;
         giftCardId = quote.value.giftCardId;
         giftCardCodeLast4 = quote.value.codeLast4;
+        giftCardCodeHash = hashGiftCardCode(giftCardCode, getRequiredServerEnv('GIFT_CARD_SECRET'));
         totals = { ...totals, total: quote.value.remainingTotalMinor };
       }
-      const number = displayNumber();
-      const publicToken = randomUUID();
-      const { data: order, error } = await supabase.from('orders').insert(buildOrderInsertRow({
-        number,
-        publicToken,
-        customerId: input.customerId,
-        customerEmail: input.checkout.senderEmail,
-        customerPhone: input.checkout.recipientPhone,
-        recipientName: input.checkout.recipientName,
-        recipientPhone: input.checkout.recipientPhone,
-        deliveryAddress: input.checkout.address,
-        deliveryCityCode: input.destination.cityCode,
-        deliveryDate: input.checkout.deliveryDate,
-        deliveryWindow: input.checkout.deliveryWindow,
-        locale: input.locale,
-        subtotalMinor: totals.subtotal,
-        deliveryFeeMinor: totals.deliveryFee,
-        discountMinor,
-        promoCode,
-        totalMinor: totals.total,
-        giftCardMinor,
-        giftCardId,
-        giftCardCodeLast4,
-      })).select('id,display_number,public_token,total_minor').single();
-      if (error || !order) return { ok: false, error: 'unavailable' };
-      const { error: itemError } = await supabase.from('order_items').insert(safeLines.map((line) => ({
-        order_id: order.id,
-        product_id: null,
-        variant_id: line.variantId,
-        product_slug: line.productSlug,
-        product_name_en: line.productName,
-        product_name_ar: line.productNameAr ?? '',
-        product_name_fr: (line as { productNameFr?: string }).productNameFr ?? '',
-        unit_price_minor: line.unitPrice,
-        quantity: line.quantity,
-        add_ons: line.addOns,
-        gift_message: line.message,
-      })));
-      if (itemError) { await supabase.from('orders').delete().eq('id', order.id); return { ok: false, error: 'unavailable' }; }
-      let giftCardHoldId: string | null = null;
-      if (giftCardCode && giftCardMinor > 0) {
-        const hold = await holdGiftCardForOrder(supabase, { code: giftCardCode, orderId: order.id, amountMinor: giftCardMinor });
-        if (!hold.ok) { await supabase.from('orders').delete().eq('id', order.id); return { ok: false, error: 'invalid_gift_card' }; }
-        giftCardHoldId = hold.holdId;
-        const { error: holdUpdateError } = await supabase.from('orders').update({ gift_card_hold_id: giftCardHoldId }).eq('id', order.id);
-        if (holdUpdateError) { await supabase.rpc('release_gift_card_hold', { p_hold_id: giftCardHoldId, p_idempotency_key: `gift-card-release:${order.id}` }); await supabase.from('orders').delete().eq('id', order.id); return { ok: false, error: 'unavailable' }; }
-      }
-      const { error: reservationError } = await supabase.rpc('reserve_order_inventory', { p_order_id: order.id, p_items: safeLines.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })) });
-      if (reservationError) {
-        if (giftCardHoldId) await supabase.rpc('release_gift_card_hold', { p_hold_id: giftCardHoldId, p_idempotency_key: `gift-card-release:${order.id}` });
-        await supabase.from('orders').delete().eq('id', order.id);
-        return { ok: false, error: reservationError.message.includes('INSUFFICIENT_STOCK') ? 'invalid' : 'unavailable' };
-      }
-      if (promoCode) await supabase.rpc('increment_promo_usage', { p_code: promoCode });
-      return { ok: true, value: { id: order.id, displayNumber: order.display_number, totalMinor: order.total_minor, subtotalMinor: totals.subtotal, deliveryFeeMinor: totals.deliveryFee, discountMinor, giftCardMinor, giftCardId, giftCardHoldId, giftCardCodeLast4, publicToken: order.public_token, paymentStatus: 'pending', fulfillmentStatus: 'confirmed' } };
+      const { data, error } = await supabase.rpc('create_pending_order', {
+        p_lines: safeLines.map((line) => ({
+          variantId: line.variantId,
+          productSlug: line.productSlug,
+          productName: line.productName,
+          productNameAr: line.productNameAr ?? '',
+          productNameFr: (line as { productNameFr?: string }).productNameFr ?? '',
+          unitPrice: line.unitPrice,
+          quantity: line.quantity,
+          addOns: line.addOns,
+          message: line.message,
+        })),
+        p_destination: { cityCode: input.destination.cityCode },
+        p_checkout: {
+          customerEmail: input.checkout.senderEmail,
+          customerPhone: input.checkout.recipientPhone,
+          recipientName: input.checkout.recipientName,
+          recipientPhone: input.checkout.recipientPhone,
+          deliveryAddress: input.checkout.address,
+          deliveryDate: input.checkout.deliveryDate,
+          deliveryWindow: input.checkout.deliveryWindow,
+          locale: input.locale,
+          giftCardCodeHash,
+          giftCardId,
+          giftCardCodeLast4,
+        },
+        p_customer_id: input.customerId ?? null,
+        p_subtotal_minor: totals.subtotal,
+        p_delivery_fee_minor: totals.deliveryFee,
+        p_discount_minor: discountMinor,
+        p_total_minor: totals.total,
+        p_promo_code: promoCode,
+        p_gift_card_minor: giftCardMinor,
+      });
+      if (error || !data) return { ok: false, error: 'unavailable' };
+      const rpc = data as unknown as RpcResponse;
+      return { ok: true, value: { id: rpc.order.id, displayNumber: rpc.order.display_number, totalMinor: rpc.order.total_minor, subtotalMinor: rpc.order.subtotal_minor, deliveryFeeMinor: rpc.order.delivery_fee_minor, discountMinor: rpc.order.discount_minor, giftCardMinor: rpc.order.gift_card_minor, giftCardId: rpc.order.gift_card_id, giftCardHoldId: rpc.order.gift_card_hold_id, giftCardCodeLast4: rpc.order.gift_card_code_last4, publicToken: rpc.order.public_token, paymentStatus: 'pending', fulfillmentStatus: 'confirmed' } };
     } catch {
       return { ok: false, error: 'unavailable' };
     }
