@@ -45,12 +45,33 @@ describe('Rosette storefront (Playwright deterministic E2E)', () => {
     await page.goto(`${getBaseUrl()}/en/cairo/shop`, { waitUntil: 'domcontentloaded' });
 
     const cards = page.locator('a[href*="/shop/"]');
+    await cards.first().waitFor({ state: 'visible', timeout: 15_000 });
     const count = await cards.count();
     expect(count).toBeGreaterThan(0);
 
     // at least one card shows a price (EGP)
-    const firstCardText = await cards.first().textContent();
-    expect(firstCardText).toMatch(/EGP/i);
+    const pricedCard = cards.filter({ hasText: /EGP/i }).first();
+    await pricedCard.waitFor({ state: 'visible', timeout: 15_000 });
+  });
+
+  it('shows the Stitch header nav and full footer on the storefront', async () => {
+    await page.goto(`${getBaseUrl()}/en/cairo`, { waitUntil: 'domcontentloaded' });
+    for (const name of ['Collections', 'Bespoke', 'Atelier', 'Gifts']) {
+      await page.getByRole('link', { name, exact: true }).waitFor({ state: 'visible', timeout: 15_000 });
+    }
+    await page.getByRole('link', { name: 'Privacy' }).waitFor({ state: 'visible', timeout: 10_000 });
+    await page.getByRole('contentinfo').waitFor({ state: 'visible', timeout: 10_000 });
+  });
+
+  it('renders the size selector once variants are readable', async () => {
+    await page.goto(`${getBaseUrl()}/en/cairo/shop/rose-hour`, { waitUntil: 'domcontentloaded' });
+    await page.getByText(/choose a size/i).first().waitFor({ state: 'visible', timeout: 15_000 });
+  });
+
+  it('renders the tracking page inside site chrome', async () => {
+    await page.goto(`${getBaseUrl()}/en/cairo/track`, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('banner').waitFor({ state: 'visible', timeout: 10_000 });
+    await page.getByRole('contentinfo').waitFor({ state: 'visible', timeout: 10_000 });
   });
 
   it('renders the static pages linked from the footer', async () => {
