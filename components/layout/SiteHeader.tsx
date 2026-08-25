@@ -40,7 +40,7 @@ export function SiteHeader({ cityName, cartCount }: SiteHeaderProps) {
 
   function navClasses(path: string) {
     const base = href(path.split('?')[0] ?? path);
-    const active = pathname === base || pathname.startsWith(`${base}/`);
+    const active = !path.includes('?') && (pathname === base || pathname.startsWith(`${base}/`));
     return `border-b-2 pb-1 transition-colors ${active ? 'border-primary text-primary' : 'border-transparent text-on-surface hover:text-primary'}`;
   }
 
