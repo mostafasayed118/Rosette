@@ -33,6 +33,9 @@ export async function createPaymobIntention(input: CreatePaymentInput): Promise<
     method: 'POST',
     headers: { Authorization: `Token ${getRequiredServerEnv('PAYMOB_API_KEY')}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(buildPaymobIntentionPayload(input)),
+    // A hung Paymob must not pin a Worker isolate. 10s is generous; Paymob
+    // typically responds in <2s. The route maps the abort to a 503.
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) throw new Error(`Paymob intention failed with status ${response.status}`);
   const body = (await response.json()) as PaymobIntentionResponse;

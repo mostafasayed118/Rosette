@@ -10,6 +10,7 @@ export async function createPaymobAuthToken(): Promise<string> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ api_key: getRequiredServerEnv('PAYMOB_API_KEY') }),
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) throw new Error(`Paymob auth failed with status ${response.status}`);
   const body = (await response.json()) as { token?: string };
@@ -30,6 +31,7 @@ export async function refundPaymobTransaction(input: { transactionId: string; am
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ auth_token: authToken, transaction_id: Number(input.transactionId), amount_cents: input.amountMinor }),
+      signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) return { ok: false, error: `Paymob refund failed with status ${response.status}` };
     const body = (await response.json()) as { id?: number | string };
