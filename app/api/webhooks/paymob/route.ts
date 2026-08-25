@@ -10,11 +10,18 @@ import { logRouteError } from '@/lib/api';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
-  const payload = (await request.json()) as Record<string, unknown> & { hmac?: string; obj?: Record<string, unknown> };
+  let payload: Record<string, unknown> & { hmac?: string; obj?: Record<string, unknown> };
+  try {
+    payload = (await request.json()) as Record<string, unknown> & { hmac?: string; obj?: Record<string, unknown> };
+  } catch {
+    logger.warn('payment.webhook.malformed_body');
+    return NextResponse.json({ error: 'Malformed callback body' }, { status: 400 });
+  }
   const transaction = (payload.obj ?? payload) as Record<string, any>;
-  // Paymob delivers the HMAC as a query parameter on the callback URL (?hmac=), not in the body.
+  // Paymob delivers the HMAC as a query parameter on the callback URL (?hmac=);
+  // prefer it over any body-supplied value.
   const queryHmac = new URL(request.url).searchParams.get('hmac') ?? undefined;
-  const callback = { ...transaction, hmac: payload.hmac ?? transaction.hmac ?? queryHmac };
+  const callback = { ...transaction, hmac: queryHmac ?? payload.hmac ?? transaction.hmac };
   if (!verifyPaymobCallback(callback, getRequiredServerEnv('PAYMOB_HMAC_SECRET'))) {
     logger.warn('payment.webhook.invalid_signature', { providerReference: String(transaction.id ?? '') });
     return NextResponse.json({ error: 'Invalid callback signature' }, { status: 401 });
