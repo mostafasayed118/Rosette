@@ -11,6 +11,7 @@ import { RequestTabs } from '@/components/admin/RequestTabs';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
+import { formatDateTime } from '@/lib/date';
 import { formatMoney } from '@/features/money';
 import { fulfillmentBadgeVariant, fulfillmentLabel, paymentBadgeVariant, paymentLabel } from '@/features/admin/status-labels';
 
@@ -41,10 +42,6 @@ function mapRows(rows: Array<Record<string, any>>, reviewerNames: Map<string, st
       } : null,
     };
   });
-}
-
-function formatDate(value: string, locale: string) {
-  return new Date(value).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB');
 }
 
 export default async function AdminCancelRequestsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -79,13 +76,13 @@ export default async function AdminCancelRequestsPage({ searchParams }: { search
 
     {rows.length === 0 ? <StatusMessage title={showResolved ? t('noResolvedCancelRequests') : t('noCancelRequests')} /> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('orders')}</TableHead><TableHead>{t('cancellationRequestedBy')}</TableHead><TableHead>{t('cancellationReason')}</TableHead>{showResolved ? <><TableHead>{t('decision')}</TableHead><TableHead>{t('reviewedBy')}</TableHead></> : <><TableHead>{t('payment')}</TableHead><TableHead>{t('fulfillment')}</TableHead><TableHead className="text-end">{t('total')}</TableHead><TableHead className="text-end">{t('review')}</TableHead></>}</TableRow></TableHeader><TableBody>{rows.map((request) => (
       <TableRow key={request.id}>
-        <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/orders/${request.order?.id ?? ''}`}>{request.order?.display_number ?? '—'}</Link><span className="block text-sm text-muted-foreground">{formatDate(request.createdAt, locale)}</span></TableCell>
+        <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/orders/${request.order?.id ?? ''}`}>{request.order?.display_number ?? '—'}</Link><span className="block text-sm text-muted-foreground">{formatDateTime(request.createdAt, locale)}</span></TableCell>
         <TableCell>{request.order?.customer_email ?? '—'}</TableCell>
         <TableCell>{request.reason ?? '—'}</TableCell>
         {showResolved ? (
           <TableCell>
             <Badge variant={request.status === 'approved' ? 'success' : 'default'}>{request.status === 'approved' ? t('cancelRequestApproved') : t('cancelRequestRejected')}</Badge>
-            <span className="block text-sm text-muted-foreground">{request.reviewedAt ? formatDate(request.reviewedAt, locale) : '—'}</span>
+            <span className="block text-sm text-muted-foreground">{request.reviewedAt ? formatDateTime(request.reviewedAt, locale) : '—'}</span>
           </TableCell>
         ) : null}
         {showResolved ? (

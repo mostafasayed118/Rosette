@@ -12,6 +12,7 @@ import { StarRating } from '@/components/ui/StarRating';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
+import { formatDateTime } from '@/lib/date';
 
 type ReviewRow = {
   id: string;
@@ -55,7 +56,6 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
   const pending = ((pendingRows ?? []) as Array<Record<string, any>>).map(mapRow);
   const approved = ((approvedRows ?? []) as Array<Record<string, any>>).map(mapRow);
   const rows = showApproved ? approved : pending;
-  const date = (value: string) => new Date(value).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB');
 
   return <>
     <PageHeader eyebrow={t('reviews')} title={t('reviews')} />
@@ -67,9 +67,9 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
 
     {rows.length === 0 ? <StatusMessage title={showApproved ? t('noReviews') : t('noPendingReviews')} /> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('products')}</TableHead><TableHead>{t('rating')}</TableHead><TableHead>{t('reviews')}</TableHead>{showApproved ? <TableHead>{t('reviewedBy')}</TableHead> : <TableHead className="text-end">{t('review')}</TableHead>}</TableRow></TableHeader><TableBody>{rows.map((review) => (
       <TableRow key={review.id}>
-        <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/products/${review.product?.id ?? ''}`}>{review.product?.name_en ?? '—'}</Link><span className="block text-sm text-muted-foreground">{date(review.createdAt)}</span></TableCell>
+        <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/products/${review.product?.id ?? ''}`}>{review.product?.name_en ?? '—'}</Link><span className="block text-sm text-muted-foreground">{formatDateTime(review.createdAt, locale)}</span></TableCell>
         <TableCell><StarRating value={review.rating} /></TableCell>
-        <TableCell className="max-w-md"><p className="line-clamp-3 text-sm">{review.body}</p>{review.photos.length > 0 ? <span className="mt-1 flex flex-wrap gap-1">{review.photos.slice(0, 3).map((url) => <Image key={url} src={url} alt="" width={40} height={40} className="h-10 w-10 rounded object-cover" />)}</span> : null}{review.reviewedAt ? <span className="block text-xs text-muted-foreground">{date(review.reviewedAt)}</span> : null}</TableCell>
+        <TableCell className="max-w-md"><p className="line-clamp-3 text-sm">{review.body}</p>{review.photos.length > 0 ? <span className="mt-1 flex flex-wrap gap-1">{review.photos.slice(0, 3).map((url) => <Image key={url} src={url} alt="" width={40} height={40} className="h-10 w-10 rounded object-cover" />)}</span> : null}{review.reviewedAt ? <span className="block text-xs text-muted-foreground">{formatDateTime(review.reviewedAt, locale)}</span> : null}</TableCell>
         {showApproved ? <TableCell>{review.reviewedByName ?? '—'}</TableCell> : <TableCell className="text-end"><ReviewQueueActions reviewId={review.id} /></TableCell>}
       </TableRow>
     ))}</TableBody></Table></div></Card>}
