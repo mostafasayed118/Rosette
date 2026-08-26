@@ -38,7 +38,6 @@ export function ImagePreview({ url, kind = 'product', width, height, fallback }:
     <Image
       src={url}
       alt=""
-      role="img"
       width={w}
       height={h}
       className={cn(radius, 'object-cover')}

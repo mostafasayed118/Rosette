@@ -20,17 +20,22 @@ describe('admin primitives', () => {
   });
 
   it('KeyValueRow renders label and value with documented classes', () => {
-    render(<KeyValueRow label="Total" value={<strong>100</strong>} />);
+    const { container } = render(<KeyValueRow label="Total" value={<strong>100</strong>} />);
     expect(screen.getByText('Total')).toHaveClass('text-muted-foreground');
-    expect(screen.getByText('100')).toHaveClass('text-foreground');
+    const dd = container.querySelector('dd');
+    expect(dd).not.toBeNull();
+    expect(dd).toHaveClass('text-end', 'text-foreground');
+    expect(dd?.querySelector('strong')).toHaveTextContent('100');
   });
 
   it('ImagePreview renders next/image with correct size for product kind', () => {
-    render(<ImagePreview url="https://example.com/img.jpg" kind="product" />);
-    const img = screen.getByRole('img', { name: '' });
+    const { container } = render(<ImagePreview url="https://example.com/img.jpg" kind="product" />);
+    const img = container.querySelector('img');
+    expect(img).not.toBeNull();
     expect(img).toHaveAttribute('width', '96');
     expect(img).toHaveAttribute('height', '96');
     expect(img).toHaveClass('rounded-md', 'object-cover');
+    expect(img).toHaveAttribute('alt', '');
   });
 
   it('ImagePreview renders fallback chip for avatar kind without url', () => {
@@ -39,7 +44,10 @@ describe('admin primitives', () => {
   });
 
   it('RequestTabs renders tab triggers wired to links', () => {
-    render(<RequestTabs basePath="/admin/reviews" tabs={[{ value: 'pending', label: 'Pending' }]} current="pending" />);
-    expect(screen.getByText('Pending')).toBeInTheDocument();
+    const { container } = render(<RequestTabs basePath="/admin/reviews" tabs={[{ value: 'pending', label: 'Pending' }]} current="pending" />);
+    const link = container.querySelector('a');
+    expect(link).not.toBeNull();
+    expect(link).toHaveAttribute('href', '/admin/reviews?status=pending');
+    expect(link).toHaveTextContent('Pending');
   });
 });
