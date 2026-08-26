@@ -2,7 +2,7 @@ import type { Author, AuthorInput, BlogPostInput, BlogPostSummary } from '@/feat
 
 type AdminClient = { from: (table: string) => any };
 
-const adminSelect = 'id,slug,type,city_code,author_id,title_en,title_ar,title_fr,excerpt_en,excerpt_ar,excerpt_fr,category,published,published_at,updated_at';
+const adminSelect = 'id,slug,type,city_code,author_id,title_en,title_ar,title_fr,excerpt_en,excerpt_ar,excerpt_fr,category,published,published_at,updated_at,cover_url';
 const authorSelect = 'id,slug,name_en,name_ar,name_fr,role_en,role_ar,role_fr,bio_en,bio_ar,bio_fr,avatar_url';
 
 function toSummary(row: Record<string, unknown>): BlogPostSummary {
@@ -21,6 +21,7 @@ function toSummary(row: Record<string, unknown>): BlogPostSummary {
     category: row.category ? String(row.category) : undefined,
     publishedAt: row.published_at ? String(row.published_at) : null,
     updatedAt: String(row.updated_at ?? ''),
+    coverUrl: row.cover_url ? String(row.cover_url) : undefined,
   };
 }
 

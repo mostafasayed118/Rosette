@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusMessage } from '@/components/ui/status-message';
+import { ImagePreview } from '@/components/admin/ImagePreview';
 import { minorToEgp, toMinor } from '@/features/admin/money';
 import { CATEGORIES, OCCASIONS, type SaveProductInput } from '@/features/admin/catalog-validation';
 import { useI18n } from '@/features/i18n/I18nProvider';
@@ -70,6 +71,9 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
       <Field id="tone" label={t('toneHex')} type="text" pattern="#[0-9a-fA-F]{6}" value={product.tone} onChange={(e) => patch({ tone: e.target.value })} required />
       <Field id="delivery" label={t('deliveryCopy')} type="text" value={product.delivery} onChange={(e) => patch({ delivery: e.target.value })} required />
       <Field id="imageUrl" label={t('imageUrl')} className="col-span-2 max-md:col-span-1" type="url" value={product.imageUrl} onChange={(e) => patch({ imageUrl: e.target.value })} placeholder="https://…" />
+      <div className="col-span-2 max-md:col-span-1 mt-2">
+        <ImagePreview url={product.imageUrl} kind="product" fallback={<span className="text-xs text-muted-foreground">No image</span>} />
+      </div>
       <fieldset className="col-span-2 grid gap-2.5 border-0 p-0 max-md:col-span-1"><legend className="mb-1.5 font-bold">{t('occasionsLabel')}</legend><div className="flex flex-wrap gap-2.5">{OCCASIONS.map((o) => <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring" key={o}><input type="checkbox" checked={product.occasions.includes(o)} onChange={(e) => patch({ occasions: e.target.checked ? [...product.occasions, o] : product.occasions.filter((x) => x !== o) })} className="accent-primary" /><span>{o}</span></label>)}</div></fieldset>
       <label className="col-span-2 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 max-md:col-span-1 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"><input type="checkbox" checked={product.active} onChange={(e) => patch({ active: e.target.checked })} className="accent-primary" /><span>{t('activeVisible')}</span></label>
     </div></section>

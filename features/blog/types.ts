@@ -66,6 +66,7 @@ export type BlogPostSummary = {
   category?: string;
   publishedAt: string | null;
   updatedAt: string;
+  coverUrl?: string;
 };
 
 export type BlogPostInput = {

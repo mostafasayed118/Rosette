@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AuthorDeleteButton } from '@/components/admin/AuthorDeleteButton';
+import { ImagePreview } from '@/components/admin/ImagePreview';
 import { listAuthors } from '@/features/admin/blog-admin';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
@@ -20,9 +21,12 @@ export default async function AdminAuthorsPage() {
         <Card key={row.id}>
           <CardHeader><CardTitle>{row.nameEn}</CardTitle></CardHeader>
           <CardContent className="flex flex-wrap items-center justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">{row.roleEn ? <span className="text-sm text-muted-foreground">{row.roleEn}</span> : null}</div>
-              <p className="mt-1 text-sm text-muted-foreground">/{row.slug}</p>
+            <div className="flex items-center gap-3">
+              <ImagePreview url={row.avatarUrl} kind="avatar" width={32} height={32} fallback={<span className="text-xs font-medium">{row.nameEn[0]?.toUpperCase()}</span>} />
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">{row.roleEn ? <span className="text-sm text-muted-foreground">{row.roleEn}</span> : null}</div>
+                <p className="mt-1 text-sm text-muted-foreground">/{row.slug}</p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Link className="text-sm text-primary underline underline-offset-4" href={`/admin/authors/${row.id}`}>{t('edit')}</Link>

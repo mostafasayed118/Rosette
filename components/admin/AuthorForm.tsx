@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { ImagePreview } from '@/components/admin/ImagePreview';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import type { AuthorInput } from '@/features/blog/types';
 
@@ -53,6 +54,9 @@ export function AuthorForm({ author, id }: { author: AuthorInput; id?: string })
     <div className="grid gap-2"><label className="text-sm font-medium">{t('bioAr')}</label><Textarea value={bioAr} onChange={(e) => setBioAr(e.target.value)} rows={3} dir="rtl" /></div>
     <div className="grid gap-2"><label className="text-sm font-medium">{t('bioFr')}</label><Textarea value={bioFr} onChange={(e) => setBioFr(e.target.value)} rows={3} /></div>
     <div className="grid gap-2"><label className="text-sm font-medium">{t('avatarUrl')}</label><Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…" /></div>
+    <div className="mt-2">
+      <ImagePreview url={avatarUrl} kind="avatar" fallback={<span className="text-xs font-medium">{nameEn[0]?.toUpperCase() ?? '?'}</span>} />
+    </div>
     <div className="flex items-center gap-3"><Button type="submit" disabled={saving}>{saving ? t('saving') : t('save')}</Button>{error ? <small className="text-sm text-destructive">{error}</small> : null}</div>
   </form>;
 }

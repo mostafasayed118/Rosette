@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { BlogDeleteButton } from '@/components/admin/BlogDeleteButton';
+import { ImagePreview } from '@/components/admin/ImagePreview';
 import { listAllBlogPosts } from '@/features/admin/blog-admin';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
@@ -21,12 +22,15 @@ export default async function AdminBlogPage() {
         <Card key={row.id}>
           <CardHeader><CardTitle>{row.titleEn}</CardTitle></CardHeader>
           <CardContent className="flex flex-wrap items-center justify-between gap-4">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <Badge variant={row.publishedAt ? 'default' : 'secondary'}>{row.publishedAt ? t('active') : t('inactive')}</Badge>
-                <Badge variant="outline">{row.type === 'city' ? t('blogTypeCity') : t('blogTypePost')}</Badge>
+            <div className="flex items-center gap-3">
+              <ImagePreview url={row.coverUrl} kind="cover" width={48} height={48} fallback={<span className="text-sm font-medium">{row.titleEn[0]?.toUpperCase()}</span>} />
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <Badge variant={row.publishedAt ? 'default' : 'secondary'}>{row.publishedAt ? t('active') : t('inactive')}</Badge>
+                  <Badge variant="outline">{row.type === 'city' ? t('blogTypeCity') : t('blogTypePost')}</Badge>
+                </div>
+                <p className="mt-1 truncate text-sm text-muted-foreground">/{row.slug}{row.cityCode ? ` · ${row.cityCode}` : ''}</p>
               </div>
-              <p className="mt-1 truncate text-sm text-muted-foreground">/{row.slug}{row.cityCode ? ` · ${row.cityCode}` : ''}</p>
             </div>
             <div className="flex items-center gap-3">
               <Link className="text-sm text-primary underline underline-offset-4" href={`/admin/blog/${row.id}`}>{t('edit')}</Link>
