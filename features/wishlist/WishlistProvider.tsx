@@ -15,6 +15,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  // Canonical post-merge snapshot. The session-scoped /api/wishlist/sync effect
+  // depends on this (not on `userId`) so it only fires once the merge response
+  // has populated the canonical list — fixes the stale-closure bug where the
+  // effect previously captured an empty pre-merge `saved` array and skipped.
+  const [mergedSlugs, setMergedSlugs] = useState<string[] | null>(null);
   const inFlight = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -36,18 +41,23 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
           const response = await fetch('/api/account/wishlist/merge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slugs: guest, locale }) });
           if (response.ok) {
             const body = (await response.json()) as { slugs?: string[] };
-            setSaved(body.slugs ?? []);
+            const canonical = body.slugs ?? [];
+            setSaved(canonical);
+            setMergedSlugs(canonical);
             clearWishlistStorage();
           } else {
             setSaved(guest);
+            setMergedSlugs(null);
           }
         } catch {
           setSaved(guest);
+          setMergedSlugs(null);
         }
       } else {
         setSignedIn(false);
         setUserId(null);
         setSaved(guest);
+        setMergedSlugs(null);
       }
       setReady(true);
     };
@@ -61,28 +71,32 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
-  // Session-scoped personalization sync. Fires once per browser session when the
-  // user logs in, so we don't hammer /api/wishlist/sync on every page navigation.
-  // Reads the post-merge saved list (not the guest localStorage, which the merge
-  // path clears above) so we always re-sync whatever the server should hold.
+  // Session-scoped personalization sync. Fires once per browser session after
+  // the merge response populates the canonical `mergedSlugs` snapshot, so the
+  // server-side wishlist used by personalized picks reflects the merged list.
+  // The sessionStorage flag is only set on response.ok — a transient failure
+  // clears the flag so the next render retries (M-01).
   useEffect(() => {
     if (!userId) return;
+    if (mergedSlugs === null) return;
     if (typeof window !== 'undefined' && window.sessionStorage.getItem(SYNC_FLAG_KEY)) return;
-    const slugs = saved;
-    if (!slugs.length) return;
+    if (!mergedSlugs.length) return;
     fetch('/api/wishlist/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slugs }),
+      body: JSON.stringify({ slugs: mergedSlugs }),
     })
-      .then(() => {
-        if (typeof window !== 'undefined') window.sessionStorage.setItem(SYNC_FLAG_KEY, '1');
+      .then((r) => {
+        if (typeof window === 'undefined') return;
+        if (r.ok) window.sessionStorage.setItem(SYNC_FLAG_KEY, '1');
+        else window.sessionStorage.removeItem(SYNC_FLAG_KEY);
       })
-      .catch(() => {});
-    // Run only when userId flips; `saved` is captured at that moment and the
-    // sessionStorage flag prevents re-entry, so the dep array stays tight.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+      .catch(() => {
+        if (typeof window !== 'undefined') window.sessionStorage.removeItem(SYNC_FLAG_KEY);
+      });
+    // `mergedSlugs` is the canonical post-merge list; the sessionStorage flag
+    // prevents re-entry, so the dep array stays tight.
+  }, [userId, mergedSlugs]);
 
   const toggle = useCallback(async (slug: string) => {
     if (inFlight.current.has(slug)) return;

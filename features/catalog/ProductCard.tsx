@@ -35,11 +35,11 @@ export function ProductCard({ product, aspectClass = 'aspect-[3/4]', statusPill,
             className={`h-full w-full transition-transform duration-700 group-hover:scale-[1.06] ${statusPill?.variant === 'neutral' ? 'grayscale opacity-80' : ''} ${imageClassName ?? ''}`}
           />
         </Link>
-        <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-surface-variant bg-surface-container/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-tertiary backdrop-blur-md">{badgeLabel}</span>
-        <WishlistHeart slug={product.slug} className="absolute right-3 top-3" />
+        <span className="pointer-events-none absolute start-3 top-3 rounded-full border border-surface-variant bg-surface-container/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-tertiary backdrop-blur-md">{badgeLabel}</span>
+        <WishlistHeart slug={product.slug} className="absolute end-3 top-3" />
         {statusPill ? (
           <span
-            className={`pointer-events-none absolute bottom-3 left-3 inline-flex items-center rounded-full border px-3 py-1 font-mono text-[11px] font-medium tracking-widest shadow-sm backdrop-blur-sm ${
+            className={`pointer-events-none absolute bottom-3 start-3 inline-flex items-center rounded-full border px-3 py-1 font-mono text-[11px] font-medium tracking-widest shadow-sm backdrop-blur-sm ${
               statusPill.variant === 'sage'
                 ? 'border-secondary-fixed/50 bg-secondary-container text-on-secondary-container'
                 : 'border-outline-variant/50 bg-surface-variant text-on-surface-variant'

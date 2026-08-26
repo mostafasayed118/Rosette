@@ -3,11 +3,9 @@
 import { ProductCard } from '@/features/catalog/ProductCard';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import type { Product } from '@/features/catalog/types';
-import type { Locale } from '@/features/i18n/types';
 
 type BuyAgainStripProps = {
   products: Product[];
-  locale: Locale;
 };
 
 export function BuyAgainStrip({ products }: BuyAgainStripProps) {
