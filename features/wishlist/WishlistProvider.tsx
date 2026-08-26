@@ -7,12 +7,14 @@ import { clearWishlistStorage, readWishlist, writeWishlist } from './storage';
 
 type WishlistContextValue = { ready: boolean; saved: string[]; isSaved: (slug: string) => boolean; count: number; toggle: (slug: string) => void };
 const WishlistContext = createContext<WishlistContextValue | null>(null);
+const SYNC_FLAG_KEY = 'rosette.wishlist.synced.v1';
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const { locale } = useI18n();
   const [saved, setSaved] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const inFlight = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -29,6 +31,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       if (!active) return;
       if (user) {
         setSignedIn(true);
+        setUserId(user.id);
         try {
           const response = await fetch('/api/account/wishlist/merge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slugs: guest, locale }) });
           if (response.ok) {
@@ -43,6 +46,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setSignedIn(false);
+        setUserId(null);
         setSaved(guest);
       }
       setReady(true);
@@ -56,6 +60,29 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     });
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
+
+  // Session-scoped personalization sync. Fires once per browser session when the
+  // user logs in, so we don't hammer /api/wishlist/sync on every page navigation.
+  // Reads the post-merge saved list (not the guest localStorage, which the merge
+  // path clears above) so we always re-sync whatever the server should hold.
+  useEffect(() => {
+    if (!userId) return;
+    if (typeof window !== 'undefined' && window.sessionStorage.getItem(SYNC_FLAG_KEY)) return;
+    const slugs = saved;
+    if (!slugs.length) return;
+    fetch('/api/wishlist/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slugs }),
+    })
+      .then(() => {
+        if (typeof window !== 'undefined') window.sessionStorage.setItem(SYNC_FLAG_KEY, '1');
+      })
+      .catch(() => {});
+    // Run only when userId flips; `saved` is captured at that moment and the
+    // sessionStorage flag prevents re-entry, so the dep array stays tight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const toggle = useCallback(async (slug: string) => {
     if (inFlight.current.has(slug)) return;
