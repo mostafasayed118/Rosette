@@ -4,9 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { PageHeader } from '@/components/admin/PageHeader';
 import { AutoRefresh } from '@/components/admin/AutoRefresh';
 import { CancelRequestReview } from '@/components/admin/CancelRequestReview';
+import { RequestTabs } from '@/components/admin/RequestTabs';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
@@ -68,19 +69,13 @@ export default async function AdminCancelRequestsPage({ searchParams }: { search
   const resolved = mapRows(resolvedRows ?? [], reviewerNames);
   const rows = showResolved ? resolved : pending;
 
-  const tabLink = 'text-sm font-bold underline-offset-4 hover:underline';
-  const tabActive = 'text-primary underline';
-  const tabIdle = 'text-muted-foreground';
-
-  return <AdminShell>
+  return <>
+    <PageHeader eyebrow={t('customerOrders')} title={t('cancelRequests')} />
     <AutoRefresh />
-    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('customerOrders')}</p>
-    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('cancelRequests')}</h1>
-
-    <nav className="mt-4 flex items-center gap-6 border-b pb-2">
-      <Link className={`${tabLink} ${showResolved ? tabIdle : tabActive}`} href="/admin/cancel-requests">{t('pendingRequests', { count: pending.length })}</Link>
-      <Link className={`${tabLink} ${showResolved ? tabActive : tabIdle}`} href="/admin/cancel-requests?status=resolved">{t('resolvedRequests', { count: resolved.length })}</Link>
-    </nav>
+    <RequestTabs basePath="/admin/cancel-requests" tabs={[
+      { value: 'pending', label: t('pendingRequests', { count: pending.length }) },
+      { value: 'resolved', label: t('resolvedRequests', { count: resolved.length }) },
+    ]} current={showResolved ? 'resolved' : 'pending'} />
 
     {rows.length === 0 ? <StatusMessage title={showResolved ? t('noResolvedCancelRequests') : t('noCancelRequests')} /> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('orders')}</TableHead><TableHead>{t('cancellationRequestedBy')}</TableHead><TableHead>{t('cancellationReason')}</TableHead>{showResolved ? <><TableHead>{t('decision')}</TableHead><TableHead>{t('reviewedBy')}</TableHead></> : <><TableHead>{t('payment')}</TableHead><TableHead>{t('fulfillment')}</TableHead><TableHead className="text-end">{t('total')}</TableHead><TableHead className="text-end">{t('review')}</TableHead></>}</TableRow></TableHeader><TableBody>{rows.map((request) => (
       <TableRow key={request.id}>
@@ -105,5 +100,5 @@ export default async function AdminCancelRequestsPage({ searchParams }: { search
         )}
       </TableRow>
     ))}</TableBody></Table></div></Card>}
-  </AdminShell>;
+  </>;
 }

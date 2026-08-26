@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { PageHeader } from '@/components/admin/PageHeader';
 import { NotificationsToolbar } from '@/components/admin/NotificationsToolbar';
 import { RetryEmailsButton } from '@/components/admin/RetryEmailsButton';
 import { listStuckDeliveries } from '@/features/admin/notification-admin';
@@ -44,9 +44,8 @@ export default async function AdminNotificationsPage({ searchParams }: { searchP
     return `/admin/notifications?${next.toString()}`;
   }
 
-  return <AdminShell>
-    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('notificationOperations')}</p>
-    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('notifications')}</h1>
+  return <>
+    <PageHeader eyebrow={t('notificationOperations')} title={t('notifications')} />
     <RetryEmailsButton />
     <NotificationsToolbar />
     {rows.length === 0 ? <StatusMessage title={t('noStuckEmails')} /> : (
@@ -72,5 +71,5 @@ export default async function AdminNotificationsPage({ searchParams }: { searchP
         </div>
       </section>
     )}
-  </AdminShell>;
+  </>;
 }

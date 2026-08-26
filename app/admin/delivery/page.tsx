@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { PageHeader } from '@/components/admin/PageHeader';
 import { AddCityForm } from '@/components/admin/AddCityForm';
 import { DeliveryRuleForm, type DeliveryRuleInitial } from '@/components/admin/DeliveryRuleForm';
 import { getCurrentAdmin } from '@/features/auth/server';
@@ -17,9 +17,8 @@ export default async function AdminDeliveryPage() {
   const { t } = await getServerT();
   const { data } = await getAdminSupabase().from('cities').select('code,name_en,name_ar,same_day,delivery_rules(*)').order('code');
   const rows = (data ?? []) as CityRow[];
-  return <AdminShell>
-    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('deliveryOperations')}</p>
-    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('deliveryRules')}</h1>
+  return <>
+    <PageHeader eyebrow={t('deliveryOperations')} title={t('deliveryRules')} />
     <AddCityForm />
     <div className="mt-6 grid gap-4">
       {rows.map((city) => {
@@ -32,5 +31,5 @@ export default async function AdminDeliveryPage() {
         </CardContent></Card>;
       })}
     </div>
-  </AdminShell>;
+  </>;
 }

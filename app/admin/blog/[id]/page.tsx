@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { PageHeader } from '@/components/admin/PageHeader';
 import { BlogForm } from '@/components/admin/BlogForm';
 import { listAuthors } from '@/features/admin/blog-admin';
 import type { BlogPostInput } from '@/features/blog/types';
@@ -16,7 +16,7 @@ export default async function AdminBlogEditorPage({ params }: { params: Promise<
   const authors = (await listAuthors(getAdminSupabase())).map((author) => ({ id: author.id, nameEn: author.nameEn }));
   if (id === 'new') {
     const blank: BlogPostInput = { slug: '', type: 'post', cityCode: null, titleEn: '', contentEn: '', published: false };
-    return <AdminShell><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('blogOperations')}</p><h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('newBlogPost')}</h1><div className="mt-6"><BlogForm post={blank} authors={authors} /></div></AdminShell>;
+    return <><PageHeader eyebrow={t('blogOperations')} title={t('newBlogPost')} /><div className="mt-6"><BlogForm post={blank} authors={authors} /></div></>;
   }
   const { data } = await getAdminSupabase().from('blog_posts').select('*').eq('id', id).maybeSingle();
   if (!data) { redirect('/admin/blog'); return null; }
@@ -38,5 +38,5 @@ export default async function AdminBlogEditorPage({ params }: { params: Promise<
     category: row.category ? String(row.category) : undefined,
     published: Boolean(row.published),
   };
-  return <AdminShell><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('blogOperations')}</p><h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('editBlogPost')}</h1><p className="mt-1"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/blog">{t('backToBlog')}</Link></p><div className="mt-6"><BlogForm post={post} id={id} authors={authors} /></div></AdminShell>;
+  return <><PageHeader eyebrow={t('blogOperations')} title={t('editBlogPost')} /><p className="mt-1"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/blog">{t('backToBlog')}</Link></p><div className="mt-6"><BlogForm post={post} id={id} authors={authors} /></div></>;
 }

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { PageHeader } from '@/components/admin/PageHeader';
 import { BlogDeleteButton } from '@/components/admin/BlogDeleteButton';
 import { listAllBlogPosts } from '@/features/admin/blog-admin';
 import { getCurrentAdmin } from '@/features/auth/server';
@@ -14,10 +14,8 @@ export default async function AdminBlogPage() {
   if (!admin) redirect('/login');
   const { t } = await getServerT();
   const rows = await listAllBlogPosts(getAdminSupabase());
-  return <AdminShell>
-    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('blogOperations')}</p>
-    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('blogTitle')}</h1>
-    <p className="mt-1"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/blog/new">{t('newBlogPost')}</Link></p>
+  return <>
+    <PageHeader eyebrow={t('blogOperations')} title={t('blogTitle')} actions={<Link className="text-sm text-primary underline underline-offset-4" href="/admin/blog/new">{t('newBlogPost')}</Link>} />
     <div className="mt-6 grid gap-4">
       {rows.map((row) => (
         <Card key={row.id}><CardContent className="flex flex-wrap items-center justify-between gap-4">
@@ -37,5 +35,5 @@ export default async function AdminBlogPage() {
       ))}
     </div>
     <p className="mt-6"><Link className="text-sm text-primary underline underline-offset-4" href="/admin">{t('backToDashboard')}</Link></p>
-  </AdminShell>;
+  </>;
 }

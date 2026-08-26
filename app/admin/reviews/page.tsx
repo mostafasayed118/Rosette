@@ -4,9 +4,10 @@ import { redirect } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { PageHeader } from '@/components/admin/PageHeader';
 import { AutoRefresh } from '@/components/admin/AutoRefresh';
 import { ReviewQueueActions } from '@/components/admin/ReviewQueueActions';
+import { RequestTabs } from '@/components/admin/RequestTabs';
 import { StarRating } from '@/components/ui/StarRating';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
@@ -56,19 +57,13 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
   const rows = showApproved ? approved : pending;
   const date = (value: string) => new Date(value).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB');
 
-  const tabLink = 'text-sm font-bold underline-offset-4 hover:underline';
-  const tabActive = 'text-primary underline';
-  const tabIdle = 'text-muted-foreground';
-
-  return <AdminShell>
+  return <>
+    <PageHeader eyebrow={t('reviews')} title={t('reviews')} />
     <AutoRefresh />
-    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('reviews')}</p>
-    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('reviews')}</h1>
-
-    <nav className="mt-4 flex items-center gap-6 border-b pb-2">
-      <Link className={`${tabLink} ${showApproved ? tabIdle : tabActive}`} href="/admin/reviews">{t('pendingRequests', { count: pending.length })}</Link>
-      <Link className={`${tabLink} ${showApproved ? tabActive : tabIdle}`} href="/admin/reviews?status=approved">{t('resolvedRequests', { count: approved.length })}</Link>
-    </nav>
+    <RequestTabs basePath="/admin/reviews" tabs={[
+      { value: 'pending', label: t('pendingRequests', { count: pending.length }) },
+      { value: 'approved', label: t('resolvedRequests', { count: approved.length }) },
+    ]} current={showApproved ? 'approved' : 'pending'} paramName="status" />
 
     {rows.length === 0 ? <StatusMessage title={showApproved ? t('noReviews') : t('noPendingReviews')} /> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('products')}</TableHead><TableHead>{t('rating')}</TableHead><TableHead>{t('reviews')}</TableHead>{showApproved ? <TableHead>{t('reviewedBy')}</TableHead> : <TableHead className="text-end">{t('review')}</TableHead>}</TableRow></TableHeader><TableBody>{rows.map((review) => (
       <TableRow key={review.id}>
@@ -78,5 +73,5 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
         {showApproved ? <TableCell>{review.reviewedByName ?? '—'}</TableCell> : <TableCell className="text-end"><ReviewQueueActions reviewId={review.id} /></TableCell>}
       </TableRow>
     ))}</TableBody></Table></div></Card>}
-  </AdminShell>;
+  </>;
 }

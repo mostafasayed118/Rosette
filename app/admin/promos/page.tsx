@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { PageHeader } from '@/components/admin/PageHeader';
 import { AddPromoForm } from '@/components/admin/AddPromoForm';
 import { PromoForm } from '@/components/admin/PromoForm';
 import type { PromoInput } from '@/features/admin/promo-actions';
@@ -19,9 +19,8 @@ export default async function AdminPromosPage() {
   const { t } = await getServerT();
   const { data } = await getAdminSupabase().from('promo_codes').select('*').order('created_at', { ascending: false });
   const rows = (data ?? []) as PromoRow[];
-  return <AdminShell>
-    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('promoOperations')}</p>
-    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('promos')}</h1>
+  return <>
+    <PageHeader eyebrow={t('promoOperations')} title={t('promos')} />
     <AddPromoForm />
     <div className="mt-6 grid gap-4">
       {rows.map((row) => {
@@ -37,5 +36,5 @@ export default async function AdminPromosPage() {
       })}
     </div>
     <p className="mt-6"><Link className="text-sm text-primary underline underline-offset-4" href="/admin">{t('backToDashboard')}</Link></p>
-  </AdminShell>;
+  </>;
 }

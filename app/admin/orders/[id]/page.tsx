@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusMessage } from '@/components/ui/status-message';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { PageHeader } from '@/components/admin/PageHeader';
 import { OrderActions } from '@/components/admin/OrderActions';
 import { CancelRequestReview } from '@/components/admin/CancelRequestReview';
 import { NOTIFICATION_TYPE_LABEL_KEYS } from '@/features/admin/notification-type-labels';
@@ -27,7 +27,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
   const { id } = await params;
   const supabase = getAdminSupabase();
   const { data: order } = await supabase.from('orders').select('*,order_items(*),payments(*),order_events(*),notification_deliveries(*),order_cancel_requests(*)').eq('id', id).maybeSingle();
-  if (!order) return <AdminShell><h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('orderNotFound')}</h1><p className="mt-4"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/orders">{t('backToOrders')}</Link></p></AdminShell>;
+  if (!order) return <><h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('orderNotFound')}</h1><p className="mt-4"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/orders">{t('backToOrders')}</Link></p></>;
 
   const current = order.fulfillment_status as FulfillmentStatus;
   const transitions = allFulfillmentStatuses.filter((next) => canTransitionFulfillment(current, next) && canUpdateOrderStatus(admin.role, current, next));
@@ -35,10 +35,9 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
   const deliveries = ((order.notification_deliveries ?? []) as Array<{ id: string; type: string; recipient: string; status: string; attempts: number; last_error: string | null; created_at: string; sent_at: string | null }>).sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0));
   const cancelRequests = ((order.order_cancel_requests ?? []) as Array<{ id: string; status: string; reason: string | null; created_at: string }>).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 
-  return <AdminShell>
-    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage"><Link className="underline underline-offset-4" href="/admin/orders">{t('orders')}</Link> · {order.display_number}</p>
-    <h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{order.display_number}</h1>
-    <p className="text-muted-foreground">{formatMoney(order.total_minor, locale)} · {t('payment')} {paymentLabel(order.payment_status, t)} · {t('fulfillmentFilter')} {fulfillmentLabel(order.fulfillment_status, t)}</p>
+  return <>
+    <p className="text-xs font-bold uppercase tracking-[.16em] text-sage"><Link className="underline underline-offset-4" href="/admin/orders">{t('orders')}</Link></p>
+    <PageHeader eyebrow="" title={order.display_number} description={`${formatMoney(order.total_minor, locale)} · ${paymentLabel(order.payment_status, t)} · ${fulfillmentLabel(order.fulfillment_status, t)}`} />
 
     <Card className="mt-6"><CardHeader><CardTitle>{t('recipientAndDelivery')}</CardTitle></CardHeader><CardContent>
       <p>{order.recipient_name} · {order.recipient_phone}</p>
@@ -93,5 +92,5 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     <Card className="mt-4"><CardHeader><CardTitle>{t('updateStatus')}</CardTitle></CardHeader><CardContent>
       <OrderActions orderId={order.id} transitions={transitions} />
     </CardContent></Card>
-  </AdminShell>;
+  </>;
 }
