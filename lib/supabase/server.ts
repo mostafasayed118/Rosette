@@ -23,3 +23,19 @@ export async function getServerSupabase() {
     },
   });
 }
+
+export function createClient() {
+  // Sync alias for personalization provider; defers to getServerSupabase semantics.
+  // In server context, cookies() is async, so this creates a client without cookie handling
+  // for non-request contexts (tests). Route handlers should use getServerSupabase() directly.
+  const url = getOptionalServerEnv('NEXT_PUBLIC_SUPABASE_URL');
+  const key = getOptionalServerEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  if (!url || !key) throw new Error('Missing Supabase env');
+  // Use createServerClient with no-op cookies for sync provider path
+  return createServerClient(url, key, {
+    cookies: {
+      getAll() { return []; },
+      setAll() {},
+    },
+  });
+}

@@ -53,3 +53,5 @@ export function mapSupabaseProduct(row: SupabaseProductRow): Product {
     addOns: (row.add_ons ?? []).map((addOn) => ({ id: addOn.id, name: addOn.name_en, nameFr: addOn.name_fr, price: addOn.price_minor })),
   };
 }
+
+export const mapRowToProduct = mapSupabaseProduct;
