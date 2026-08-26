@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusMessage } from '@/components/ui/status-message';
 import { PageHeader } from '@/components/admin/PageHeader';
+import { KeyValueRow } from '@/components/admin/KeyValueRow';
 import { OrderActions } from '@/components/admin/OrderActions';
 import { CancelRequestReview } from '@/components/admin/CancelRequestReview';
 import { NOTIFICATION_TYPE_LABEL_KEYS } from '@/features/admin/notification-type-labels';
@@ -15,6 +16,7 @@ import { getCurrentAdmin } from '@/features/auth/server';
 import { createAdminWhatsAppHref } from '@/features/support/whatsapp';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
+import { formatDateTime } from '@/lib/date';
 import { formatMoney } from '@/features/money';
 import { deliveryBadgeVariant, deliveryLabel, fulfillmentLabel, paymentLabel } from '@/features/admin/status-labels';
 
@@ -48,22 +50,30 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
 
     <Card className="mt-4"><CardHeader><CardTitle>{t('items')}</CardTitle></CardHeader><CardContent className="grid gap-2">
       {((order.order_items ?? []) as Array<{ id: string; product_name_en: string; unit_price_minor: number; quantity: number }>).map((item) => (
-        <p key={item.id} className="flex justify-between gap-4 border-b py-2 text-sm">{item.product_name_en} × {item.quantity}<strong>{formatMoney(item.unit_price_minor, locale)}</strong></p>
+        <KeyValueRow key={item.id} label={`${item.product_name_en} × ${item.quantity}`} value={<strong>{formatMoney(item.unit_price_minor, locale)}</strong>} />
       ))}
     </CardContent></Card>
 
     <Card className="mt-4"><CardHeader><CardTitle>{t('payment')}</CardTitle></CardHeader><CardContent className="grid gap-2">
       {((order.payments ?? []) as Array<{ id: string; provider: string; provider_reference: string | null; amount_minor: number; status: string }>).map((payment) => (
-        <p key={payment.id} className="flex justify-between gap-4 border-b py-2 text-sm">{payment.provider} · {payment.provider_reference ?? 'n/a'}<strong>{formatMoney(payment.amount_minor, locale)} · {payment.status}</strong></p>
+        <KeyValueRow key={payment.id} label={`${payment.provider} · ${payment.provider_reference ?? 'n/a'}`} value={<strong>{formatMoney(payment.amount_minor, locale)} · {payment.status}</strong>} />
       ))}
     </CardContent></Card>
 
     <Card className="mt-4"><CardHeader><CardTitle>{t('cancelRequests')}</CardTitle></CardHeader><CardContent className="grid gap-3">
       {cancelRequests.length === 0 ? <p className="text-sm text-muted-foreground">{t('noCancelRequests')}</p> : cancelRequests.map((request) => (
-        <div key={request.id} className="flex flex-wrap items-center justify-between gap-3 border-b py-2">
-          <div className="min-w-0"><p className="text-sm">{t('cancellationRequestedBy')} {order.customer_email}</p>{request.reason ? <p className="text-sm text-muted-foreground">{t('cancellationReason')}: {request.reason}</p> : null}<p className="text-xs text-muted-foreground">{new Date(request.created_at).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</p></div>
-          {request.status === 'pending' ? <CancelRequestReview requestId={request.id} /> : <Badge variant={request.status === 'approved' ? 'success' : 'default'}>{request.status === 'approved' ? t('cancelRequestApproved') : t('cancelRequestRejected')}</Badge>}
-        </div>
+        <KeyValueRow
+          key={request.id}
+          label={t('cancellationRequestedBy')}
+          value={
+            <div className="grid gap-1">
+              <span>{order.customer_email}</span>
+              {request.reason ? <span className="text-sm text-muted-foreground">{t('cancellationReason')}: {request.reason}</span> : null}
+              <span className="text-xs text-muted-foreground">{formatDateTime(request.created_at, locale)}</span>
+              {request.status === 'pending' ? <CancelRequestReview requestId={request.id} /> : <Badge variant={request.status === 'approved' ? 'success' : 'default'}>{request.status === 'approved' ? t('cancelRequestApproved') : t('cancelRequestRejected')}</Badge>}
+            </div>
+          }
+        />
       ))}
     </CardContent></Card>
 
@@ -74,8 +84,8 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           <span className="text-muted-foreground">{delivery.recipient}</span>
           <Badge variant={deliveryBadgeVariant(delivery.status)}>{deliveryLabel(delivery.status, t)}</Badge>
           <span className="text-muted-foreground">{t('attempts')}: {delivery.attempts}</span>
-          <span className="text-muted-foreground">{new Date(delivery.created_at).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</span>
-          {delivery.sent_at ? <span className="text-muted-foreground">{t('sentAt')}: {new Date(delivery.sent_at).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</span> : null}
+          <span className="text-muted-foreground">{formatDateTime(delivery.created_at, locale)}</span>
+          {delivery.sent_at ? <span className="text-muted-foreground">{t('sentAt')}: {formatDateTime(delivery.sent_at, locale)}</span> : null}
           {delivery.last_error ? <span className="font-mono text-xs text-muted-foreground">{delivery.last_error}</span> : null}
         </div>
       ))}
@@ -84,7 +94,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     <Card className="mt-4"><CardHeader><CardTitle>{t('timeline')}</CardTitle></CardHeader><CardContent>
       <ol className="my-0 grid list-none gap-0 p-0">
         {((order.order_events ?? []) as Array<{ id: string; event_type: string; from_status: string | null; to_status: string | null; created_at: string }>).map((event) => (
-          <li key={event.id} className="flex min-h-10 items-center gap-3 text-sm text-muted-foreground"><span className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-border bg-background" aria-hidden="true" />{event.event_type}: {event.from_status ?? '—'} → {event.to_status ?? '—'} · {new Date(event.created_at).toLocaleString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-GB')}</li>
+          <li key={event.id} className="flex min-h-10 items-center gap-3 text-sm text-muted-foreground"><span className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-border bg-background" aria-hidden="true" />{event.event_type}: {event.from_status ?? '—'} → {event.to_status ?? '—'} · {formatDateTime(event.created_at, locale)}</li>
         ))}
       </ol>
     </CardContent></Card>
