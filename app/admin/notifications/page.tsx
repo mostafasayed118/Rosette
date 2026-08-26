@@ -1,8 +1,7 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/admin/PageHeader';
@@ -14,6 +13,7 @@ import { NOTIFICATION_TYPE_LABEL_KEYS } from '@/features/admin/notification-type
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
+import { formatDateTime } from '@/lib/date';
 
 const PAGE_SIZE = 10;
 
@@ -24,7 +24,7 @@ function first(value: string | string[] | undefined) {
 export default async function AdminNotificationsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const admin = await getCurrentAdmin();
   if (!admin) redirect('/login');
-  const { t } = await getServerT();
+  const { t, locale } = await getServerT();
   const params = await searchParams;
   const q = first(params.q);
   const status = first(params.status);
@@ -59,15 +59,22 @@ export default async function AdminNotificationsPage({ searchParams }: { searchP
             <TableCell className="text-sm text-muted-foreground">{d.recipient}</TableCell>
             <TableCell><Badge variant={d.status === 'failed' ? 'destructive' : 'secondary'}>{d.status === 'failed' ? t('statusFailed') : t('statusPending')}</Badge></TableCell>
             <TableCell>{d.attempts}</TableCell>
-            <TableCell className="text-sm text-muted-foreground">{new Date(d.createdAt).toLocaleString()}</TableCell>
+            <TableCell className="text-sm text-muted-foreground">{formatDateTime(d.createdAt, locale)}</TableCell>
           </TableRow>
         ))}</TableBody></Table></div></Card>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <Pagination>
+            <PaginationContent>
+              {current > 1 && <PaginationItem><PaginationPrevious href={pageHref(current - 1)} /></PaginationItem>}
+              {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink href={pageHref(p)} isActive={p === current}>{p}</PaginationLink>
+                </PaginationItem>
+              ))}
+              {current < pageCount && <PaginationItem><PaginationNext href={pageHref(current + 1)} /></PaginationItem>}
+            </PaginationContent>
+          </Pagination>
           <p className="text-sm text-muted-foreground">{t('pageOf', { page: current, pages: pageCount })}</p>
-          <div className="flex items-center gap-2">
-            {current > 1 ? <Button asChild variant="outline" size="sm"><Link href={pageHref(current - 1)}>{t('previous')}</Link></Button> : <Button variant="outline" size="sm" disabled>{t('previous')}</Button>}
-            {current < pageCount ? <Button asChild variant="outline" size="sm"><Link href={pageHref(current + 1)}>{t('next')}</Link></Button> : <Button variant="outline" size="sm" disabled>{t('next')}</Button>}
-          </div>
         </div>
       </section>
     )}
