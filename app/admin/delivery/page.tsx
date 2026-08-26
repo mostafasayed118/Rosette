@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AddCityForm } from '@/components/admin/AddCityForm';
 import { DeliveryRuleForm, type DeliveryRuleInitial } from '@/components/admin/DeliveryRuleForm';
@@ -24,11 +24,15 @@ export default async function AdminDeliveryPage() {
       {rows.map((city) => {
         const rule = city.delivery_rules?.[0];
         const initial: DeliveryRuleInitial = { feeMinor: rule?.fee_minor ?? DEFAULT_FEE_MINOR, minimumOrderMinor: rule?.minimum_order_minor ?? 0, cutoffHour: rule?.cutoff_hour ?? 14, active: rule?.active ?? false };
-        return <Card key={city.code}><CardContent className="flex flex-wrap items-baseline gap-x-6 gap-y-3">
-          <strong>{city.name_en}</strong>
-          <span className="text-sm text-muted-foreground">{city.name_ar} · {city.code} · {city.same_day ? t('sameDay') : t('nextDay')} · {rule?.active ? t('active') : t('inactive')}</span>
-          <DeliveryRuleForm cityCode={city.code} initial={initial} />
-        </CardContent></Card>;
+        return (
+          <Card key={city.code}>
+            <CardHeader><CardTitle>{city.name_en}</CardTitle></CardHeader>
+            <CardContent className="flex flex-wrap items-baseline gap-x-6 gap-y-3">
+              <span className="text-sm text-muted-foreground">{city.name_ar} · {city.code} · {city.same_day ? t('sameDay') : t('nextDay')} · {rule?.active ? t('active') : t('inactive')}</span>
+              <DeliveryRuleForm cityCode={city.code} initial={initial} />
+            </CardContent>
+          </Card>
+        );
       })}
     </div>
   </>;
