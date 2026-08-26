@@ -11,7 +11,7 @@ describe('admin hand-rolled controls removed', () => {
 
   it('notifications page uses shadcn Pagination, not hand-rolled buttons', () => {
     const source = readFileSync(join(process.cwd(), 'app/admin/notifications/page.tsx'), 'utf-8');
-    expect(source).not.toMatch(/previous.*next/s);
+    expect(source).not.toMatch(/previous[\s\S]*next/);
     expect(source).toMatch(/Pagination/);
   });
 
