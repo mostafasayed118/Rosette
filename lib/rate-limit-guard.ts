@@ -6,9 +6,11 @@ export type RateLimitRule = { bucket: string; limit: number; windowMs: number; e
 /**
  * Enforce a rate limit inside a route handler (Cloudflare has no middleware).
  * Returns a 429 response when the caller is over the limit, otherwise null.
+ * The check is async so the shared Upstash engine can participate; the local
+ * memory fallback resolves synchronously underneath the same promise.
  */
-export function enforceRateLimit(request: Request, rule: RateLimitRule): NextResponse | null {
-  const result = checkRateLimit({ bucket: rule.bucket, identifier: getClientIp(request), limit: rule.limit, windowMs: rule.windowMs });
+export async function enforceRateLimit(request: Request, rule: RateLimitRule): Promise<NextResponse | null> {
+  const result = await checkRateLimit({ bucket: rule.bucket, identifier: getClientIp(request), limit: rule.limit, windowMs: rule.windowMs });
   if (result.allowed) return null;
   return NextResponse.json({ error: rule.error }, { status: 429, headers: { 'Retry-After': String(result.retryAfterSeconds) } });
 }

@@ -22,5 +22,5 @@ export function AccountNavItem() {
     return () => { active = false; };
   }, []);
 
-  return <Link href={signedIn ? href('/account') : href('/account/login')}>{signedIn ? t('account') : t('signIn')}</Link>;
+  return <Link href={signedIn ? href('/account') : href('/account/login')}>{signedIn ? t('navAccount') : t('signIn')}</Link>;
 }

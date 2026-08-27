@@ -1,11 +1,5 @@
-/**
- * Best-effort fixed-window rate limiting.
- *
- * Cloudflare has no middleware in this deployment, so limits are enforced inside
- * each route handler. State lives in the isolate's memory: it is not shared
- * across isolates, but it reliably stops burst abuse from a single client with
- * zero extra infrastructure.
- */
+import { logger } from './logger';
+import { isUpstashConfigured, upstashFixedWindow } from './rate-limit-upstash';
 
 type Bucket = { count: number; resetAt: number };
 
@@ -21,7 +15,7 @@ function prune(now: number): void {
 export type RateLimitInput = { bucket: string; identifier: string; limit: number; windowMs: number };
 export type RateLimitResult = { allowed: boolean; remaining: number; retryAfterSeconds: number };
 
-export function checkRateLimit({ bucket, identifier, limit, windowMs }: RateLimitInput): RateLimitResult {
+function memoryFixedWindow({ bucket, identifier, limit, windowMs }: RateLimitInput): RateLimitResult {
   const now = Date.now();
   prune(now);
 
@@ -39,6 +33,27 @@ export function checkRateLimit({ bucket, identifier, limit, windowMs }: RateLimi
 
   existing.count += 1;
   return { allowed: true, remaining: Math.max(0, limit - existing.count), retryAfterSeconds: 0 };
+}
+
+/**
+ * Fixed-window rate limiting.
+ *
+ * Primary engine: Upstash Redis over its REST API — the counter is shared
+ * across Cloudflare Workers isolates, so limits survive scale-out and deploys.
+ * Fallback engine: in-isolate memory, which reliably stops burst abuse from a
+ * single client with zero extra infrastructure but does not share state
+ * across isolates. The Upstash call is time-boxed; any failure downgrades to
+ * the memory engine for that request instead of failing the endpoint.
+ */
+export async function checkRateLimit(input: RateLimitInput): Promise<RateLimitResult> {
+  if (isUpstashConfigured()) {
+    try {
+      return await upstashFixedWindow(input);
+    } catch (error) {
+      logger.warn('rate_limit.upstash_unavailable', { error });
+    }
+  }
+  return memoryFixedWindow(input);
 }
 
 /** Test helper: clear all windows. */
@@ -59,3 +74,4 @@ export function getClientIp(request: Request): string {
   if (real) return real.trim();
   return 'unknown';
 }
+

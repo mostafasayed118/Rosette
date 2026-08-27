@@ -18,6 +18,7 @@ import { defaultDeliveryDate, minDeliveryDate } from '@/features/delivery/dates'
 import { categoryMessageKeys, variantMessageKeys } from '@/features/catalog/catalog-labels';
 import { addOnLabel } from '@/features/catalog/add-on-labels';
 import type { Product } from '@/features/catalog/types';
+import { deferToTask } from '@/hooks/use-deferred-task';
 
 export function ProductDetail({ product }: { product: Product }) {
   const { locale, t } = useI18n();
@@ -32,9 +33,11 @@ export function ProductDetail({ product }: { product: Product }) {
   // Date math runs after hydration so server and client render identical
   // markup regardless of timezone (Cloudflare runs UTC, browsers do not).
   useEffect(() => {
-    const now = new Date();
-    setMinDate(minDeliveryDate(now));
-    setDeliveryDate((current) => current || defaultDeliveryDate(now));
+    deferToTask(() => {
+      const now = new Date();
+      setMinDate(minDeliveryDate(now));
+      setDeliveryDate((current) => current || defaultDeliveryDate(now));
+    });
   }, []);
   const variant = product.variants.find((item) => item.id === variantId);
   const addOns = product.addOns.filter((item) => addOnIds.includes(item.id));

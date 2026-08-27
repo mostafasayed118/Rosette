@@ -5,7 +5,7 @@ import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 const MAX_MESSAGE_LENGTH = 500;
 
 export async function POST(request: Request) {
-  const limited = enforceRateLimit(request, RATE_LIMITS.chat);
+  const limited = await enforceRateLimit(request, RATE_LIMITS.chat);
   if (limited) return limited;
   try {
     const body = (await request.json()) as { message?: unknown; language?: unknown };

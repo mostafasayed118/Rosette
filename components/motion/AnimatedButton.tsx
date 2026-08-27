@@ -43,8 +43,8 @@ export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButton
     const classes = cn(
       buttonVariants({ variant, size }),
       "relative overflow-hidden",
-      showSuccess && "bg-green-600 text-white hover:bg-green-600",
-      showError && "bg-destructive text-white",
+      showSuccess && "border-success/40 bg-success/5 text-success hover:bg-success/10",
+      showError && "border-destructive/40 bg-destructive/5 text-destructive",
       className
     );
 

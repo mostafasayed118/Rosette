@@ -17,7 +17,11 @@ export async function getServerSupabase() {
         try {
           values.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
         } catch {
-          // Server Components cannot always write cookies; middleware handles refreshes.
+          // Server Components cannot always write cookies. There is no
+          // middleware/proxy in this deployment: the browser client refreshes
+          // the session cookie asynchronously while the tab is open, and
+          // cookie-writable contexts (Server Actions, route handlers) rotate
+          // it on auth changes.
         }
       },
     },
@@ -38,9 +42,11 @@ export async function createClient() {
         try {
           values.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
         } catch {
-          // Server Components cannot always write cookies; middleware handles refreshes.
+          // See getServerSupabase: refreshes come from the browser client and
+          // cookie-writable contexts, not from middleware.
         }
       },
     },
   });
 }
+

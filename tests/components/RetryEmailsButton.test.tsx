@@ -24,6 +24,6 @@ describe('RetryEmailsButton', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ error: 'x' }) }));
     renderWithProviders(<RetryEmailsButton />);
     await userEvent.click(screen.getByRole('button', { name: 'Retry stuck emails' }));
-    expect(await screen.findByText('Could not retry emails.')).toBeTruthy();
+    expect(await screen.findByText("Couldn't retry emails.")).toBeTruthy();
   });
 });

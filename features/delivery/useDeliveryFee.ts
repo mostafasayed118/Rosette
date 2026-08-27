@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { deferToTask } from '@/hooks/use-deferred-task';
 
 export type DeliveryFeeState = { feeMinor: number | null; loading: boolean };
 
@@ -9,11 +10,13 @@ export function useDeliveryFee(cityCode: string | null | undefined): DeliveryFee
 
   useEffect(() => {
     if (!cityCode) {
-      setState({ feeMinor: null, loading: false });
+      // Deferred: keeps the reset out of the commit phase.
+      deferToTask(() => setState({ feeMinor: null, loading: false }));
       return;
     }
     let cancelled = false;
-    setState((current) => (current.loading ? current : { ...current, loading: true }));
+    // Deferred: the loading flip stays outside the commit phase.
+    deferToTask(() => setState((current) => (current.loading ? current : { ...current, loading: true })));
     fetch(`/api/delivery-fee?city=${encodeURIComponent(cityCode)}`)
       .then((response) => {
         if (!response.ok) throw new Error(`delivery fee lookup failed: ${response.status}`);

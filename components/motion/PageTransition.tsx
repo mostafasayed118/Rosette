@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { durations, easings } from "@/lib/motion/tokens";
 
 type PageTransitionProps = {
   routeKey: string;
@@ -15,10 +16,11 @@ export function PageTransition({ routeKey, children }: PageTransitionProps) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
+        transition={{ duration: durations.normal / 1000, ease: easings.standard }}
       >
         {children}
       </motion.div>
     </AnimatePresence>
   );
 }
+

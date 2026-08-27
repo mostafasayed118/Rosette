@@ -5,7 +5,7 @@ describe('getServerT', () => {
   it('uses an explicit locale without reading cookies', async () => {
     const ar = await getServerT('ar');
     expect(ar.locale).toBe('ar');
-    expect(ar.t('homeTitle')).toBe('زهور تقول ما تعجز عنه الكلمات.');
+    expect(ar.t('homeTitle')).toBe('ورود بتقول اللي إنت محتاج تقول.');
 
     const fr = await getServerT('fr');
     expect(fr.locale).toBe('fr');

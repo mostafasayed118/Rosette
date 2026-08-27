@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider, useTheme } from '@/features/theme/ThemeProvider';
@@ -26,15 +26,18 @@ describe('ThemeProvider', () => {
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
-  it('restores a saved preference from localStorage', () => {
+  it('restores a saved preference from localStorage', async () => {
     window.localStorage.setItem('rosette.theme.v1', 'dark');
     render(<ThemeProvider><Probe /></ThemeProvider>);
+    // The stored preference applies one tick after mount (deferred task).
+    await act(async () => {});
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
-  it('falls back to the theme cookie (SSR path) when localStorage is empty', () => {
+  it('falls back to the theme cookie (SSR path) when localStorage is empty', async () => {
     document.cookie = 'rosette.theme=dark; path=/';
     render(<ThemeProvider><Probe /></ThemeProvider>);
+    await act(async () => {});
     expect(screen.getByRole('button')).toHaveTextContent('dark');
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });

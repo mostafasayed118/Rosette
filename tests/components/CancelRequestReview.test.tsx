@@ -28,7 +28,7 @@ describe('CancelRequestReview', () => {
     vi.stubGlobal('fetch', fetchMock);
     renderWithProviders(<CancelRequestReview requestId="req-1" />);
     fireEvent.change(screen.getByPlaceholderText(/reason for rejection/i), { target: { value: 'too late' } });
-    fireEvent.click(screen.getByRole('button', { name: /reject/i }));
+    fireEvent.click(screen.getByRole('button', { name: /decline/i }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     const [, init] = fetchMock.mock.calls[0] as [string, { body: string }];
     expect(JSON.parse(init.body)).toEqual({ action: 'reject', reason: 'too late' });
@@ -39,7 +39,7 @@ describe('CancelRequestReview', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
     renderWithProviders(<CancelRequestReview requestId="req-1" />);
     fireEvent.click(screen.getByRole('button', { name: /approve/i }));
-    await waitFor(() => expect(screen.getByText(/could not review/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/couldn't review the cancellation request/i)).toBeInTheDocument());
     expect(refresh).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
   });

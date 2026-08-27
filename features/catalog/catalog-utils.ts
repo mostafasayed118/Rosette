@@ -1,4 +1,5 @@
 import type { CatalogQuery, Product } from './types';
+import { searchProducts } from './fuse-search';
 
 /** Products per catalog page — tuned to the two-column masonry rhythm. */
 export const CATALOG_PER_PAGE = 8;
@@ -19,9 +20,18 @@ export function paginateProducts(products: Product[], page: number | undefined, 
 }
 
 export function filterProducts(products: Product[], query: CatalogQuery): Product[] {
-  const search = query.search?.trim().toLowerCase();
-  return products.filter((product) => {
-    if (search && !`${product.name} ${product.description}`.toLowerCase().includes(search)) return false;
+  const trimmedSearch = query.search?.trim();
+  // Use Fuse.js for typo-tolerant, bilingual search (free, ~4kb). Fallback to exact if no Fuse match.
+  let candidates = products;
+  if (trimmedSearch) {
+    const fuseResults = searchProducts(products, trimmedSearch);
+    // If Fuse found matches, use them; if empty and query is <2 chars, do substring fallback inside searchProducts.
+    // To keep behavior deterministic for tests, only replace candidates when Fuse returns non-empty or search is non-empty.
+    candidates = fuseResults.length > 0 || trimmedSearch.length >= 2 ? fuseResults : [];
+    // If Fuse returned empty for a 2+ char query, keep empty (means no fuzzy match) — do NOT fall back to full list.
+    if (fuseResults.length === 0 && trimmedSearch.length >= 2) return [];
+  }
+  return candidates.filter((product) => {
     if (query.category && query.category !== 'all' && product.category !== query.category) return false;
     if (query.occasion && query.occasion !== 'all' && !product.occasions.includes(query.occasion)) return false;
     if (query.minPrice !== undefined && product.price < query.minPrice) return false;

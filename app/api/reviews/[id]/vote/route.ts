@@ -28,7 +28,7 @@ export async function GET(request: Request, context: VoteContext) {
 }
 
 export async function POST(request: Request, context: VoteContext) {
-  const limited = enforceRateLimit(request, RATE_LIMITS.reviewVote);
+  const limited = await enforceRateLimit(request, RATE_LIMITS.reviewVote);
   if (limited) return limited;
   const { id } = await context.params;
   const body = (await request.json().catch(() => ({}))) as { visitor?: unknown };

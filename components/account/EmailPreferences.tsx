@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle2, Lock } from 'lucide-react';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { deferToTask } from '@/hooks/use-deferred-task';
 import { setEmailEngagementPreference } from '@/features/account/actions';
 
 type EmailPreferencesProps = { initialEnabled: boolean; loadFailed?: boolean; accountPath?: string };
@@ -49,27 +50,33 @@ export function EmailPreferences({ initialEnabled, loadFailed = false, accountPa
   const [error, setError] = useState(loadFailed);
   const [lang, setLang] = useState(locale);
 
-  // keep lang in sync if locale changes externally
-  useEffect(() => setLang(locale), [locale]);
-  // sync enabled if prop changes
-  useEffect(() => setEnabled(initialEnabled), [initialEnabled]);
-
-  // derived child toggles: when master off, all off except locked order updates stays on disabled
+  // Derived child toggles: when master off, all off except locked order updates stays on disabled
   const [bag, setBag] = useState(initialEnabled);
   const [wishlistDrop, setWishlistDrop] = useState(initialEnabled);
   const [backInStock, setBackInStock] = useState(initialEnabled);
   const [seasonal, setSeasonal] = useState(false);
 
+  // Mirror prop/context changes during render using the previous-value pattern:
+  // no effect, no intermediate paint, and no setState-in-effect cascade.
+  const [prevLocale, setPrevLocale] = useState(locale);
+  if (prevLocale !== locale) { setPrevLocale(locale); setLang(locale); }
+  const [prevInitialEnabled, setPrevInitialEnabled] = useState(initialEnabled);
+  if (prevInitialEnabled !== initialEnabled) {
+    setPrevInitialEnabled(initialEnabled);
+    setEnabled(initialEnabled);
+    setBag(initialEnabled);
+    setWishlistDrop(initialEnabled);
+    setBackInStock(initialEnabled);
+  }
+
   useEffect(() => {
-    if (enabled) {
-      setBag(true);
-      setWishlistDrop(true);
-      setBackInStock(true);
-    } else {
-      setBag(false);
-      setWishlistDrop(false);
-      setBackInStock(false);
-    }
+    // Flipping the master switch fans out into three child toggles; deferring
+    // keeps that fan-out out of the commit phase.
+    deferToTask(() => {
+      setBag(enabled);
+      setWishlistDrop(enabled);
+      setBackInStock(enabled);
+    });
   }, [enabled]);
 
   async function toggle(nextEnabled: boolean) {

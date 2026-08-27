@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { deferToTask } from '@/hooks/use-deferred-task';
 
 const STORAGE_KEY = 'rosette.theme.v1';
 type Theme = 'light' | 'dark';
@@ -17,12 +18,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   };
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved === 'dark' || saved === 'light') { setThemeState(saved); return; }
-    const cookieTheme = document.cookie.split('; ').find((part) => part.startsWith('rosette.theme='))?.split('=')[1];
-    if (cookieTheme === 'dark' || cookieTheme === 'light') { setThemeState(cookieTheme); return; }
-    const prefersDark = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setThemeState(prefersDark ? 'dark' : 'light');
+    // Deferred so the first commit settles from the SSR snapshot before the
+    // stored preference flips the class on <html>.
+    deferToTask(() => {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved === 'dark' || saved === 'light') { setThemeState(saved); return; }
+      const cookieTheme = document.cookie.split('; ').find((part) => part.startsWith('rosette.theme='))?.split('=')[1];
+      if (cookieTheme === 'dark' || cookieTheme === 'light') { setThemeState(cookieTheme); return; }
+      const prefersDark = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setThemeState(prefersDark ? 'dark' : 'light');
+    });
   }, []);
   useEffect(() => { document.documentElement.classList.toggle('dark', theme === 'dark'); }, [theme]);
   const value = { theme, setTheme };

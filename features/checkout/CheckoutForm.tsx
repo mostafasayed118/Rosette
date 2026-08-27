@@ -17,6 +17,7 @@ import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
 import { getCityBySlug } from '@/features/destination/data';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
+import { deferToTask } from '@/hooks/use-deferred-task';
 import { formatMoney } from '@/features/money';
 import { createLocalOrder } from '@/features/order/local-repository';
 import { SignedInNotice } from './SignedInNotice';
@@ -66,12 +67,18 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [minDate, setMinDate] = useState('');
+  // Captured once at mount: delivery windows are display-only constraints, and
+  // a per-render `new Date()` is impure (a different value on every render).
+  const [mountNow] = useState(() => new Date());
   // Date defaults are applied after hydration so server (UTC) and client
-  // markup agree even when timezones straddle midnight.
+  // markup agree even when timezones straddle midnight. Deferred so the first
+  // commit settles from the SSR snapshot.
   useEffect(() => {
-    const now = new Date();
-    setMinDate(minDeliveryDate(now));
-    setInput((current) => current.deliveryDate ? current : { ...current, deliveryDate: defaultDeliveryDate(now) });
+    deferToTask(() => {
+      const now = new Date();
+      setMinDate(minDeliveryDate(now));
+      setInput((current) => current.deliveryDate ? current : { ...current, deliveryDate: defaultDeliveryDate(now) });
+    });
   }, []);
 
   function update<K extends keyof CheckoutInput>(key: K, value: CheckoutInput[K]) {
@@ -145,9 +152,9 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
   if (!ready) return <StatusMessage title={t('openingBag')} />;
   if (!cart.lines.length) return <StatusMessage title={t('bagWaiting')} />;
 
-  const todayISO = toISODate(new Date());
-  const tomorrowISO = toISODate(new Date(Date.now() + 86400000));
-  const nextDay2ISO = toISODate(new Date(Date.now() + 86400000 * 2));
+  const todayISO = toISODate(mountNow);
+  const tomorrowISO = toISODate(new Date(mountNow.getTime() + 86400000));
+  const nextDay2ISO = toISODate(new Date(mountNow.getTime() + 86400000 * 2));
   const cityLabel = getCityBySlug(cityCode)?.name ?? cityCode;
   const firstGiftLine = cart.lines.find((l) => l.message?.trim());
 

@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { WishlistLink } from '@/components/wishlist/WishlistLink';
 import { WishlistProvider } from '@/features/wishlist/WishlistProvider';
@@ -16,9 +16,11 @@ describe('WishlistLink', () => {
     expect(screen.getByText('0')).toBeInTheDocument();
   });
 
-  it('shows the saved count from localStorage', () => {
+  it('shows the saved count from localStorage', async () => {
     localStorage.setItem('rosette.wishlist.v1', JSON.stringify(['rose-hour', 'citrus-cloud']));
     renderWithProviders(<WishlistProvider><WishlistLink /></WishlistProvider>);
+    // The stored wishlist is read one tick after mount (deferred task).
+    await act(async () => {});
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 });

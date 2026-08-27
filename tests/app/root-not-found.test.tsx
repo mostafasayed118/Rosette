@@ -18,8 +18,8 @@ describe('app/not-found (root)', () => {
     const node = await RootNotFound();
     const html = renderToString(<ThemeProvider><I18nProvider initialLocale="en">{node}</I18nProvider></ThemeProvider>);
     expect(html).toContain('4·0·4');
-    expect(html).toContain('That page has wandered off.');
-    expect(html).toContain('Browse flowers');
+    expect(html).toContain('This page got lost.');
+    expect(html).toContain('Browse the flowers');
     expect(html).toContain('href="/en"');
   });
 });

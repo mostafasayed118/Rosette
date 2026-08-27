@@ -24,8 +24,8 @@ describe('app/[locale]/not-found', () => {
     const node = await LocaleNotFound();
     const html = await renderServer(node);
     expect(html).toContain('4·0·4');
-    expect(html).toContain('That page has wandered off.');
-    expect(html).toContain('Browse flowers');
+    expect(html).toContain('This page got lost.');
+    expect(html).toContain('Browse the flowers');
     expect(html).toContain('href="/en"');
   });
 });
@@ -36,7 +36,7 @@ describe('app/[locale]/forbidden', () => {
     const html = await renderServer(node);
     expect(html).toContain('4·0·3');
     expect(html).toContain('This corner is for the team only.');
-    expect(html).toContain('Back to home');
+    expect(html).toContain('Back home');
     expect(html).toContain('href="/en"');
   });
 });
@@ -46,9 +46,9 @@ describe('app/[locale]/unauthorized', () => {
     const node = await LocaleUnauthorized();
     const html = await renderServer(node);
     expect(html).toContain('4·0·1');
-    expect(html).toContain('This page is for signed-in guests.');
+    expect(html).toContain('This page is for signed-in visitors.');
     expect(html).toContain('Sign in');
-    expect(html).toContain('Back to home');
+    expect(html).toContain('Back home');
     expect(html).toContain('/en/login');
   });
 });

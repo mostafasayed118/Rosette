@@ -23,7 +23,7 @@ describe('CancelRequestButton', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
     renderWithProviders(<CancelRequestButton orderId="o1" />);
     fireEvent.click(screen.getByRole('button', { name: /request cancellation/i }));
-    await waitFor(() => expect(screen.getByText(/could not request/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/couldn't request the cancellation/i)).toBeInTheDocument());
     vi.unstubAllGlobals();
   });
 });

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { WishlistProvider } from '@/features/wishlist/WishlistProvider';
 import { BuyAgainStrip } from '@/features/personalization/components/BuyAgainStrip';
 import { RecommendedCarousel } from '@/features/personalization/components/RecommendedCarousel';
@@ -80,7 +80,7 @@ describe('PersonalizationCarousels', () => {
     expect(screen.getByText(/hand-bouquet/i)).toBeInTheDocument();
   });
 
-  it('BuyAgainStrip renders localized Arabic aria-label and flips html dir to rtl', () => {
+  it('BuyAgainStrip renders localized Arabic aria-label and flips html dir to rtl', async () => {
     nav.pathname = '/ar/greater-cairo';
     nav.params = { locale: 'ar', city: 'greater-cairo' };
     renderWithAr(
@@ -88,8 +88,10 @@ describe('PersonalizationCarousels', () => {
         <BuyAgainStrip products={products.slice(0, 1)} />
       </WishlistProvider>,
     );
-    // Arabic dictionary value for personalizationBuyAgain is "اشترِ مرة أخرى".
-    const section = screen.getByRole('region', { name: /اشترِ مرة أخرى/i });
+    // The stored wishlist resolves one tick after mount (deferred task).
+    await act(async () => {});
+    // Arabic dictionary value for personalizationBuyAgain is "اشتري تاني".
+    const section = screen.getByRole('region', { name: /اشتري تاني/i });
     expect(section).toBeInTheDocument();
     expect(document.documentElement.dir).toBe('rtl');
   });
@@ -125,7 +127,7 @@ describe('PersonalizationSkeleton', () => {
       </WishlistProvider>,
     );
     const status = screen.getByRole('status');
-    // ar dictionary value for personalizationRecommended is "مقترحات لك"
-    expect(status).toHaveAttribute('aria-label', expect.stringMatching(/مقترحات لك/));
+    // ar dictionary value for personalizationRecommended is "مقترح ليك"
+    expect(status).toHaveAttribute('aria-label', expect.stringMatching(/مقترح ليك/));
   });
 });

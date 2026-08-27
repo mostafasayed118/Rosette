@@ -47,7 +47,7 @@ describe('ChangeRequestForm', () => {
     renderWithProviders(<ChangeRequestForm orderId="o1" items={items} />);
     fireEvent.change(screen.getByLabelText(/delivery date/i), { target: { value: '2026-08-20' } });
     fireEvent.click(screen.getByRole('button', { name: /request a change/i }));
-    await waitFor(() => expect(screen.getByText(/could not request the change/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/couldn't request the change/i)).toBeInTheDocument());
     vi.unstubAllGlobals();
   });
 });

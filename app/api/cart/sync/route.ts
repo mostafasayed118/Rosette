@@ -10,7 +10,7 @@ const CART_SYNC_EMAIL = { bucket: 'cart-sync-email', limit: 5, windowMs: 12_000 
 
 export async function POST(request: Request) {
   try {
-    const ipLimited = enforceRateLimit(request, { bucket: 'cart-sync-ip', limit: 30, windowMs: 60_000, error: 'Too many requests' });
+    const ipLimited = await enforceRateLimit(request, { bucket: 'cart-sync-ip', limit: 30, windowMs: 60_000, error: 'Too many requests' });
     if (ipLimited) return ipLimited;
     const customer = await getCurrentCustomer();
     const body = (await request.json().catch(() => null)) as { email?: unknown; locale?: unknown; city?: unknown; lines?: unknown } | null;
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 });
     // Per-email throttle (self-pruning) on top of the per-IP guard so distinct
     // spoofed emails cannot each open a fresh write window.
-    const emailResult = checkRateLimit({ ...CART_SYNC_EMAIL, identifier: `${getClientIp(request)}:${email}` });
+    const emailResult = await checkRateLimit({ ...CART_SYNC_EMAIL, identifier: `${getClientIp(request)}:${email}` });
     if (!emailResult.allowed) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     const result = await upsertCart(getAdminSupabase(), { email, customerId: customer?.id ?? null, locale, city, lines: (body.lines as never) ?? [] });
     if (result.status === 'invalid') return NextResponse.json({ error: 'Invalid cart' }, { status: 400 });

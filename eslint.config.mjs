@@ -11,6 +11,7 @@ const config = [
     ignores: [
       '.next/**',
       '.open-next/**',
+      '.worktrees/**',
       'node_modules/**',
       'docs/stitch-export/**',
       'next-env.d.ts',

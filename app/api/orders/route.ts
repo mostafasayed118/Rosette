@@ -12,17 +12,18 @@ import { resolvePaymentMethodAvailability } from '@/features/checkout/payment-mo
 import { logger } from '@/lib/logger';
 import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { runInBackground } from '@/lib/wait-until';
 
 const ORDERS_PER_EMAIL = { bucket: 'orders-email', limit: 5, windowMs: 10 * 60_000 };
 
 export async function POST(request: Request) {
-  const limited = enforceRateLimit(request, RATE_LIMITS.orders);
+  const limited = await enforceRateLimit(request, RATE_LIMITS.orders);
   if (limited) return limited;
   try {
     const body = await request.json() as { cart?: unknown; destination?: unknown; checkout?: { senderEmail?: unknown }; locale?: unknown };
     const senderEmail = typeof body.checkout?.senderEmail === 'string' ? body.checkout.senderEmail.trim().toLowerCase() : '';
     if (senderEmail) {
-      const emailResult = checkRateLimit({ ...ORDERS_PER_EMAIL, identifier: senderEmail });
+      const emailResult = await checkRateLimit({ ...ORDERS_PER_EMAIL, identifier: senderEmail });
       if (!emailResult.allowed) {
         return NextResponse.json({ error: 'Too many order attempts for this address. Please wait a moment.' }, { status: 429, headers: { 'Retry-After': String(emailResult.retryAfterSeconds) } });
       }
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
     const validation = validateOrderRequest(body as { cart?: { lines?: unknown[] }; total?: unknown });
     if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
     if (!body.destination || !body.checkout || (body.locale !== 'ar' && body.locale !== 'en' && body.locale !== 'fr')) return NextResponse.json({ error: 'Incomplete checkout details' }, { status: 400 });
+    const locale = body.locale as 'ar' | 'en' | 'fr';
 
     const checkoutPayment = (body.checkout as { paymentMethod?: string }).paymentMethod;
     const paymentPath = resolvePaymentMethodAvailability((checkoutPayment as 'paymob' | 'pay-on-delivery' | 'demo-card') ?? 'pay-on-delivery');
@@ -40,24 +42,26 @@ export async function POST(request: Request) {
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.error === 'invalid_promo' || result.error === 'invalid_gift_card' ? 400 : 409 });
     const order = result.value;
     const checkout = body.checkout as { senderEmail: string; recipientPhone: string; recipientName: string };
-    await deliverOrderNotification(getAdminSupabase(), {
+    // Email delivery is best-effort; on Cloudflare it rides ctx.waitUntil so
+    // the checkout response is never delayed by SMTP.
+    void runInBackground(() => deliverOrderNotification(getAdminSupabase(), {
       orderId: order.id,
       type: 'order_received',
       recipient: checkout.senderEmail,
-      locale: body.locale,
+      locale,
       orderNumber: order.displayNumber,
       totalMinor: order.totalMinor,
       subtotalMinor: order.subtotalMinor,
       deliveryFeeMinor: order.deliveryFeeMinor,
       discountMinor: order.discountMinor,
       orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}`,
-    });
+    }));
     // Best-effort: an order must never fail because a cart could not be marked.
     await markCartConverted(getAdminSupabase(), { email: checkout.senderEmail });
     if (order.totalMinor === 0 && order.giftCardHoldId) {
       // The create_pending_order RPC has already redeemed the hold, stamped the
       // order paid, and inserted the zero-amount payment row atomically.
-      await deliverOrderNotification(getAdminSupabase(), { orderId: order.id, type: 'payment_confirmed', recipient: checkout.senderEmail, locale: body.locale, orderNumber: order.displayNumber, totalMinor: 0, subtotalMinor: order.subtotalMinor, deliveryFeeMinor: order.deliveryFeeMinor, discountMinor: order.discountMinor, orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}` });
+      void runInBackground(() => deliverOrderNotification(getAdminSupabase(), { orderId: order.id, type: 'payment_confirmed', recipient: checkout.senderEmail, locale, orderNumber: order.displayNumber, totalMinor: 0, subtotalMinor: order.subtotalMinor, deliveryFeeMinor: order.deliveryFeeMinor, discountMinor: order.discountMinor, orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}` }));
       return NextResponse.json({ orderId: order.id, publicToken: order.publicToken, displayNumber: order.displayNumber, paymentStatus: 'paid', checkoutUrl: null });
     }
     const paymobConfigured = Boolean(getOptionalServerEnv('PAYMOB_API_KEY') && getOptionalServerEnv('PAYMOB_PUBLIC_KEY') && getOptionalServerEnv('PAYMOB_INTEGRATION_ID') && getOptionalServerEnv('PAYMOB_HMAC_SECRET'));

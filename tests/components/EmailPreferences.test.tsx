@@ -24,12 +24,12 @@ describe('EmailPreferences', () => {
     setPreference.mockResolvedValue('failure');
     renderWithProviders(<EmailPreferences initialEnabled={true} />);
     fireEvent.click(screen.getByRole('checkbox', { name: /email preferences/i }));
-    expect(await screen.findByRole('alert')).toHaveTextContent(/could not update email preferences/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/couldn't update email preferences/i);
   });
 
   it('disables the control when the initial preference read failed', () => {
     renderWithProviders(<EmailPreferences initialEnabled={true} loadFailed />);
     expect(screen.getByRole('checkbox', { name: /email preferences/i })).toBeDisabled();
-    expect(screen.getByRole('alert')).toHaveTextContent(/could not update email preferences/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(/couldn't update email preferences/i);
   });
 });

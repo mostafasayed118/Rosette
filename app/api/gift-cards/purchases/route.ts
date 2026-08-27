@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger';
 import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 
 export async function POST(request: Request) {
-  const limited = enforceRateLimit(request, RATE_LIMITS.giftCardPurchase);
+  const limited = await enforceRateLimit(request, RATE_LIMITS.giftCardPurchase);
   if (limited) return limited;
   try {
     const body = await request.json() as { purchase?: unknown; locale?: unknown };

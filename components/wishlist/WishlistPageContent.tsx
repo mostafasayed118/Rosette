@@ -8,6 +8,7 @@ import type { Product } from '@/features/catalog/types';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
 import { useWishlist } from '@/features/wishlist/WishlistProvider';
+import { deferToTask } from '@/hooks/use-deferred-task';
 
 const WISHLIST_ASPECTS = ['aspect-[4/5]', 'aspect-[16/10]', 'aspect-square', 'aspect-[3/4]'];
 
@@ -43,7 +44,8 @@ export function WishlistPageContent() {
     let active = true;
     if (!ready) return;
     if (saved.length === 0) {
-      setProducts([]);
+      // Deferred clear keeps this out of the commit phase.
+      deferToTask(() => setProducts([]));
       return;
     }
     (async () => {

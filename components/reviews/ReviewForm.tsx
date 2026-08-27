@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { deferToTask } from '@/hooks/use-deferred-task';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Star, X } from 'lucide-react';
@@ -31,7 +32,9 @@ export function ReviewForm({ productSlug, state }: { productSlug: string; state:
   // so repeated renders (typing, re-renders) never leak blob URLs.
   useEffect(() => {
     const created = photos.map(makePreview);
-    setPreviews(created);
+    // Deferred so the preview setState lands outside the commit phase; the
+    // revoke cleanup still owns the same `created` array.
+    deferToTask(() => setPreviews(created));
     return () => {
       for (const url of created) if (url) URL.revokeObjectURL(url);
     };

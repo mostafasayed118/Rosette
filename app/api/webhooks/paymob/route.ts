@@ -10,6 +10,7 @@ import { activateGiftCardPurchase, settleGiftCardOrderPayment } from '@/features
 import { sanitizePaymobPayload } from '@/features/payment/paymob-pii';
 import { getPublicOrigin } from '@/lib/origin';
 import { logger } from '@/lib/logger';
+import { runInBackground } from '@/lib/wait-until';
 
 export async function POST(request: Request) {
   // Paymob callbacks should never be large. Anything over 64KB is not a real
@@ -110,7 +111,9 @@ export async function POST(request: Request) {
     await supabase.from('orders').update({ payment_status: desiredStatus }).eq('id', order.id).in('payment_status', ['pending', 'payment_started', 'payment_failed']);
     await supabase.from('order_events').insert({ order_id: order.id, event_type: success ? 'payment_confirmed' : 'payment_failed', from_status: order.payment_status, to_status: desiredStatus, metadata: { providerReference } });
     if (success) {
-      await deliverOrderNotification(supabase, {
+      // Ack Paymob immediately; delivery rides ctx.waitUntil on Cloudflare and
+      // is awaited in other runtimes (it is best-effort and never throws).
+      void runInBackground(() => deliverOrderNotification(supabase, {
         orderId: order.id,
         type: 'payment_confirmed',
         recipient: order.customer_email ?? '',
@@ -121,7 +124,7 @@ export async function POST(request: Request) {
         deliveryFeeMinor: order.delivery_fee_minor,
         discountMinor: order.discount_minor ?? undefined,
         orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}`,
-      });
+      }));
     }
     logger.info('payment.webhook.processed', { orderReference, providerReference, success, amountMinor });
     return NextResponse.json({ received: true });

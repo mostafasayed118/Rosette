@@ -5,7 +5,7 @@ import { getAdminSupabase } from '@/lib/supabase/admin';
 import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 
 export async function GET(request: Request) {
-  const limited = enforceRateLimit(request, RATE_LIMITS.promoValidate);
+  const limited = await enforceRateLimit(request, RATE_LIMITS.promoValidate);
   if (limited) return limited;
   const url = new URL(request.url);
   const code = url.searchParams.get('code')?.trim();

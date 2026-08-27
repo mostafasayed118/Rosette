@@ -19,7 +19,7 @@ describe('PayDifferenceButton', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
     renderWithProviders(<PayDifferenceButton requestId="req-1" />);
     fireEvent.click(screen.getByRole('button', { name: /pay the difference/i }));
-    await waitFor(() => expect(screen.getByText(/could not start the payment/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/couldn't start the payment/i)).toBeInTheDocument());
     vi.unstubAllGlobals();
   });
 });

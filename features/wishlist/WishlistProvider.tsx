@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
+import { deferToTask } from '@/hooks/use-deferred-task';
 import { clearWishlistStorage, readWishlist, writeWishlist } from './storage';
 
 type WishlistContextValue = { ready: boolean; saved: string[]; isSaved: (slug: string) => boolean; count: number; toggle: (slug: string) => void };
@@ -11,6 +12,11 @@ const SYNC_FLAG_KEY = 'rosette.wishlist.synced.v1';
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
   const { locale } = useI18n();
+  // The mount effect intentionally runs once; keep the freshest locale for
+  // merge calls through a ref instead of re-subscribing auth listeners on
+  // every locale change.
+  const localeRef = useRef(locale);
+  useEffect(() => { localeRef.current = locale; }, [locale]);
   const [saved, setSaved] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
@@ -26,12 +32,16 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     let active = true;
     const supabase = getBrowserSupabase();
     if (!supabase) {
-      setSaved(readWishlist());
-      setReady(true);
+      deferToTask(() => {
+        if (!active) return;
+        setSaved(readWishlist());
+        setReady(true);
+      });
       return;
     }
     const sync = async () => {
       const guest = readWishlist();
+      const locale = localeRef.current;
       const { data: { user } } = await supabase.auth.getUser();
       if (!active) return;
       if (user) {
@@ -65,6 +75,8 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     // The provider lives in the root layout and survives client-side
     // navigation, so it must re-sync when the auth state changes (sign-in
     // merges the guest list; sign-out drops back to guest storage).
+    // `localeRef` supplies the current locale without widening this dep array,
+    // which would tear down and recreate the auth subscription per switch.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') void sync();
     });

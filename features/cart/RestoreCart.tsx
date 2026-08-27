@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { getBrowserSupabase } from '@/lib/supabase/browser';
@@ -18,8 +18,15 @@ export function RestoreCart() {
   const { cart, ready, restoreCart } = useCart();
   const [pending, setPending] = useState<CartLine[] | null>(null);
 
+  const attemptedToken = useRef<string | null>(null);
+
   useEffect(() => {
     if (!token || !ready || !getBrowserSupabase()) return;
+    // One restore attempt per token: the widened dep array below re-runs this
+    // effect when the bag changes, and a repeat fetch would churn state (and
+    // outlive the test's fetch stub).
+    if (attemptedToken.current === token) return;
+    attemptedToken.current = token;
     let active = true;
     (async () => {
       router.replace(href('/cart'), { scroll: false });
@@ -32,7 +39,7 @@ export function RestoreCart() {
       else setPending(lines);
     })();
     return () => { active = false; };
-  }, [token, ready]);
+  }, [token, ready, cart.lines.length, href, restoreCart, router]);
 
   if (!pending) return null;
   return (
