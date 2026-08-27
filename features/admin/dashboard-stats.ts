@@ -46,3 +46,18 @@ export function computeDashboardStats(orders: OrderRow[], inventory: InventoryRo
     .slice(0, LOW_STOCK_LIMIT);
   return { awaitingFulfillment, revenueTodayMinor, revenueAllTimeMinor, pipeline, lowStock };
 }
+
+export function computeSubscriptionTiles(
+  subscriptions: Array<{ status: string }>,
+  deliveries: Array<{ status: string; scheduled_date?: string }>,
+  now: Date = new Date(),
+): { activeSubscriptions: number; deliveriesThisWeek: number } {
+  const activeSubscriptions = subscriptions.filter((s) => s.status === 'active').length;
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const end = start + 7 * 86_400_000;
+  const deliveriesThisWeek = deliveries.filter((d) => {
+    const t = new Date(`${d.scheduled_date}T00:00:00Z`).getTime();
+    return (d.status === 'scheduled' || d.status === 'ordered') && Number.isFinite(t) && t >= start && t < end;
+  }).length;
+  return { activeSubscriptions, deliveriesThisWeek };
+}

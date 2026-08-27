@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeDashboardStats, LOW_STOCK_THRESHOLD, type InventoryRow, type OrderRow } from '@/features/admin/dashboard-stats';
+import { computeDashboardStats, computeSubscriptionTiles, LOW_STOCK_THRESHOLD, type InventoryRow, type OrderRow } from '@/features/admin/dashboard-stats';
 
 const today = new Date(2026, 7, 18, 12, 0, 0); // Aug 18, 2026 12:00 local
 const todayStr = today.toISOString();
@@ -95,5 +95,20 @@ describe('computeDashboardStats', () => {
 
   it('returns zeroed stats for empty inputs', () => {
     expect(computeDashboardStats([], [], today)).toEqual({ awaitingFulfillment: 0, revenueTodayMinor: 0, revenueAllTimeMinor: 0, pipeline: emptyPipeline, lowStock: [] });
+  });
+});
+
+describe('computeSubscriptionTiles', () => {
+  it('computes active subscribers and deliveries this week', () => {
+    const { activeSubscriptions, deliveriesThisWeek } = computeSubscriptionTiles(
+      [{ status: 'active' }, { status: 'active' }, { status: 'paused' }],
+      [
+        { status: 'scheduled', scheduled_date: '2026-09-15' }, { status: 'scheduled', scheduled_date: '2026-09-30' }, { status: 'ordered' },
+      ],
+      new Date('2026-09-13T00:00:00Z'),
+    );
+    expect(activeSubscriptions).toBe(2);
+    // week = 2026-09-13..2026-09-19
+    expect(deliveriesThisWeek).toBe(1);
   });
 });

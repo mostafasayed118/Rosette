@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ClipboardList, TrendingUp, Wallet } from 'lucide-react';
+import { ClipboardList, PackageCheck, TrendingUp, Wallet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/admin/PageHeader';
-import { computeDashboardStats, LOW_STOCK_THRESHOLD, type InventoryRow, type OrderRow } from '@/features/admin/dashboard-stats';
+import { computeDashboardStats, computeSubscriptionTiles, LOW_STOCK_THRESHOLD, type InventoryRow, type OrderRow } from '@/features/admin/dashboard-stats';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
@@ -20,9 +20,11 @@ export default async function AdminPage() {
   const admin = await getCurrentAdmin();
   if (!admin) redirect('/login');
   const { t, locale } = await getServerT();
-  const [ordersResult, inventoryResult] = await Promise.all([
+  const [ordersResult, inventoryResult, subscriptionsResult, deliveriesResult] = await Promise.all([
     getAdminSupabase().from('orders').select('payment_status,fulfillment_status,total_minor,created_at'),
     getAdminSupabase().from('inventory').select('variant_id,quantity,reserved_quantity,product_variants(name_en)'),
+    getAdminSupabase().from('subscriptions').select('status'),
+    getAdminSupabase().from('subscription_deliveries').select('status,scheduled_date'),
   ]);
   const stats = computeDashboardStats(
     (ordersResult.data ?? []) as OrderRow[],
@@ -36,12 +38,18 @@ export default async function AdminPage() {
   );
   const pipelineEntries = Object.entries(stats.pipeline) as Array<[string, number]>;
   const maxPipeline = Math.max(1, ...pipelineEntries.map(([, count]) => count));
+  const subTiles = computeSubscriptionTiles(
+    (subscriptionsResult.data ?? []) as Array<{ status: string }>,
+    (deliveriesResult.data ?? []) as Array<{ status: string; scheduled_date: string }>,
+  );
   return <>
     <PageHeader eyebrow={t('adminEyebrow')} title={t('adminDashboard')} description={t('signedInAs', { role: admin.role })} />
     <div className="mb-8 mt-6 grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
       <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('awaitingFulfillment')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><ClipboardList className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{stats.awaitingFulfillment}</p><Link className="text-sm text-primary underline underline-offset-4" href="/admin/orders">{t('openOrders')}</Link></CardContent></Card>
       <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueToday')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><Wallet className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{formatMoney(stats.revenueTodayMinor, locale)}</p></CardContent></Card>
       <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueAllTime')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><TrendingUp className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{formatMoney(stats.revenueAllTimeMinor, locale)}</p></CardContent></Card>
+      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('subscriptionsTitle')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><PackageCheck className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{subTiles.activeSubscriptions}</p><Link className="text-sm text-primary underline underline-offset-4" href="/admin/subscriptions">{t('subscriptionManage')}</Link></CardContent></Card>
+      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('subscriptionNextDelivery')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><ClipboardList className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{subTiles.deliveriesThisWeek}</p></CardContent></Card>
     </div>
     <h2 className="font-display text-2xl">{t('fulfillmentPipeline')}</h2>
     <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
