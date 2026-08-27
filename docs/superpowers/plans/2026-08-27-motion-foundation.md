@@ -6,7 +6,7 @@
 
 **Architecture:** Additive layer over the existing shadcn/ui component primitives. `MotionProvider` wraps the app at the root with `MotionConfig reducedMotion="user"`. `useAsyncAction` is opinionated and auto-toasts. New primitives live under `components/motion/`. Motion tokens are pure data in `lib/motion/`.
 
-**Tech Stack:** Framer Motion (`framer-motion` package, `motion/react` import), React 19, TypeScript 5.9, Tailwind v4, Vitest + Testing Library for unit, Playwright for E2E, Supabase for user prefs.
+**Tech Stack:** Framer Motion (`motion@^12` package, `motion/react` import path), React 19, TypeScript 5.9, Tailwind v4, Vitest + Testing Library for unit, Playwright for E2E, Supabase for user prefs.
 
 **Spec:** `docs/superpowers/specs/2026-08-27-motion-foundation-design.md`
 
@@ -34,9 +34,9 @@
 
 - [ ] **Step 1: Add the dependency**
 
-Run: `npm install framer-motion@^11`
+Run: `npm install motion@^12`
 
-Expected: package.json adds `"framer-motion": "^11.x.x"`. node_modules updated.
+Expected: package.json adds `"motion": "^12.x.x"`. node_modules updated. (Note: post-v11, Framer Motion is distributed as the `motion` package with the React API at `motion/react`. Older `framer-motion@11` lacks the `./react` subpath.)
 
 - [ ] **Step 2: Verify the build still works**
 
