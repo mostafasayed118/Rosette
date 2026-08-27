@@ -39,7 +39,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
 
   return <>
     <p className="text-xs font-bold uppercase tracking-[.16em] text-sage"><Link className="underline underline-offset-4" href="/admin/orders">{t('orders')}</Link></p>
-    <PageHeader eyebrow="" title={order.display_number} description={`${formatMoney(order.total_minor, locale)} · ${paymentLabel(order.payment_status, t)} · ${fulfillmentLabel(order.fulfillment_status, t)}`} />
+    <PageHeader title={order.display_number} description={`${formatMoney(order.total_minor, locale)} · ${paymentLabel(order.payment_status, t)} · ${fulfillmentLabel(order.fulfillment_status, t)}`} />
 
     <Card className="mt-6"><CardHeader><CardTitle>{t('recipientAndDelivery')}</CardTitle></CardHeader><CardContent>
       <p>{order.recipient_name} · {order.recipient_phone}</p>

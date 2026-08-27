@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { AdminShell } from '@/components/admin/AdminShell';
+import { PageHeader } from '@/components/admin/PageHeader';
 import { ProductForm } from '@/components/admin/ProductForm';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getServerT } from '@/features/i18n/server';
@@ -8,5 +8,5 @@ export default async function NewProductPage() {
   const admin = await getCurrentAdmin();
   if (!admin) redirect('/login');
   const { t } = await getServerT();
-  return <AdminShell><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('catalogOperations')}</p><h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('newProduct')}</h1><ProductForm /></AdminShell>;
+  return <><PageHeader eyebrow={t('catalogOperations')} title={t('newProduct')} /><div className="mt-6"><ProductForm /></div></>;
 }

@@ -19,6 +19,12 @@ describe('admin primitives', () => {
     expect(screen.getByText('Products')).toBeInTheDocument();
   });
 
+  it('PageHeader omits the eyebrow <p> when eyebrow is an empty string', () => {
+    const { container } = render(<PageHeader eyebrow="" title="Order #1234" />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Order #1234' })).toBeInTheDocument();
+    expect(container.querySelector('p')).toBeNull();
+  });
+
   it('KeyValueRow renders label and value with documented classes', () => {
     const { container } = render(<KeyValueRow label="Total" value={<strong>100</strong>} />);
     expect(screen.getByText('Total')).toHaveClass('text-muted-foreground');
