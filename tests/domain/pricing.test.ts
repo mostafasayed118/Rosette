@@ -4,7 +4,7 @@ import { addLine, removeLine, updateLineQuantity } from '@/features/cart/cart-ut
 import type { Cart, CartLine } from '@/features/cart/types';
 
 const line: CartLine = { id: 'rose-hour-classic', productSlug: 'rose-hour', productName: 'Rose Hour', tone: '#bc6d63', unitPrice: 12000, quantity: 2, variantName: 'Classic', addOns: [{ id: 'note', name: 'Handwritten note', price: 500 }], message: 'For you', deliveryDate: '2026-08-20' };
-const cart: Cart = { lines: [line] };
+const cart: Cart = { version: 2, lines: [line], recipients: [] };
 
 describe('cart pricing and mutations', () => {
   it('calculates add-ons and quantity in minor units', () => {

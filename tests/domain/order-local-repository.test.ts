@@ -1,8 +1,9 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
+import type { Cart } from '@/features/cart/types';
 
 const STORAGE_KEY = 'rosette.orders.v1';
 
-const cart = { lines: [{ id: 'l1', productSlug: 'rose-hour', productName: 'Rose Hour', tone: '#bc6d63', unitPrice: 12000, quantity: 1, addOns: [], message: '', deliveryDate: '2026-08-20' }] };
+const cart: Cart = { version: 2, lines: [{ id: 'l1', productSlug: 'rose-hour', productName: 'Rose Hour', tone: '#bc6d63', unitPrice: 12000, quantity: 1, addOns: [], message: '', deliveryDate: '2026-08-20' }], recipients: [] };
 
 beforeEach(() => {
   if (typeof window !== 'undefined') window.localStorage.clear();

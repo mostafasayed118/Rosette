@@ -1,6 +1,10 @@
+import type { CartRecipient } from './recipient-types';
+
+export type { CartRecipient } from './recipient-types';
+
 export type CartAddOn = { id: string; name: string; price: number };
-export type CartLine = { id: string; productSlug: string; productName: string; productNameAr?: string; productNameFr?: string; tone: string; imageUrl?: string | null; unitPrice: number; quantity: number; variantId?: string; variantName?: string; addOns: CartAddOn[]; message: string; deliveryDate: string };
-export type Cart = { lines: CartLine[] };
+export type CartLine = { id: string; productSlug: string; productName: string; productNameAr?: string; productNameFr?: string; tone: string; imageUrl?: string | null; unitPrice: number; quantity: number; variantId?: string; variantName?: string; addOns: CartAddOn[]; message: string; deliveryDate: string; recipientId?: string };
+export type Cart = { version: 2; lines: CartLine[]; recipients: CartRecipient[] };
 export type OrderTotals = { subtotal: number; deliveryFee: number; discountMinor?: number; total: number };
 export type AddCartLineInput = CartLine;
 

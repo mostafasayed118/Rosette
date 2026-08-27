@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createLocalOrder } from '@/features/order/local-repository';
 import type { CreateOrderInput } from '@/features/order/types';
 
-const input: CreateOrderInput = { cart: { lines: [{ id: 'rose', productSlug: 'rose-hour', productName: 'Rose Hour', tone: '#bc6d63', unitPrice: 12000, quantity: 1, addOns: [], message: '', deliveryDate: '2026-08-20' }] }, destination: { countryCode: 'EG', cityCode: 'alexandria' }, recipient: { name: 'Maya', phone: '01000000000' }, sender: { name: 'Nour', email: 'nour@example.com' }, delivery: { address: '12 Garden Street', date: '2026-08-20', window: '12-3' }, paymentMethod: 'demo-card', simulatePaymentFailure: false };
+const input: CreateOrderInput = { cart: { version: 2, lines: [{ id: 'rose', productSlug: 'rose-hour', productName: 'Rose Hour', tone: '#bc6d63', unitPrice: 12000, quantity: 1, addOns: [], message: '', deliveryDate: '2026-08-20' }], recipients: [] }, destination: { countryCode: 'EG', cityCode: 'alexandria' }, recipient: { name: 'Maya', phone: '01000000000' }, sender: { name: 'Nour', email: 'nour@example.com' }, delivery: { address: '12 Garden Street', date: '2026-08-20', window: '12-3' }, paymentMethod: 'demo-card', simulatePaymentFailure: false };
 
 describe('local order repository', () => {
   it('stores a confirmed order after successful mock authorization', () => {
