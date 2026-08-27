@@ -104,7 +104,7 @@ code constants.
 | --- | --- | --- | --- |
 | 1 | Who's it for? | partner / family / friend / colleague | `gift_recipients` |
 | 2 | What's the occasion? | birthday / love / thank-you / new-home / congratulations / sympathy / just-because | existing `occasions[]` |
-| 3 | What's your budget? | under 500 / 500–1000 / 1000–2000 / 2000+ EGP | `price_minor` bands |
+| 3 | What's your budget? | under 150 / 150–250 / over 250 EGP | `price_minor` bands |
 | 4 | Colors they'd love? | red / pink / white / pastel / bright / mixed | `gift_colors` |
 | 5 | Their style? | romantic / classic / bold / minimal / playful | `gift_styles` |
 
