@@ -1,6 +1,8 @@
+import { randomUUID } from 'node:crypto';
 import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 import type { PaymentCustomer } from '@/features/payment/paymob-client';
+import { generateGiftCardCode, hashGiftCardCode, encryptGiftCardCode, maskGiftCardCode } from '@/features/gift-cards/crypto';
 import { datesFrom } from './schedule';
 import type { Frequency } from './types';
 import { getPlanBySlug } from './repository';
@@ -82,4 +84,62 @@ export async function activateSubscriptionIfPaid(client: Client, subscriptionId:
   const dates = datesFrom(String(sub.first_delivery_date), sub.frequency as Frequency, Number(sub.bundle_size));
   const { error } = await c.rpc('activate_subscription', { p_subscription_id: subscriptionId, p_dates: dates });
   return error ? 'noop' : 'activated';
+}
+
+export type CancelResult = { ok: true; creditMinor: number; giftCardCodeLast4: string | null } | { ok: false; error: 'not_found' | 'already_cancelled' | 'unavailable' };
+
+export async function cancelSubscriptionWithCredit(
+  client: Client, subscriptionId: string, customerId: string,
+  opts: { actor: 'customer' | 'admin'; actorId?: string | null },
+  deps: { now?: Date } = {},
+): Promise<CancelResult> {
+  const c = client as any;
+  const { data: owned } = await c.from('subscriptions')
+    .select('id,price_minor,bundle_size,frequency,locale,recipient_email,customer_id,subscription_plans(name_en)')
+    .eq('id', subscriptionId).eq('customer_id', customerId).maybeSingle();
+  if (!owned) return { ok: false, error: 'not_found' };
+  const { data: cancelData, error: cancelError } = await c.rpc('cancel_subscription', { p_subscription_id: subscriptionId });
+  if (cancelError) return { ok: false, error: 'unavailable' };
+  if (!cancelData?.cancelled) return { ok: false, error: 'already_cancelled' };
+
+  const unmaterialized = Number(cancelData.unmaterialized_count ?? 0);
+  const bundleSize = Number(owned.bundle_size);
+  const priceMinor = Number(owned.price_minor);
+  const creditMinor = bundleSize > 0 ? Math.floor((priceMinor * unmaterialized) / bundleSize) : 0;
+  let giftCardCodeLast4: string | null = null;
+
+  if (creditMinor > 0) {
+    const now = deps.now ?? new Date();
+    const secret = getRequiredServerEnv('GIFT_CARD_SECRET');
+    const code = generateGiftCardCode();
+    const purchaseId = randomUUID();
+    const cardId = randomUUID();
+    const expiresAt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000).toISOString();
+    const buyerEmail = String(owned.recipient_email ?? '').trim();
+    const planName = String(owned.subscription_plans?.name_en ?? '');
+    const row = {
+      id: cardId, purchase_id: purchaseId, code_hash: hashGiftCardCode(code, secret), code_ciphertext: encryptGiftCardCode(code, secret),
+      code_last4: code.replace(/-/g, '').slice(-4), initial_balance_minor: creditMinor, balance_minor: creditMinor,
+      recipient_name: planName, recipient_email: buyerEmail, buyer_email: buyerEmail, status: 'active', locale: owned.locale ?? 'en',
+      expires_at: expiresAt, delivery_status: 'sent', delivery_attempts: 1, activated_at: now.toISOString(), created_at: now.toISOString(),
+    };
+    const { error: cardError } = await c.from('gift_cards').insert(row);
+    if (cardError) return { ok: false, error: 'unavailable' };
+    await c.from('gift_card_purchases').insert({
+      id: purchaseId, reference: `SUBREF-${subscriptionId}`, amount_minor: creditMinor, currency: 'EGP',
+      sender_name: planName, sender_email: buyerEmail, recipient_name: planName, recipient_email: buyerEmail,
+      message: 'Store credit from subscription cancellation', locale: owned.locale ?? 'en',
+      status: 'paid', source: 'subscription_refund', delivery_status: 'sent', delivery_attempts: 1,
+    });
+    await c.from('gift_card_transactions').insert({
+      gift_card_id: cardId, type: 'issue', amount_minor: creditMinor, actor_id: opts.actorId ?? null,
+      idempotency_key: `subscription-refund:${subscriptionId}`, metadata: { source: 'subscription_refund' },
+    });
+    giftCardCodeLast4 = maskGiftCardCode(code);
+    await c.from('subscription_events').insert({
+      subscription_id: subscriptionId, actor: opts.actor, actor_id: opts.actorId ?? null,
+      event_type: 'credit_issued', payload: { credit_minor: creditMinor, plan_name: planName },
+    });
+  }
+  return { ok: true, creditMinor, giftCardCodeLast4 };
 }
