@@ -19,5 +19,7 @@ export async function sendOrderNotification(input: OrderNotificationInput, injec
 }
 
 export function isEmailConfigured() {
+  // Prefer Resend (free 3k/mo, better deliverability). Fall back to Gmail SMTP.
+  if (getOptionalServerEnv('RESEND_API_KEY')) return true;
   return Boolean(getOptionalServerEnv('GMAIL_USER') && getOptionalServerEnv('GMAIL_APP_PASSWORD') && getOptionalServerEnv('GMAIL_FROM'));
 }

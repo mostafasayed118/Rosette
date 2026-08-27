@@ -28,15 +28,16 @@ const nextConfig: NextConfig = {
   async headers() {
     const isDev = process.env.NODE_ENV !== 'production';
     const scriptSrc = isDev
-      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-      : "script-src 'self' 'unsafe-inline'";
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com"
+      : "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://static.cloudflareinsights.com";
     const csp = [
       "default-src 'self'",
       scriptSrc,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://lh3.googleusercontent.com",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co",
+      "connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com https://cloudflareinsights.com",
+      "frame-src 'self' https://challenges.cloudflare.com",
       "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",

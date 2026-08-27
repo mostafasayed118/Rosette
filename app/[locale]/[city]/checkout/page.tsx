@@ -3,6 +3,7 @@ import { SiteHeader } from '@/components/layout/SiteHeader';
 import { CheckoutForm } from '@/features/checkout/CheckoutForm';
 import { getCheckoutPaymentMethods } from '@/features/checkout/payment-mode';
 import { getCityBySlug } from '@/features/destination/data';
+import { getOptionalServerEnv } from '@/lib/server-env';
 
 function CheckoutProgress() {
   return (
@@ -33,7 +34,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
       <SiteHeader />
       <main className="flex-grow w-full max-w-[1280px] mx-auto px-5 md:px-16 py-10 md:py-12">
         <CheckoutProgress />
-        <CheckoutForm cityCode={cityCode} availablePaymentMethods={getCheckoutPaymentMethods()} />
+        <CheckoutForm cityCode={cityCode} availablePaymentMethods={getCheckoutPaymentMethods()} turnstileSiteKey={getOptionalServerEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY')} />
       </main>
       <SiteFooter locale={locale} city={city} />
     </div>

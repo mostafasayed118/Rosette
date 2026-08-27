@@ -10,6 +10,7 @@ import { resolveHtmlAttributes } from '@/features/i18n/server-html';
 import { resolveServerLocale } from '@/features/i18n/server-locale';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
 import { ChatWidget } from '@/features/chat/ChatWidget';
+import { CloudflareWebAnalytics } from '@/components/analytics/CloudflareWebAnalytics';
 import { MotionProvider } from '@/components/motion';
 import { Toaster } from '@/components/ui/sonner';
 import { getOptionalServerEnv } from '@/lib/server-env';
@@ -45,5 +46,5 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const locale = await resolveServerLocale();
   const attrs = resolveHtmlAttributes(locale, store.get('rosette.theme')?.value);
   const reduceMotionInitial = store.get('rosette-reduce-motion')?.value === '1';
-  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${outfit.variable} ${jetbrains.variable} ${plexArabic.variable}${attrs.themeClass}`}><body><script dangerouslySetInnerHTML={{ __html: LOCALE_SYNC_SCRIPT }} /><MotionProvider initialReduceMotion={reduceMotionInitial}><ThemeProvider><I18nProvider initialLocale={locale}><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider><Toaster position="top-center" /></ThemeProvider></MotionProvider></body></html>;
+  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${outfit.variable} ${jetbrains.variable} ${plexArabic.variable}${attrs.themeClass}`}><body><script dangerouslySetInnerHTML={{ __html: LOCALE_SYNC_SCRIPT }} /><MotionProvider initialReduceMotion={reduceMotionInitial}><ThemeProvider><I18nProvider initialLocale={locale}><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /><CloudflareWebAnalytics token={getOptionalServerEnv('NEXT_PUBLIC_CF_BEACON_TOKEN')} /></I18nProvider><Toaster position="top-center" /></ThemeProvider></MotionProvider></body></html>;
 }

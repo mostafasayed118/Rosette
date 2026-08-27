@@ -22,4 +22,5 @@ export const RATE_LIMITS = {
   giftCardPurchase: { bucket: 'gift-card-purchase', limit: 10, windowMs: 10 * 60_000, error: 'Too many gift-card attempts. Please wait a moment.' },
   promoValidate: { bucket: 'promo-validate', limit: 20, windowMs: 5 * 60_000, error: 'Too many promo attempts. Please wait a moment.' },
   reviewSubmit: { bucket: 'review-submit', limit: 5, windowMs: 10 * 60_000, error: 'Too many review submissions. Please wait a moment.' },
+  turnstileVerify: { bucket: 'turnstile-verify', limit: 20, windowMs: 5 * 60_000, error: 'Too many verification attempts. Please wait a moment.' },
 } as const satisfies Record<string, RateLimitRule>;

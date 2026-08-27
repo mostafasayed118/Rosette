@@ -11,7 +11,8 @@ import { markCartConverted } from '@/features/cart/cart-sync';
 import { resolvePaymentMethodAvailability } from '@/features/checkout/payment-mode';
 import { logger } from '@/lib/logger';
 import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { checkTurnstileToken } from '@/lib/turnstile';
 import { runInBackground } from '@/lib/wait-until';
 
 const ORDERS_PER_EMAIL = { bucket: 'orders-email', limit: 5, windowMs: 10 * 60_000 };
@@ -20,7 +21,13 @@ export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, RATE_LIMITS.orders);
   if (limited) return limited;
   try {
-    const body = await request.json() as { cart?: unknown; destination?: unknown; checkout?: { senderEmail?: unknown }; locale?: unknown };
+    const body = await request.json() as { cart?: unknown; destination?: unknown; checkout?: { senderEmail?: unknown }; locale?: unknown; turnstileToken?: unknown };
+    // Enforced only when TURNSTILE_SECRET_KEY is set; runs before the email
+    // bucket so bots cannot consume per-address quota.
+    const turnstile = await checkTurnstileToken(body.turnstileToken, getOptionalServerEnv('TURNSTILE_SECRET_KEY'), getClientIp(request));
+    if (turnstile !== 'pass') {
+      return NextResponse.json({ error: turnstile === 'missing' ? 'Human verification required' : 'Human verification failed' }, { status: 400 });
+    }
     const senderEmail = typeof body.checkout?.senderEmail === 'string' ? body.checkout.senderEmail.trim().toLowerCase() : '';
     if (senderEmail) {
       const emailResult = await checkRateLimit({ ...ORDERS_PER_EMAIL, identifier: senderEmail });

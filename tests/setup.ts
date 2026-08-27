@@ -14,6 +14,11 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(window.location.search),
 }));
 
+// Tests inject sendNotification directly via the third arg of deliverOrderNotification.
+// Ensure RESEND_API_KEY is unset so the Resend branch in notification-delivery.ts is
+// skipped and the injected sendNotification is exercised instead.
+delete process.env.RESEND_API_KEY;
+
 afterEach(() => {
   cleanup();
   window.localStorage.clear();

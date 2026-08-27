@@ -20,6 +20,7 @@ import { useStorePath } from '@/features/i18n/use-store-path';
 import { deferToTask } from '@/hooks/use-deferred-task';
 import { formatMoney } from '@/features/money';
 import { createLocalOrder } from '@/features/order/local-repository';
+import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { SignedInNotice } from './SignedInNotice';
 import { validateCheckout } from './validation';
 import type { CheckoutErrors, CheckoutInput } from './types';
@@ -40,7 +41,7 @@ function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymentMethods }: { cityCode: string; availablePaymentMethods?: PaymentMethod[] }) {
+export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymentMethods, turnstileSiteKey }: { cityCode: string; availablePaymentMethods?: PaymentMethod[]; turnstileSiteKey?: string }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const { href } = useStorePath();
@@ -66,6 +67,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
   const [simulateFailure, setSimulateFailure] = useState(false);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
   const [minDate, setMinDate] = useState('');
   // Captured once at mount: delivery windows are display-only constraints, and
   // a per-render `new Date()` is impure (a different value on every render).
@@ -96,7 +98,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
     const response = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cart, destination, checkout: { ...input, promoCode: promo.state === 'valid' ? promo.code.trim() : undefined }, locale }),
+      body: JSON.stringify({ cart, destination, checkout: { ...input, promoCode: promo.state === 'valid' ? promo.code.trim() : undefined }, locale, turnstileToken: turnstileToken || undefined }),
     });
     const data = (await response.json()) as OrderApiResponse;
     if (!response.ok || !data.orderId) {
@@ -443,6 +445,10 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
               <input type="checkbox" checked={simulateFailure} onChange={(e) => setSimulateFailure(e.target.checked)} className="accent-primary h-4 w-4 rounded border-outline-variant" />
               <span className="text-sm text-on-surface">{t('simulateFailure')}</span>
             </label>
+
+            {turnstileSiteKey ? (
+              <TurnstileWidget siteKey={turnstileSiteKey} onVerify={setTurnstileToken} onExpire={() => setTurnstileToken('')} onError={() => setTurnstileToken('')} />
+            ) : null}
 
             <Button type="submit" disabled={submitting} className="w-full justify-center py-6 text-[15px] font-medium mt-2">
               {submitting ? t('processing') : t('placeOrder')} · <span className="font-mono tracking-[0.05em]">{formatMoney(displayTotal, locale)}</span> <span aria-hidden>↗</span>

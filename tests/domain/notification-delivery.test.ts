@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
+
+const { resendMock } = vi.hoisted(() => ({ resendMock: vi.fn() }));
+vi.mock('@/features/notifications/resend-mailer', () => ({ sendOrderEmailResend: resendMock }));
 
 type Call = { table: string; op: string; payload?: unknown; id?: string };
 
@@ -86,5 +89,42 @@ describe('deliverOrderNotification', () => {
     const result = await deliverOrderNotification(client, input, sendOk);
     expect(result).toEqual({ accepted: false });
     expect(calls.filter((c) => c.op === 'update')).toEqual([]);
+  });
+});
+
+describe('deliverOrderNotification (resend branch)', () => {
+  beforeEach(() => {
+    resendMock.mockReset();
+    vi.stubEnv('RESEND_API_KEY', 'rk_test');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('routes through the Resend mailer instead of the injected SMTP sender', async () => {
+    resendMock.mockResolvedValue({ id: 'em_1', accepted: true });
+    const { client, calls } = fakeClient();
+    const result = await deliverOrderNotification(client, input, sendOk);
+    expect(resendMock).toHaveBeenCalledTimes(1);
+    expect(resendMock.mock.calls[0]![0]).toMatchObject({
+      recipientEmail: 'buyer@example.com',
+      orderNumber: 'RO-123',
+      totalMinor: 12300,
+      locale: 'en',
+      type: 'ready_for_delivery',
+    });
+    expect(result).toEqual({ accepted: true });
+    const updated = calls.find((c) => c.op === 'update');
+    expect(updated!.payload).toMatchObject({ status: 'sent' });
+  });
+
+  it('marks the row failed with resend_failed when Resend rejects', async () => {
+    resendMock.mockRejectedValue(new Error('boom'));
+    const { client, calls } = fakeClient();
+    const result = await deliverOrderNotification(client, input, sendOk);
+    expect(result).toEqual({ accepted: false });
+    const updated = calls.find((c) => c.op === 'update');
+    expect(updated!.payload).toMatchObject({ status: 'failed', attempts: 1, last_error: 'resend_failed' });
   });
 });
