@@ -728,5 +728,20 @@
   "giftFinderPdpLink": "Not the right one? Try the gift finder",
   "giftRecipientsLabel": "Gift recipients",
   "giftStylesLabel": "Gift styles",
-  "giftColorsLabel": "Gift colors"
+  "giftColorsLabel": "Gift colors",
+  "subscriptionsTitle": "Flower Subscriptions",
+  "subscriptionsLede": "A hand-picked bouquet on your schedule.",
+  "subscriptionPlan": "Plan",
+  "subscriptionManage": "Manage",
+  "subscriptionProgress": "Deliveries",
+  "subscriptionNextDelivery": "Next delivery",
+  "subscriptionsEmpty": "No subscriptions yet.",
+  "subscriptionCheckoutTitle": "Start your subscription",
+  "subscriptionRecipientMe": "Deliver to me",
+  "subscriptionRecipientOther": "Deliver to someone else",
+  "subscriptionFrequency": "Frequency",
+  "subscriptionBundleSize": "Bouquets",
+  "subscriptionFirstDelivery": "First delivery",
+  "subscriptionGiftMessage": "Gift message",
+  "subscriptionConfirmPurchase": "Start subscription"
 }

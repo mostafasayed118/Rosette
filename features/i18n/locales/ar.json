@@ -728,5 +728,20 @@
   "giftFinderPdpLink": "ليس هذا ما تريده؟ جرّب أداة البحث عن الهدايا",
   "giftRecipientsLabel": "مستلمو الهدايا",
   "giftStylesLabel": "أنماط الهدايا",
-  "giftColorsLabel": "ألوان الهدايا"
+  "giftColorsLabel": "ألوان الهدايا",
+  "subscriptionsTitle": "اشتراكات الزهور",
+  "subscriptionsLede": "باقة مختارة بعناية وفق جدولك.",
+  "subscriptionPlan": "الخطة",
+  "subscriptionManage": "إدارة",
+  "subscriptionProgress": "التوصيلات",
+  "subscriptionNextDelivery": "التوصيل القادم",
+  "subscriptionsEmpty": "لا توجد اشتراكات بعد.",
+  "subscriptionCheckoutTitle": "ابدأ اشتراكك",
+  "subscriptionRecipientMe": "التوصيل إليّ",
+  "subscriptionRecipientOther": "التوصيل لشخص آخر",
+  "subscriptionFrequency": "التكرار",
+  "subscriptionBundleSize": "الباقات",
+  "subscriptionFirstDelivery": "أول توصيل",
+  "subscriptionGiftMessage": "رسالة الهدية",
+  "subscriptionConfirmPurchase": "ابدأ الاشتراك"
 }

@@ -728,5 +728,20 @@
   "giftFinderPdpLink": "Pas le bon ? Essayez l'outil de recherche de cadeaux",
   "giftRecipientsLabel": "Destinataires du cadeau",
   "giftStylesLabel": "Styles de cadeau",
-  "giftColorsLabel": "Couleurs du cadeau"
+  "giftColorsLabel": "Couleurs du cadeau",
+  "subscriptionsTitle": "Abonnements fleuris",
+  "subscriptionsLede": "Un bouquet choisi avec soin, à votre rythme.",
+  "subscriptionPlan": "Formule",
+  "subscriptionManage": "Gérer",
+  "subscriptionProgress": "Livraisons",
+  "subscriptionNextDelivery": "Prochaine livraison",
+  "subscriptionsEmpty": "Aucun abonnement pour l'instant.",
+  "subscriptionCheckoutTitle": "Commencez votre abonnement",
+  "subscriptionRecipientMe": "Livrer chez moi",
+  "subscriptionRecipientOther": "Livrer à quelqu'un d'autre",
+  "subscriptionFrequency": "Fréquence",
+  "subscriptionBundleSize": "Bouquets",
+  "subscriptionFirstDelivery": "Première livraison",
+  "subscriptionGiftMessage": "Message cadeau",
+  "subscriptionConfirmPurchase": "Commencer l'abonnement"
 }

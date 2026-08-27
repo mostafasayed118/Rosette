@@ -9,4 +9,13 @@ describe('i18n dictionaries', () => {
       expect(keys).toEqual(expect.arrayContaining(enKeys));
     }
   });
+
+  it('defines every subscription* key in en, ar and fr', () => {
+    const keys = ['subscriptionsTitle', 'subscriptionsLede', 'subscriptionPlan', 'subscriptionManage', 'subscriptionProgress', 'subscriptionNextDelivery', 'subscriptionsEmpty', 'subscriptionCheckoutTitle', 'subscriptionRecipientMe', 'subscriptionRecipientOther', 'subscriptionFrequency', 'subscriptionBundleSize', 'subscriptionFirstDelivery', 'subscriptionGiftMessage', 'subscriptionConfirmPurchase'];
+    for (const k of keys) {
+      expect(messages.en[k], `en.${k}`).toBeTruthy();
+      expect(messages.ar[k], `ar.${k}`).toBeTruthy();
+      expect(messages.fr[k], `fr.${k}`).toBeTruthy();
+    }
+  });
 });
