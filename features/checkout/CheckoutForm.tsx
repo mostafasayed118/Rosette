@@ -8,9 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusMessage } from '@/components/ui/status-message';
 import { defaultDeliveryDate, minDeliveryDate } from '@/features/delivery/dates';
-import { calculateCartTotals } from '@/features/cart/pricing';
+import { calculateCartTotals, calculateLineTotal } from '@/features/cart/pricing';
 import { useCart } from '@/features/cart/CartProvider';
 import { CartLineItem } from '@/features/cart/CartLineItem';
+import { RecipientEditorDialog } from '@/features/cart/RecipientEditorDialog';
+import { RecipientGroupCard } from '@/features/cart/RecipientGroupCard';
+import { groupLinesByRecipient } from '@/features/cart/cart-utils';
+import type { CartRecipient } from '@/features/cart/types';
 import { useDeliveryFee } from '@/features/delivery/useDeliveryFee';
 import { usePromoCode } from '@/features/promo/usePromoCode';
 import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
@@ -23,6 +27,7 @@ import { createLocalOrder } from '@/features/order/local-repository';
 import { TurnstileWidget } from '@/components/security/TurnstileWidget';
 import { SignedInNotice } from './SignedInNotice';
 import { validateCheckout } from './validation';
+import { checkoutDeliveryFeeMinor, validateRecipientGroups } from './recipient-groups';
 import type { CheckoutErrors, CheckoutInput } from './types';
 import type { PaymentMethod } from './types';
 
@@ -45,10 +50,11 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
   const { t, locale } = useI18n();
   const router = useRouter();
   const { href } = useStorePath();
-  const { cart, ready, clearCart, updateQuantity, removeItem } = useCart();
+  const { cart, ready, clearCart, updateQuantity, removeItem, multiRecipient, recipients, updateRecipient, removeRecipient } = useCart();
   const { feeMinor } = useDeliveryFee(cityCode);
   const deliveryFee = feeMinor ?? estimateDeliveryFeeMinor(cityCode) ?? 1500;
-  const totals = calculateCartTotals(cart.lines, cart.lines.length ? deliveryFee : 0);
+  const effectiveFee = multiRecipient ? checkoutDeliveryFeeMinor(deliveryFee, recipients) : deliveryFee;
+  const totals = calculateCartTotals(cart.lines, cart.lines.length ? effectiveFee : 0);
   const subtotalOnly = calculateCartTotals(cart.lines, 0).subtotal;
   const promo = usePromoCode(subtotalOnly);
   const promoDiscount = promo.discountMinor ?? 0;
@@ -69,6 +75,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
   const [submitting, setSubmitting] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [minDate, setMinDate] = useState('');
+  const [editingRecipient, setEditingRecipient] = useState<CartRecipient | null>(null);
   // Captured once at mount: delivery windows are display-only constraints, and
   // a per-render `new Date()` is impure (a different value on every render).
   const [mountNow] = useState(() => new Date());
@@ -98,7 +105,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
     const response = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cart, destination, checkout: { ...input, promoCode: promo.state === 'valid' ? promo.code.trim() : undefined }, locale, turnstileToken: turnstileToken || undefined }),
+      body: JSON.stringify({ cart, destination, checkout: { ...input, promoCode: promo.state === 'valid' ? promo.code.trim() : undefined }, recipients: multiRecipient ? recipients : [], locale, turnstileToken: turnstileToken || undefined }),
     });
     const data = (await response.json()) as OrderApiResponse;
     if (!response.ok || !data.orderId) {
@@ -114,12 +121,13 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
 
   function submitLocal() {
     const destination = { countryCode: 'EG', cityCode };
+    const primary = multiRecipient ? recipients[0] : undefined;
     const result = createLocalOrder({
       cart,
       destination,
-      recipient: { name: input.recipientName, phone: input.recipientPhone },
+      recipient: primary ? { name: primary.recipientName, phone: primary.recipientPhone } : { name: input.recipientName, phone: input.recipientPhone },
       sender: { name: input.senderName, email: input.senderEmail },
-      delivery: { address: input.address, date: input.deliveryDate, window: input.deliveryWindow },
+      delivery: primary ? { address: primary.address, date: primary.deliveryDate, window: primary.deliveryWindow } : { address: input.address, date: input.deliveryDate, window: input.deliveryWindow },
       paymentMethod: input.paymentMethod,
       simulatePaymentFailure: simulateFailure,
     });
@@ -132,7 +140,12 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validateCheckout(input);
+    const groupError = multiRecipient ? validateRecipientGroups(recipients, cart.lines) : null;
+    if (groupError) {
+      setMessage(t(groupError));
+      return;
+    }
+    const nextErrors = validateCheckout(input, { multiRecipient });
     setErrors(nextErrors);
     const firstError = Object.keys(nextErrors)[0] as keyof CheckoutInput | undefined;
     if (firstError) {
@@ -159,6 +172,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
   const nextDay2ISO = toISODate(new Date(mountNow.getTime() + 86400000 * 2));
   const cityLabel = getCityBySlug(cityCode)?.name ?? cityCode;
   const firstGiftLine = cart.lines.find((l) => l.message?.trim());
+  const buckets = groupLinesByRecipient(cart.lines);
 
   const deliveryDateOptions: Array<{ label: string; sub: string; value: string; weekday?: string }> = [
     { label: 'Today', sub: new Date(todayISO).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-GB', { month: 'short', day: 'numeric' }), value: todayISO },
@@ -183,6 +197,27 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
           <p className="mt-2 text-[15px] leading-relaxed text-on-surface-variant max-w-[44ch]">Please provide the delivery address and preferred date for your botanical arrangement.</p>
 
           <div className="mt-6 grid gap-5">
+            {multiRecipient ? (
+              <>
+                <div className="space-y-3">
+                  {recipients.map((recipient) => {
+                    const groupLines = buckets.get(recipient.id) ?? [];
+                    return (
+                      <RecipientGroupCard
+                        key={recipient.id}
+                        recipient={recipient}
+                        itemCount={groupLines.reduce((s, l) => s + l.quantity, 0)}
+                        subtotalMinor={groupLines.reduce((s, l) => s + calculateLineTotal(l), 0)}
+                        onEdit={() => setEditingRecipient(recipient)}
+                        onRemove={() => removeRecipient(recipient.id)}
+                      />
+                    );
+                  })}
+                </div>
+                <RecipientEditorDialog value={editingRecipient} open={Boolean(editingRecipient)} onClose={() => setEditingRecipient(null)} onSave={(r) => { updateRecipient(r.id, r); setEditingRecipient(null); }} />
+              </>
+            ) : (
+              <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-1.5">
                 <Label htmlFor="recipientName" className={stitchLabel}>
@@ -232,6 +267,8 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
               />
               {errors.address ? <small className="text-sm text-destructive">{errors.address}</small> : null}
             </div>
+              </>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="grid gap-1.5">
@@ -270,6 +307,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
         </section>
 
         {/* Delivery Date */}
+        {!multiRecipient ? (
         <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-[0_10px_48px_-12px_rgba(94,89,80,0.06)] p-5 md:p-7">
           <div className="flex items-center justify-between gap-4">
             <h2 className="font-display text-[22px] md:text-[24px] font-medium leading-tight text-on-surface">Delivery Date</h2>
@@ -350,6 +388,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
             </div>
           </div>
         </section>
+        ) : null}
 
         {/* Payment */}
         <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-[0_10px_48px_-12px_rgba(94,89,80,0.06)] p-5 md:p-7">
