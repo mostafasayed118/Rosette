@@ -3,6 +3,7 @@ import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
 import { createPaymobIntention } from '@/features/payment/paymob-client';
 import type { PaymentCustomer } from '@/features/payment/paymob-client';
 import { generateGiftCardCode, hashGiftCardCode, encryptGiftCardCode, maskGiftCardCode } from '@/features/gift-cards/crypto';
+import { sendSubscriptionEmail } from './email';
 import { datesFrom } from './schedule';
 import type { Frequency } from './types';
 import { getPlanBySlug } from './repository';
@@ -140,6 +141,10 @@ export async function cancelSubscriptionWithCredit(
       subscription_id: subscriptionId, actor: opts.actor, actor_id: opts.actorId ?? null,
       event_type: 'credit_issued', payload: { credit_minor: creditMinor, plan_name: planName },
     });
+    if (buyerEmail) {
+      const locale = (owned.locale === 'ar' || owned.locale === 'fr' ? owned.locale : 'en') as 'en' | 'ar' | 'fr';
+      await sendSubscriptionEmail({ type: 'cancelled_credit', to: buyerEmail, locale, planName, code, creditMinor }).catch(() => {});
+    }
   }
   return { ok: true, creditMinor, giftCardCodeLast4 };
 }

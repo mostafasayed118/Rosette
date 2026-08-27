@@ -1,4 +1,5 @@
 import type { Frequency } from './types';
+import { sendSubscriptionEmail } from './email';
 
 type CronClient = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => any };
 export type SubscriptionCronSummary = { materialized: number; nudgesSent: number; completed: number; expired: number; failed: number };
@@ -18,7 +19,7 @@ export async function runSubscriptionsCron(
 ): Promise<SubscriptionCronSummary> {
   const s: SubscriptionCronSummary = { materialized: 0, nudgesSent: 0, completed: 0, expired: 0, failed: 0 };
   const today = dateRef(deps.today ?? new Date());
-  const send = deps.send ?? (async () => {});
+  const send = deps.send ?? (async (input: Parameters<typeof sendSubscriptionEmail>[0]) => { await sendSubscriptionEmail(input); });
   const c = client as any;
 
   // Pass 1 — materialize
@@ -35,13 +36,30 @@ export async function runSubscriptionsCron(
     }
   }
 
-  // Pass 2 — nudge at 1 remaining / complete when empty (issuance ± email wiring done in Task 9)
+  // Pass 2 — nudge at 1 remaining / complete when empty
   for (const sub of (subs ?? []) as any[]) {
     const { data: remaining } = await c.from('subscription_deliveries').select('id,status').eq('subscription_id', sub.id).eq('status', 'scheduled');
     const count = ((remaining ?? []) as any[]).length;
-    if (count === 0 && sub.status === 'active') {
-      const { error } = await c.from('subscriptions').update({ status: 'completed', completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', sub.id).eq('status', 'active');
-      if (!error) s.completed += 1;
+    const planName = String(sub.subscription_plans?.name_en ?? '');
+    const to = String(sub.profiles?.email ?? '');
+    const locale = (sub.locale === 'ar' || sub.locale === 'fr' ? sub.locale : 'en') as 'en' | 'ar' | 'fr';
+    if (count === 0 && sub.status === 'active' && !sub.renewal_nudge_sent_at) {
+      const { error: compErr } = await c.from('subscriptions').update({ status: 'completed', completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', sub.id).eq('status', 'active');
+      if (!compErr) {
+        s.completed += 1;
+        await send({ type: 'completed', to, locale, planName, plansUrl: `${deps.origin}/${locale}/cairo/subscriptions` }).catch(() => { s.failed += 1; });
+      }
+    } else if (count === 1 && !sub.renewal_nudge_sent_at) {
+      const code = `ROS10${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      const expiresAt = new Date(Date.now() + 60 * 24 * 3600_000).toISOString();
+      const { error: promoError } = await c.from('promo_codes').insert({ code, type: 'percent', percent_off: 10, minimum_order_minor: 0, starts_at: null, expires_at: expiresAt, max_uses: 1, used_count: 0, active: true });
+      if (!promoError) {
+        const { error: nudgeErr } = await c.from('subscriptions').update({ renewal_nudge_sent_at: new Date().toISOString(), renewal_promo_code: code, updated_at: new Date().toISOString() }).eq('id', sub.id).is('renewal_nudge_sent_at', null);
+        if (!nudgeErr) {
+          s.nudgesSent += 1;
+          await send({ type: 'renewal_nudge', to, locale, planName, code, plansUrl: `${deps.origin}/${locale}/cairo/subscriptions` }).catch(() => { s.failed += 1; });
+        }
+      }
     }
   }
 
