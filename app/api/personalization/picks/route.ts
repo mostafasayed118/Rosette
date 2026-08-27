@@ -10,9 +10,11 @@ const schema = z.object({
   locale: z.enum(['en', 'ar', 'fr']).default('en'),
 });
 
+const FALLBACK_PICKS = { buyAgain: [], recommended: [], reason: 'fallback' as const };
+
 export async function GET(req: Request) {
   if (process.env.ROSETTE_PERSONALIZATION_ENABLED === 'false') {
-    return NextResponse.json({ buyAgain: [], recommended: [], reason: 'fallback' });
+    return NextResponse.json(FALLBACK_PICKS);
   }
 
   const url = new URL(req.url);
@@ -26,18 +28,18 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'invalid_query' }, { status: 400 });
   }
 
-  const supabase = createClient();
-  const { data: { user } } = await (supabase as any).auth.getUser();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json(
-      { buyAgain: [], recommended: [], reason: 'fallback' },
-      { status: 401, headers: { 'Cache-Control': 'private, max-age=0' } },
-    );
+    return NextResponse.json(FALLBACK_PICKS, {
+      status: 401,
+      headers: { 'Cache-Control': 'private, max-age=0' },
+    });
   }
 
   try {
-    const provider = getPersonalizationProvider();
+    const provider = await getPersonalizationProvider();
     const picks = await provider.getPicks(user.id, parsed.data);
     const etag = `W/"${user.id}:${parsed.data.limit}:${parsed.data.excludeSlug ?? ''}"`;
     logger.info('personalization.picks.served', {
@@ -51,10 +53,8 @@ export async function GET(req: Request) {
     });
   } catch (e) {
     logger.error('personalization.picks.failed', { error: String(e) });
-    const provider = getPersonalizationProvider();
-    const fallback = await provider
-      .getPicks(user.id, parsed.data)
-      .catch(() => ({ buyAgain: [], recommended: [], reason: 'fallback' as const }));
-    return NextResponse.json(fallback);
+    return NextResponse.json(FALLBACK_PICKS, {
+      headers: { 'Cache-Control': 'private, max-age=0' },
+    });
   }
 }

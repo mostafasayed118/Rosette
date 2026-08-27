@@ -13,6 +13,7 @@ import { buildLocalizedPageMetadata } from '@/features/seo/page-metadata';
 import { getServerT } from '@/features/i18n/server';
 import { getOptionalServerEnv } from '@/lib/server-env';
 import { LOCALES } from '@/lib/locale-routing';
+import { categoryMessageKeys } from '@/features/catalog/catalog-labels';
 import { createClient } from '@/lib/supabase/server';
 import { BuyAgainStrip } from '@/features/personalization/components/BuyAgainStrip';
 import { RecommendedCarousel } from '@/features/personalization/components/RecommendedCarousel';
@@ -43,17 +44,20 @@ export default async function ShopPage({ params, searchParams }: ShopPageParams)
   const { t } = await getServerT(resolvedLocale);
   const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
 
-  const supabase = createClient();
-  const { data: { user } } = await (supabase as any).auth.getUser();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   let personalization: PersonalizationPicks | null = null;
   if (user && process.env.ROSETTE_PERSONALIZATION_ENABLED !== 'false') {
     try {
-      personalization = await getPersonalizationProvider().getPicks(user.id, { limit: 8, locale: resolvedLocale });
+      personalization = await (await getPersonalizationProvider()).getPicks(user.id, { limit: 8, locale: resolvedLocale });
     } catch {
       personalization = null;
     }
   }
   const showStrips = personalization && (personalization.buyAgain.length > 0 || personalization.recommended.length > 0);
+  const hintCategoryKey = personalization?.hintCategory
+    ? t(categoryMessageKeys[personalization.hintCategory] ?? personalization.hintCategory)
+    : null;
 
-  return <div className="flex min-h-screen flex-col"><BreadcrumbJsonLd base={base} items={[{ name: t('shop'), path: `/${locale}/${city}` }, { name: t('collectionTitle') }]} /><SiteHeader /><main className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4"><LocalizedPageHeading eyebrow="collectionEyebrow" title="collectionTitle" lede="collectionLede" action="changeDestination" actionHref={`/${locale}`} values={{ count: result.total }} />{showStrips ? (<Suspense fallback={<PersonalizationSkeleton />}><BuyAgainStrip products={personalization!.buyAgain} /><RecommendedCarousel products={personalization!.recommended} /></Suspense>) : null}<CatalogToolbar /><CatalogGrid products={result.products} /><CatalogPagination page={result.page} perPage={result.perPage} totalPages={result.totalPages} total={result.total} /></main><SiteFooter locale={locale} city={city} /></div>;
+  return <div className="flex min-h-screen flex-col"><BreadcrumbJsonLd base={base} items={[{ name: t('shop'), path: `/${locale}/${city}` }, { name: t('collectionTitle') }]} /><SiteHeader /><main className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4"><LocalizedPageHeading eyebrow="collectionEyebrow" title="collectionTitle" lede="collectionLede" action="changeDestination" actionHref={`/${locale}`} values={{ count: result.total }} />{showStrips ? (<Suspense fallback={<PersonalizationSkeleton />}><BuyAgainStrip products={personalization!.buyAgain} /><RecommendedCarousel products={personalization!.recommended} category={hintCategoryKey ?? undefined} /></Suspense>) : null}<CatalogToolbar /><CatalogGrid products={result.products} /><CatalogPagination page={result.page} perPage={result.perPage} totalPages={result.totalPages} total={result.total} /></main><SiteFooter locale={locale} city={city} /></div>;
 }

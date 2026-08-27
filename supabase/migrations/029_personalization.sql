@@ -90,4 +90,5 @@ end; $$;
 
 revoke execute on function public.get_personalized_picks(uuid, int, text) from public, anon, authenticated;
 grant execute on function public.get_personalized_picks(uuid, int, text) to service_role;
--- if direct authenticated RPC is desired, also: grant execute on function public.get_personalized_picks(uuid,int,text) to authenticated;
+grant execute on function public.get_personalized_picks(uuid, int, text) to authenticated;
+grant insert, update, delete on public.wishlist_items to authenticated;

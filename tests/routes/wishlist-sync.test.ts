@@ -43,7 +43,7 @@ function anonClient() {
 
 describe('POST /api/wishlist/sync', () => {
   it('returns 401 for anonymous', async () => {
-    mockCreateClient.mockReturnValue(anonClient());
+    mockCreateClient.mockResolvedValue(anonClient());
     const req = new Request('http://test/api/wishlist/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -55,7 +55,7 @@ describe('POST /api/wishlist/sync', () => {
   });
 
   it('returns 400 for invalid body - not array', async () => {
-    mockCreateClient.mockReturnValue(authedClient());
+    mockCreateClient.mockResolvedValue(authedClient());
     const req = new Request('http://test/api/wishlist/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -68,7 +68,7 @@ describe('POST /api/wishlist/sync', () => {
   });
 
   it('returns 400 for slugs >50', async () => {
-    mockCreateClient.mockReturnValue(authedClient());
+    mockCreateClient.mockResolvedValue(authedClient());
     const many = Array.from({ length: 51 }, (_, i) => `slug-${i}`);
     const req = new Request('http://test/api/wishlist/sync', {
       method: 'POST',
@@ -80,7 +80,7 @@ describe('POST /api/wishlist/sync', () => {
   });
 
   it('returns 400 for slug >80 chars', async () => {
-    mockCreateClient.mockReturnValue(authedClient());
+    mockCreateClient.mockResolvedValue(authedClient());
     const long = 'a'.repeat(81);
     const req = new Request('http://test/api/wishlist/sync', {
       method: 'POST',
@@ -92,7 +92,7 @@ describe('POST /api/wishlist/sync', () => {
   });
 
   it('returns 200 and {synced} for authed with valid slugs', async () => {
-    mockCreateClient.mockReturnValue(authedClient('uid-123'));
+    mockCreateClient.mockResolvedValue(authedClient('uid-123'));
     mockSync.mockResolvedValue({ synced: 2 } as any);
     const req = new Request('http://test/api/wishlist/sync', {
       method: 'POST',
@@ -108,7 +108,7 @@ describe('POST /api/wishlist/sync', () => {
   });
 
   it('handles empty slugs array', async () => {
-    mockCreateClient.mockReturnValue(authedClient());
+    mockCreateClient.mockResolvedValue(authedClient());
     mockSync.mockResolvedValue({ synced: 0 } as any);
     const req = new Request('http://test/api/wishlist/sync', {
       method: 'POST',
@@ -121,7 +121,7 @@ describe('POST /api/wishlist/sync', () => {
   });
 
   it('rate-limits after 10/min per user (429)', async () => {
-    mockCreateClient.mockReturnValue(authedClient('rate-user'));
+    mockCreateClient.mockResolvedValue(authedClient('rate-user'));
     mockSync.mockResolvedValue({ synced: 1 } as any);
     const makeReq = () =>
       new Request('http://test/api/wishlist/sync', {
@@ -149,17 +149,17 @@ describe('POST /api/wishlist/sync', () => {
         body: JSON.stringify({ slugs: ['rose-hour'] }),
       });
 
-    mockCreateClient.mockReturnValue(authedClient('user-a'));
+    mockCreateClient.mockResolvedValue(authedClient('user-a'));
     for (let i = 0; i < 10; i++) {
       expect((await POST(makeReq())).status).toBe(200);
     }
     // user-b should still succeed
-    mockCreateClient.mockReturnValue(authedClient('user-b'));
+    mockCreateClient.mockResolvedValue(authedClient('user-b'));
     expect((await POST(makeReq())).status).toBe(200);
   });
 
   it('logs and returns 500 on sync failure', async () => {
-    mockCreateClient.mockReturnValue(authedClient());
+    mockCreateClient.mockResolvedValue(authedClient());
     mockSync.mockRejectedValue(new Error('db error'));
     const req = new Request('http://test/api/wishlist/sync', {
       method: 'POST',

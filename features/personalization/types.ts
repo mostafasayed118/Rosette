@@ -2,7 +2,12 @@ import type { Product } from '@/features/catalog/types';
 import { z } from 'zod';
 
 export type PersonalizationReason = 'buy_again' | 'affinity' | 'fallback_newest';
-export type PersonalizationPicks = { buyAgain: Product[]; recommended: Product[]; reason: 'history' | 'fallback' };
+export type PersonalizationPicks = {
+  buyAgain: Product[];
+  recommended: Product[];
+  reason: 'history' | 'fallback';
+  hintCategory?: string;
+};
 export type PersonalizationQuery = { limit?: number; excludeSlug?: string; locale?: 'en' | 'ar' | 'fr' };
 export interface PersonalizationRepository {
   getPicks(customerId: string, query: PersonalizationQuery): Promise<PersonalizationPicks>;

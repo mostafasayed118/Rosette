@@ -4,17 +4,16 @@ import { getServerSupabase } from '@/lib/supabase/server';
 import { filterProducts, paginateProducts, sortProducts } from './catalog-utils';
 import { mapSupabaseProduct } from './row-mappers';
 import { ratingBySlug, type ReviewRatingRow } from '@/features/reviews/aggregate';
+import { PRODUCT_SELECT } from './product-select';
 import type { CatalogRepository, CatalogQuery, DeliveryEligibilityInput } from './types';
 import type { Product } from './types';
 
 type ProductRow = Parameters<typeof mapSupabaseProduct>[0];
 
-const productSelect = 'slug,name_en,name_ar,name_fr,description_en,description_ar,description_fr,category,occasions,price_minor,tone,image_url,delivery,created_at,add_ons,product_variants(id,name_en,name_ar,name_fr,price_delta_minor,inventory(quantity,reserved_quantity))';
-
 async function readProducts(): Promise<Product[]> {
   const supabase = await getServerSupabase();
   if (!supabase) return [];
-  const { data, error } = await supabase.from('products').select(productSelect).eq('active', true);
+  const { data, error } = await supabase.from('products').select(PRODUCT_SELECT).eq('active', true);
   if (error) throw new Error(`Catalog query failed: ${error.message}`);
   const products = ((data ?? []) as unknown as ProductRow[]).map(mapSupabaseProduct);
   const { data: reviewRows } = await supabase.from('product_reviews')

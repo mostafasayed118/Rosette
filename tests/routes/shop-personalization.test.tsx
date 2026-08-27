@@ -89,13 +89,13 @@ const samplePicks = {
 const emptyPicks = { buyAgain: [], recommended: [], reason: 'fallback' as const };
 
 function mockAuthedUser() {
-  mockCreateClient.mockReturnValue({
+  mockCreateClient.mockResolvedValue({
     auth: { getUser: vi.fn(async () => ({ data: { user: { id: 'uid-123' } } })) },
   } as any);
 }
 
 function mockAnonymous() {
-  mockCreateClient.mockReturnValue({
+  mockCreateClient.mockResolvedValue({
     auth: { getUser: vi.fn(async () => ({ data: { user: null } })) },
   } as any);
 }
@@ -144,7 +144,7 @@ describe('ShopPage integration with personalization', () => {
   it('renders BuyAgainStrip + RecommendedCarousel above the catalog for an authed user', async () => {
     mockAuthedUser();
     const getPicks = vi.fn(async () => samplePicks);
-    mockGetProvider.mockReturnValue({ getPicks } as any);
+    mockGetProvider.mockResolvedValue({ getPicks } as any);
     mockCatalog();
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
@@ -162,7 +162,7 @@ describe('ShopPage integration with personalization', () => {
   it('does not call provider or render strips for an anonymous user', async () => {
     mockAnonymous();
     const getPicks = vi.fn();
-    mockGetProvider.mockReturnValue({ getPicks } as any);
+    mockGetProvider.mockResolvedValue({ getPicks } as any);
     mockCatalog();
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
@@ -178,7 +178,7 @@ describe('ShopPage integration with personalization', () => {
     process.env.ROSETTE_PERSONALIZATION_ENABLED = 'false';
     mockAuthedUser();
     const getPicks = vi.fn();
-    mockGetProvider.mockReturnValue({ getPicks } as any);
+    mockGetProvider.mockResolvedValue({ getPicks } as any);
     mockCatalog();
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
@@ -195,7 +195,7 @@ describe('ShopPage integration with personalization', () => {
     const getPicks = vi.fn(async () => {
       throw new Error('provider down');
     });
-    mockGetProvider.mockReturnValue({ getPicks } as any);
+    mockGetProvider.mockResolvedValue({ getPicks } as any);
     mockCatalog();
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
@@ -209,7 +209,7 @@ describe('ShopPage integration with personalization', () => {
 
   it('hides strips when provider returns empty picks', async () => {
     mockAuthedUser();
-    mockGetProvider.mockReturnValue({ getPicks: vi.fn(async () => emptyPicks) } as any);
+    mockGetProvider.mockResolvedValue({ getPicks: vi.fn(async () => emptyPicks) } as any);
     mockCatalog();
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
@@ -225,7 +225,7 @@ describe('ProductPage integration with personalization', () => {
   it('renders RecommendedCarousel below ProductDetail for an authed user, excluding current slug', async () => {
     mockAuthedUser();
     const getPicks = vi.fn(async () => samplePicks);
-    mockGetProvider.mockReturnValue({ getPicks } as any);
+    mockGetProvider.mockResolvedValue({ getPicks } as any);
     mockCatalog();
 
     const mod = await import('@/app/[locale]/[city]/shop/[slug]/page');
@@ -240,7 +240,7 @@ describe('ProductPage integration with personalization', () => {
   it('does not render carousel for an anonymous user on product detail', async () => {
     mockAnonymous();
     const getPicks = vi.fn();
-    mockGetProvider.mockReturnValue({ getPicks } as any);
+    mockGetProvider.mockResolvedValue({ getPicks } as any);
     mockCatalog();
 
     const mod = await import('@/app/[locale]/[city]/shop/[slug]/page');
@@ -253,7 +253,7 @@ describe('ProductPage integration with personalization', () => {
 
   it('does not block product detail when provider throws', async () => {
     mockAuthedUser();
-    mockGetProvider.mockReturnValue({
+    mockGetProvider.mockResolvedValue({
       getPicks: vi.fn(async () => {
         throw new Error('db down');
       }),
