@@ -44,6 +44,7 @@ describe('completeGiftFinderFor', () => {
   it('returns ok with scored results', async () => {
     const { client } = makeClient();
     const outcome = await completeGiftFinderFor({ answers: validAnswers, sessionId: 's1', customer: null, catalogRepo: catalogRepo as any, client });
+    if (outcome === 'invalid') throw new Error('expected ok outcome');
     expect(outcome.status).toBe('ok');
     if (outcome.status === 'ok') {
       expect(outcome.results[0]?.product.slug).toBe('red-rose-0');
@@ -74,6 +75,7 @@ describe('completeGiftFinderFor', () => {
     // returning an error at the top level exercises the best-effort path.
     const client = { from: () => ({ insert: () => ({ error: new Error('boom') }) }) };
     const outcome = await completeGiftFinderFor({ answers: validAnswers, sessionId: 's1', customer: null, catalogRepo: catalogRepo as any, client });
+    if (outcome === 'invalid') throw new Error('expected ok outcome');
     expect(outcome.status).toBe('ok');
   });
 });
