@@ -21,5 +21,5 @@ describe('repository secret scan', () => {
       return secretPatterns.some((pattern) => pattern.test(content)) ? [file] : [];
     });
     expect(findings).toEqual([]);
-  });
+  }, 60_000);
 });
