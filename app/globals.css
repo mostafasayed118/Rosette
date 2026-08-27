@@ -122,6 +122,7 @@
   --color-success: #5f9c74;
   --color-warning: #c79a5a;
   --color-danger: #e06a5c;
+  --motion-success: oklch(0.78 0.16 145);
   --sidebar: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);
   --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -147,6 +148,7 @@
   --color-success: #3e7a52;
   --color-warning: #a06a1f;
   --color-danger: #c0392b;
+  --motion-success: oklch(0.72 0.18 145);
   --text-xs: .75rem;
   --text-sm: .875rem;
   --text-md: 1rem;
@@ -227,5 +229,35 @@ main { flex: 1; }
 
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    color-mix(in oklch, var(--muted-foreground) 10%, transparent) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
 
 
