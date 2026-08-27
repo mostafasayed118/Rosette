@@ -69,13 +69,22 @@ describe('lookupOrder', () => {
     ]);
   });
 
-  it('queries by display_number and customer_email', async () => {
+  it('queries by display_number and customer_email, then groups by order_id', async () => {
     const { client, calls } = fakeClient({ order: orderRow });
     await lookupOrder(client, { number: 'RO-1024', email: 'buyer@example.com' });
     expect(calls).toEqual([
       { column: 'display_number', value: 'RO-1024' },
       { column: 'customer_email', value: 'buyer@example.com' },
+      { column: 'order_id', value: undefined },
     ]);
+  });
+
+  it('falls back to a synthetic group from order columns when no group rows resolve', async () => {
+    const { client } = fakeClient({ order: orderRow });
+    const result = await lookupOrder(client, { number: 'RO-1024', email: 'buyer@example.com' });
+    expect(result!.groups).toHaveLength(1);
+    expect(result!.groups[0]!.recipientName).toBe('Sara');
+    expect(result!.groups[0]!.fulfillmentStatus).toBe('out_for_delivery');
   });
 
   it('returns null for a valid number with the wrong email', async () => {

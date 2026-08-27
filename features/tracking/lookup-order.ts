@@ -1,4 +1,5 @@
 import type { FulfillmentStatus, PaymentStatus } from '@/features/commerce/order-state';
+import { fetchOrderDeliveryGroups, normalizeGroups, type DeliveryGroup } from '@/features/order/delivery-groups';
 
 export type TrackedOrder = {
   number: string;
@@ -11,6 +12,7 @@ export type TrackedOrder = {
   subtotalMinor: number;
   deliveryFeeMinor: number;
   totalMinor: number;
+  groups: DeliveryGroup[];
   items: Array<{ nameEn: string; nameAr: string; quantity: number; unitPriceMinor: number; addOns: Array<{ nameEn: string; nameAr: string; priceMinor: number }> }>;
   timeline: Array<{ status: FulfillmentStatus; at: string }>;
 };
@@ -33,11 +35,13 @@ export async function lookupOrder(client: LookupClient, input: { number: string;
   try {
     const { data, error } = await client
       .from('orders')
-      .select('display_number,customer_email,recipient_name,delivery_city_code,delivery_date,delivery_window,payment_status,fulfillment_status,subtotal_minor,delivery_fee_minor,total_minor,order_items(product_name_en,product_name_ar,quantity,unit_price_minor,add_ons),order_events(to_status,created_at)')
+      .select('id,display_number,customer_email,recipient_name,delivery_city_code,delivery_date,delivery_window,payment_status,fulfillment_status,subtotal_minor,delivery_fee_minor,total_minor,order_items(product_name_en,product_name_ar,quantity,unit_price_minor,add_ons),order_events(to_status,created_at)')
       .eq('display_number', input.number)
       .eq('customer_email', input.email)
       .maybeSingle();
     if (error || !data) return null;
+    const groupRows = await fetchOrderDeliveryGroups(client, data.id);
+    const groups = normalizeGroups(data, groupRows ?? []);
     return {
       number: data.display_number,
       paymentStatus: data.payment_status,
@@ -49,6 +53,7 @@ export async function lookupOrder(client: LookupClient, input: { number: string;
       subtotalMinor: data.subtotal_minor,
       deliveryFeeMinor: data.delivery_fee_minor,
       totalMinor: data.total_minor,
+      groups,
       items: ((data.order_items ?? []) as ItemRow[]).map((item) => ({
         nameEn: item.product_name_en,
         nameAr: item.product_name_ar,

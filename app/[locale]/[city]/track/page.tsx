@@ -137,6 +137,28 @@ export default async function TrackPage({
             <h2 className="font-headline-sm text-headline-sm text-on-surface mb-4">{t('fulfillment')}</h2>
             <FulfillmentProgress status={order.fulfillmentStatus} locale={locale} timeline={order.timeline} />
 
+            {order.groups.length > 1 ? (
+              <>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface mt-8 mb-4">{t('recipientAndDelivery')}</h2>
+                <div className="grid gap-3">
+                  {order.groups.map((group) => (
+                    <div key={group.id ?? group.position} className={metaCard} data-testid={`tracking-group-${group.position}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <strong className="font-headline-sm text-headline-sm text-on-surface block">{group.recipientName}</strong>
+                          <span className="font-body-md text-body-md text-on-surface-variant mt-1 block">
+                            {group.deliveryAddress} · {group.deliveryDate}
+                            <span className="block font-meta-mono text-meta-mono text-on-surface-variant">{group.deliveryWindow}</span>
+                          </span>
+                        </div>
+                        <strong className="font-headline-sm text-headline-sm text-on-surface shrink-0">{t(FULFILLMENT_KEYS[group.fulfillmentStatus] ?? group.fulfillmentStatus)}</strong>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : null}
+
             <h2 className="font-headline-sm text-headline-sm text-on-surface mt-8 mb-4">{t('timeline')}</h2>
             <div className="grid gap-3">
               {order.timeline.map((entry, index) => (
