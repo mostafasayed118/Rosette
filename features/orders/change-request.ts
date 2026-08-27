@@ -7,6 +7,12 @@ export type ChangeRequestDiff = {
   items?: Array<{ id: string; quantity?: number; gift_message?: string }>;
 };
 
+const GROUP_OWNED_FIELD_KEYS = ['delivery_date', 'delivery_window', 'recipient_name', 'recipient_phone', 'delivery_address'] as const;
+
+export function diffTouchesGroupOwnedField(diff: ChangeRequestDiff): boolean {
+  return GROUP_OWNED_FIELD_KEYS.some((key) => diff[key] !== undefined);
+}
+
 export type ChangeEligibility = 'ok' | 'not_found' | 'not_changeable' | 'request_pending';
 
 const FIELD_KEYS = ['delivery_date', 'delivery_window', 'recipient_name', 'recipient_phone', 'delivery_address'] as const;

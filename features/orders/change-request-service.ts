@@ -1,4 +1,5 @@
-import { canRequestChange, requiresReview, parseChangeRequestDiff, applyChanges, type ChangeRequestDiff, type ChangeEligibility } from './change-request';
+import { canRequestChange, requiresReview, parseChangeRequestDiff, applyChanges, diffTouchesGroupOwnedField, type ChangeRequestDiff, type ChangeEligibility } from './change-request';
+import { orderHasDeliveryGroups } from '@/features/order/delivery-groups';
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import type { AdminIdentity } from '@/features/admin/authorization';
 import { refundPaymobTransaction, type PaymobRefundResult } from '@/features/payment/paymob-refund';
@@ -92,6 +93,9 @@ export async function submitChangeRequest(
     ]);
     const eligibility = canRequestChange({ fulfillmentStatus: order.fulfillment_status, paymentStatus: order.payment_status, hasPendingRequest: Boolean(pendingChange || pendingCancel) });
     if (eligibility !== 'ok') return { status: 'ineligible', reason: eligibility };
+    if (diffTouchesGroupOwnedField(parsed.diff) && await orderHasDeliveryGroups(client, order.id)) {
+      return { status: 'invalid', error: 'group_date_not_allowed' };
+    }
     const reason = input.reason?.trim() || null;
 
     if (!requiresReview({ fulfillmentStatus: order.fulfillment_status, paymentStatus: order.payment_status })) {
@@ -152,6 +156,9 @@ export async function reviewChangeRequest(
     const parsed = parseChangeRequestDiff(request.changes);
     const computed = parsed.ok ? applyChanges(order, order.items, parsed.diff) : null;
     if (!parsed.ok || !computed || !computed.ok) return { status: 'not_applicable' };
+    if (diffTouchesGroupOwnedField(parsed.diff) && await orderHasDeliveryGroups(client, order.id)) {
+      return { status: 'not_applicable' };
+    }
     const delta = computed.deltaMinor;
 
     if (order.payment_status === 'paid' && delta > 0) {
