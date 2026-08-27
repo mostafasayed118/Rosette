@@ -4,6 +4,7 @@ import { sendOrderNotification } from '@/features/notifications/notification-ser
 import { deliverOrderNotification } from '@/features/notifications/notification-delivery';
 import { canUpdateOrderStatus } from './authorization';
 import type { AdminIdentity } from './authorization';
+import { fetchOrderDeliveryGroups, deriveOrderStatus } from '@/features/order/delivery-groups';
 
 export type UpdateStatusResult = 'updated' | 'missing_order' | 'invalid_or_unauthorized' | 'failure';
 
@@ -50,6 +51,42 @@ export async function updateFulfillmentStatus(
       discountMinor: order.discount_minor ?? undefined,
       orderUrl: `${input.orderUrlBase}/orders/${input.orderId}?token=${encodeURIComponent(order.public_token)}`,
     }, sendNotification);
+  }
+  return 'updated';
+}
+
+export async function updateGroupFulfillmentStatus(
+  client: OrderActionsClient,
+  input: { admin: AdminIdentity; orderId: string; groupId: string; status: FulfillmentStatus; orderUrlBase: string },
+  deps: { sendNotification?: typeof sendOrderNotification } = {},
+): Promise<UpdateStatusResult> {
+  const { data: group } = await client.from('order_delivery_groups').select('id,fulfillment_status,order_id').eq('id', input.groupId).maybeSingle();
+  if (!group) return 'missing_order';
+  if (!canUpdateOrderStatus(input.admin.role, group.fulfillment_status as FulfillmentStatus, input.status)) return 'invalid_or_unauthorized';
+
+  const { error } = await client.from('order_delivery_groups').update({ fulfillment_status: input.status, updated_at: new Date().toISOString() }).eq('id', input.groupId);
+  if (error) return 'failure';
+
+  await client.from('order_events').insert({
+    order_id: input.orderId,
+    actor_id: input.admin.userId,
+    event_type: 'fulfillment_status_changed',
+    from_status: group.fulfillment_status,
+    to_status: input.status,
+    metadata: { delivery_group_id: input.groupId },
+  });
+  await client.from('admin_audit_logs').insert({
+    actor_id: input.admin.userId,
+    action: 'update_order_group_status',
+    target_type: 'order',
+    target_id: input.orderId,
+    metadata: { delivery_group_id: input.groupId, status: input.status },
+  });
+
+  const groups = await fetchOrderDeliveryGroups(client, input.orderId);
+  if (groups && groups.length) {
+    const derived = deriveOrderStatus(groups);
+    await client.from('orders').update({ fulfillment_status: derived, updated_at: new Date().toISOString() }).eq('id', input.orderId);
   }
   return 'updated';
 }

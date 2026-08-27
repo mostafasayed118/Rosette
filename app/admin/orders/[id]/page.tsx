@@ -28,11 +28,12 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
   const { t, locale } = await getServerT();
   const { id } = await params;
   const supabase = getAdminSupabase();
-  const { data: order } = await supabase.from('orders').select('*,order_items(*),payments(*),order_events(*),notification_deliveries(*),order_cancel_requests(*)').eq('id', id).maybeSingle();
+  const { data: order } = await supabase.from('orders').select('*,order_items(*),payments(*),order_events(*),notification_deliveries(*),order_cancel_requests(*),order_delivery_groups(*)').eq('id', id).maybeSingle();
   if (!order) return <><h1 className="font-display text-[clamp(2rem,4vw,3rem)] leading-tight tracking-[-.02em]">{t('orderNotFound')}</h1><p className="mt-4"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/orders">{t('backToOrders')}</Link></p></>;
 
   const current = order.fulfillment_status as FulfillmentStatus;
   const transitions = allFulfillmentStatuses.filter((next) => canTransitionFulfillment(current, next) && canUpdateOrderStatus(admin.role, current, next));
+  const groups = ((order.order_delivery_groups ?? []) as Array<{ id: string; position: number; recipient_name: string; recipient_phone: string; delivery_address: string; delivery_date: string; delivery_window: string; delivery_fee_minor: number; fulfillment_status: string }>).sort((a, b) => a.position - b.position);
   const whatsapp = createAdminWhatsAppHref({ number: order.recipient_phone, orderId: order.display_number });
   const deliveries = ((order.notification_deliveries ?? []) as Array<{ id: string; type: string; recipient: string; status: string; attempts: number; last_error: string | null; created_at: string; sent_at: string | null }>).sort((a, b) => (a.created_at < b.created_at ? 1 : a.created_at > b.created_at ? -1 : 0));
   const cancelRequests = ((order.order_cancel_requests ?? []) as Array<{ id: string; status: string; reason: string | null; created_at: string }>).sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
@@ -102,5 +103,23 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     <Card className="mt-4"><CardHeader><CardTitle>{t('updateStatus')}</CardTitle></CardHeader><CardContent>
       <OrderActions orderId={order.id} transitions={transitions} />
     </CardContent></Card>
+
+    {groups.length ? (
+      <Card className="mt-4"><CardHeader><CardTitle>{t('recipientAndDelivery')}</CardTitle></CardHeader><CardContent className="grid gap-4">
+        {groups.map((group) => {
+          const groupCurrent = group.fulfillment_status as FulfillmentStatus;
+          const groupTransitions = allFulfillmentStatuses.filter((next) => canTransitionFulfillment(groupCurrent, next) && canUpdateOrderStatus(admin.role, groupCurrent, next));
+          return (
+            <div key={group.id} className="rounded border border-outline-variant/30 p-4" data-testid={`admin-group-${group.position}`}>
+              <p className="font-medium">{group.recipient_name} · {group.recipient_phone}</p>
+              <p className="text-sm text-muted-foreground">{group.delivery_address} · {group.delivery_date} · {group.delivery_window} · {formatMoney(group.delivery_fee_minor, locale)} · {fulfillmentLabel(group.fulfillment_status, t)}</p>
+              <div className="mt-3">
+                <OrderActions orderId={order.id} groupId={group.id} transitions={groupTransitions} />
+              </div>
+            </div>
+          );
+        })}
+      </CardContent></Card>
+    ) : null}
   </>;
 }

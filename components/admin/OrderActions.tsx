@@ -16,7 +16,7 @@ const labelKeys: Record<FulfillmentStatus, string> = {
   cancelled: 'statusCancelled',
 };
 
-export function OrderActions({ orderId, transitions }: { orderId: string; transitions: FulfillmentStatus[] }) {
+export function OrderActions({ orderId, groupId, transitions }: { orderId: string; groupId?: string; transitions: FulfillmentStatus[] }) {
   const router = useRouter();
   const { t } = useI18n();
   const [pending, setPending] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export function OrderActions({ orderId, transitions }: { orderId: string; transi
 
   async function move(status: FulfillmentStatus) {
     setPending(status);
-    const response = await fetch(`/api/admin/orders/${orderId}/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    const response = await fetch(`/api/admin/orders/${orderId}/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(groupId ? { status, groupId } : { status }) });
     if (!response.ok) {
       toast.error(t('couldNotUpdateOrder'));
       setPending(null);
