@@ -3,12 +3,12 @@ import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getRequiredServerEnv } from '@/lib/server-env';
 import { getPublicOrigin } from '@/lib/origin';
 import { logger } from '@/lib/logger';
-import { isCronAuthorized } from '@/lib/cron';
+import { isCronAuthorizedForJob } from '@/lib/cron';
 import { runOccasionCron } from '@/features/occasions/occasions-cron';
 
 async function handle(request: Request) {
   try {
-    if (!isCronAuthorized(request.headers.get('authorization'), getRequiredServerEnv('CRON_SECRET'))) {
+    if (!isCronAuthorizedForJob(request.headers.get('authorization'), 'OCCASIONS')) {
       logger.warn('cron.occasions.unauthorized');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getRequiredServerEnv } from '@/lib/server-env';
 import { getPublicOrigin } from '@/lib/origin';
 import { logger } from '@/lib/logger';
-import { isCronAuthorized } from '@/lib/cron';
+import { isCronAuthorizedForJob } from '@/lib/cron';
 import { runAbandonedCartCron } from '@/features/cart/abandoned-cron';
 
 async function handle(request: Request) {
   try {
-    if (!isCronAuthorized(request.headers.get('authorization'), getRequiredServerEnv('CRON_SECRET'))) {
+    if (!isCronAuthorizedForJob(request.headers.get('authorization'), 'ABANDONED_CARTS')) {
       logger.warn('cron.abandoned_carts.unauthorized');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
