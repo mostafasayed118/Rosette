@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { CatalogRepository } from '@/features/catalog/types';
+import type { CatalogRepository, Product } from '@/features/catalog/types';
 import { scoreProducts } from './scoring';
 import { insertQuizCompletion } from './repository';
 import { GIFT_RECIPIENTS, GIFT_STYLES, GIFT_COLORS } from './tags';
@@ -7,6 +7,18 @@ import type { GiftFinderOutcome, QuizAnswers } from './types';
 
 type Client = { from: (table: string) => any };
 export type Customer = { id: string; email: string; displayName: string; phone: string };
+
+// The repository paginates (CATALOG_PER_PAGE), so scoring must walk every page
+// to see the whole catalog — page 1 alone can hide most of the stock.
+async function fetchAllProducts(repo: Pick<CatalogRepository, 'list'>): Promise<Product[]> {
+  const first = await repo.list({ page: 1 });
+  const all = [...first.products];
+  for (let page = 2; page <= first.totalPages; page++) {
+    const next = await repo.list({ page });
+    all.push(...next.products);
+  }
+  return all;
+}
 
 // Spec: the action validates answers with zod, returning 'invalid' on failure.
 const quizAnswersSchema = z.object({
@@ -32,8 +44,8 @@ export async function completeGiftFinderFor(opts: {
   if (!parsed.success) return 'invalid';
   const answers: QuizAnswers = parsed.data;
 
-  const page = await opts.catalogRepo.list({});
-  const results = scoreProducts(page.products, answers);
+  const products = await fetchAllProducts(opts.catalogRepo);
+  const results = scoreProducts(products, answers);
 
   await insertQuizCompletion(opts.client, {
     sessionId: opts.sessionId,

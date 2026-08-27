@@ -25,15 +25,21 @@ type SupabaseProductRow = {
     name_ar: string;
     name_fr?: string;
     price_delta_minor: number;
-    inventory?: Array<{ quantity: number; reserved_quantity: number }>;
+    // PostgREST returns the one-to-one inventory embed as an object (the FK is
+    // the primary key) — not an array — so accept both shapes.
+    inventory?: { quantity: number; reserved_quantity: number } | Array<{ quantity: number; reserved_quantity: number }>;
   }>;
 };
+
+function variantStock(variant: { inventory?: { quantity: number; reserved_quantity: number } | Array<{ quantity: number; reserved_quantity: number }> }): { quantity: number; reserved_quantity: number } | undefined {
+  return Array.isArray(variant.inventory) ? variant.inventory[0] : variant.inventory;
+}
 
 export function mapSupabaseProduct(row: SupabaseProductRow): Product {
   // Inventory lives per-variant; the storefront model is product-level, so sum
   // the available stock (quantity - reserved) across all variants.
   const available = (row.product_variants ?? []).reduce((sum, variant) => {
-    const stock = variant.inventory?.[0];
+    const stock = variantStock(variant);
     return sum + Math.max(0, (stock?.quantity ?? 0) - (stock?.reserved_quantity ?? 0));
   }, 0);
   return {
