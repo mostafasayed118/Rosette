@@ -13,14 +13,16 @@ import { SaveBagField } from './SaveBagField';
 import { RestoreCart } from './RestoreCart';
 import { CartLineItem } from './CartLineItem';
 import { CartSummary } from './CartSummary';
-import { calculateCartTotals } from './pricing';
+import { RecipientManager } from './RecipientManager';
+import { calculateCartTotals, deliveryFeeForGroups } from './pricing';
 
 export function CartPageContent({ cityCode }: { cityCode?: string }) {
   const { t } = useI18n();
   const { href } = useStorePath();
-  const { cart, ready, updateQuantity, removeItem } = useCart();
+  const { cart, ready, multiRecipient, updateQuantity, removeItem } = useCart();
   const { feeMinor } = useDeliveryFee(cityCode);
-  const deliveryFee = feeMinor ?? estimateDeliveryFeeMinor(cityCode) ?? 1500;
+  const baseFee = feeMinor ?? estimateDeliveryFeeMinor(cityCode) ?? 1500;
+  const deliveryFee = multiRecipient ? deliveryFeeForGroups(baseFee, cart.recipients.length) : baseFee;
   const totals = calculateCartTotals(cart.lines, cart.lines.length ? deliveryFee : 0);
   if (!ready) return <StatusMessage title={t('openingBag')} />;
   if (!cart.lines.length)
@@ -45,6 +47,7 @@ export function CartPageContent({ cityCode }: { cityCode?: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: line items */}
         <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-6 order-2 lg:order-1">
+          <RecipientManager />
           <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-[0_10px_48px_-12px_rgba(94,89,80,0.06)] p-5 md:p-7">
             <div className="flex items-baseline justify-between gap-4 border-b border-outline-variant/20 pb-4 mb-6">
               <h2 className="font-display text-[24px] font-medium leading-tight text-on-surface">{t('bagTitle')}</h2>
