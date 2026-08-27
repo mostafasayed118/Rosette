@@ -7,6 +7,7 @@ import { buildPaymobIdempotencyKey, handlePaymobAmountMismatch } from '@/feature
 import { parsePaymobSpecialReference } from '@/features/payment/paymob-routing';
 import { handleChangePaymentCallback } from '@/features/orders/change-request-service';
 import { activateGiftCardPurchase, settleGiftCardOrderPayment } from '@/features/gift-cards/service';
+import { activateSubscriptionIfPaid } from '@/features/subscriptions/service';
 import { sanitizePaymobPayload } from '@/features/payment/paymob-pii';
 import { getPublicOrigin } from '@/lib/origin';
 import { logger } from '@/lib/logger';
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
 
   // Quarantine a payload whose amount disagrees with the order total. Ack 2xx so
   // Paymob stops retrying; the row sits in webhook_quarantine for an operator.
-  const { data: order } = await supabase.from('orders').select('id,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,payment_status,display_number,public_token,customer_email,locale,gift_card_id,gift_card_minor,gift_card_hold_id').eq('display_number', orderReference).maybeSingle();
+  const { data: order } = await supabase.from('orders').select('id,total_minor,subtotal_minor,delivery_fee_minor,discount_minor,payment_status,display_number,public_token,customer_email,locale,gift_card_id,gift_card_minor,gift_card_hold_id,subscription_id').eq('display_number', orderReference).maybeSingle();
   if (!order) return NextResponse.json({ received: true });
   if (order.total_minor !== amountMinor) {
     await handlePaymobAmountMismatch({ client: supabase, provider: 'paymob', providerReference, orderReference, orderTotalMinor: order.total_minor, callbackAmountMinor: amountMinor, payload });
@@ -125,6 +126,10 @@ export async function POST(request: Request) {
         discountMinor: order.discount_minor ?? undefined,
         orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.public_token)}`,
       }));
+      if (order.subscription_id) {
+        const activation = await activateSubscriptionIfPaid(supabase, String(order.subscription_id), { parentClient: supabase });
+        if (activation === 'noop') logger.warn('payment.webhook.subscription_activation_failed', { orderReference, subscriptionId: String(order.subscription_id) });
+      }
     }
     logger.info('payment.webhook.processed', { orderReference, providerReference, success, amountMinor });
     return NextResponse.json({ received: true });
