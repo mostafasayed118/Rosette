@@ -1,4 +1,4 @@
-import Fuse from 'fuse.js';
+import Fuse, { type IFuseOptions } from 'fuse.js';
 import type { Product } from './types';
 
 export type FuseProduct = Product;
@@ -8,7 +8,7 @@ export type FuseProduct = Product;
  * MIT, ~4kb gzipped, no backend needed.
  * Handles bilingual fields: name/nameAr/nameFr + description variants.
  */
-const fuseOptions: Fuse.IFuseOptions<FuseProduct> = {
+const fuseOptions: IFuseOptions<FuseProduct> = {
   keys: [
     { name: 'name', weight: 0.35 },
     { name: 'nameAr', weight: 0.35 },
