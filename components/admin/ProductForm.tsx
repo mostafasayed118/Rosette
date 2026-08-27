@@ -9,6 +9,7 @@ import { StatusMessage } from '@/components/ui/status-message';
 import { ImagePreview } from '@/components/admin/ImagePreview';
 import { minorToEgp, toMinor } from '@/features/admin/money';
 import { CATEGORIES, OCCASIONS, type SaveProductInput } from '@/features/admin/catalog-validation';
+import { GIFT_RECIPIENTS, GIFT_STYLES, GIFT_COLORS } from '@/features/gift-finder/tags';
 import { useI18n } from '@/features/i18n/I18nProvider';
 
 export type ProductFormInitial = SaveProductInput & { id: string };
@@ -25,6 +26,7 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
   const { t } = useI18n();
   const [product, setProduct] = useState<SaveProductInput>(initial ?? {
     nameEn: '', nameAr: '', descriptionEn: '', descriptionAr: '', category: CATEGORIES[0] ?? 'hand-bouquet', occasions: [],
+    giftRecipients: [], giftStyles: [], giftColors: [],
     priceMinor: 0, tone: '#bc6d63', imageUrl: '', delivery: 'Next-day delivery', active: true,
     variants: [emptyVariant()], addOns: [],
   });
@@ -75,6 +77,9 @@ export function ProductForm({ initial }: { initial?: ProductFormInitial }) {
         <ImagePreview url={product.imageUrl} kind="product" fallback={<span className="text-xs text-muted-foreground">No image</span>} />
       </div>
       <fieldset className="col-span-2 grid gap-2.5 border-0 p-0 max-md:col-span-1"><legend className="mb-1.5 font-bold">{t('occasionsLabel')}</legend><div className="flex flex-wrap gap-2.5">{OCCASIONS.map((o) => <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring" key={o}><input type="checkbox" checked={product.occasions.includes(o)} onChange={(e) => patch({ occasions: e.target.checked ? [...product.occasions, o] : product.occasions.filter((x) => x !== o) })} className="accent-primary" /><span>{o}</span></label>)}</div></fieldset>
+      <fieldset className="col-span-2 grid gap-2.5 border-0 p-0 max-md:col-span-1"><legend className="mb-1.5 font-bold">{t('giftRecipientsLabel')}</legend><div className="flex flex-wrap gap-2.5">{GIFT_RECIPIENTS.map((r) => <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring" key={r}><input type="checkbox" checked={product.giftRecipients.includes(r)} onChange={(e) => patch({ giftRecipients: e.target.checked ? [...product.giftRecipients, r] : product.giftRecipients.filter((x) => x !== r) })} className="accent-primary" /><span>{r}</span></label>)}</div></fieldset>
+      <fieldset className="col-span-2 grid gap-2.5 border-0 p-0 max-md:col-span-1"><legend className="mb-1.5 font-bold">{t('giftStylesLabel')}</legend><div className="flex flex-wrap gap-2.5">{GIFT_STYLES.map((s) => <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring" key={s}><input type="checkbox" checked={product.giftStyles.includes(s)} onChange={(e) => patch({ giftStyles: e.target.checked ? [...product.giftStyles, s] : product.giftStyles.filter((x) => x !== s) })} className="accent-primary" /><span>{s}</span></label>)}</div></fieldset>
+      <fieldset className="col-span-2 grid gap-2.5 border-0 p-0 max-md:col-span-1"><legend className="mb-1.5 font-bold">{t('giftColorsLabel')}</legend><div className="flex flex-wrap gap-2.5">{GIFT_COLORS.map((c) => <label className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring" key={c}><input type="checkbox" checked={product.giftColors.includes(c)} onChange={(e) => patch({ giftColors: e.target.checked ? [...product.giftColors, c] : product.giftColors.filter((x) => x !== c) })} className="accent-primary" /><span>{c}</span></label>)}</div></fieldset>
       <label className="col-span-2 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 max-md:col-span-1 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"><input type="checkbox" checked={product.active} onChange={(e) => patch({ active: e.target.checked })} className="accent-primary" /><span>{t('activeVisible')}</span></label>
     </div></section>
 

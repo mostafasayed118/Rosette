@@ -31,7 +31,7 @@ const operator = { userId: 'op-1', role: 'operator' as const };
 
 const productInput: SaveProductInput = {
   nameEn: 'Rose Hour', nameAr: 'ساعة الورد', descriptionEn: 'Soft roses', descriptionAr: 'ورود ناعمة',
-  category: 'hand-bouquet', occasions: ['birthday'], priceMinor: 12000, tone: '#bc6d63', imageUrl: '',
+  category: 'hand-bouquet', occasions: ['birthday'], giftRecipients: ['partner', 'family'], giftStyles: ['romantic'], giftColors: ['pink', 'pastel'], priceMinor: 12000, tone: '#bc6d63', imageUrl: '',
   delivery: 'Same-day', active: true,
   variants: [
     { nameEn: 'Classic', nameAr: 'كلاسيكي', priceDeltaMinor: 0, active: true, quantity: 5 },
