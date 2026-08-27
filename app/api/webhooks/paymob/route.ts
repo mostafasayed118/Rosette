@@ -7,6 +7,7 @@ import { buildPaymobIdempotencyKey, handlePaymobAmountMismatch } from '@/feature
 import { parsePaymobSpecialReference } from '@/features/payment/paymob-routing';
 import { handleChangePaymentCallback } from '@/features/orders/change-request-service';
 import { activateGiftCardPurchase, settleGiftCardOrderPayment } from '@/features/gift-cards/service';
+import { sanitizePaymobPayload } from '@/features/payment/paymob-pii';
 import { getPublicOrigin } from '@/lib/origin';
 import { logger } from '@/lib/logger';
 
@@ -93,13 +94,14 @@ export async function POST(request: Request) {
     if (!giftCardSettlement.ok) throw new Error('Gift-card settlement failed');
 
     const desiredStatus = success ? 'paid' : 'payment_failed';
+    const sanitizedPayload = sanitizePaymobPayload(payload);
     const { data: existing } = await supabase.from('payments').select('id,status').eq('provider_reference', providerReference).maybeSingle();
     if (existing) {
       if (existing.status !== desiredStatus) {
-        await supabase.from('payments').update({ status: desiredStatus, raw_event: payload, updated_at: new Date().toISOString() }).eq('id', existing.id);
+        await supabase.from('payments').update({ status: desiredStatus, raw_event: sanitizedPayload, updated_at: new Date().toISOString() }).eq('id', existing.id);
       }
     } else {
-      const { error: insertError } = await supabase.from('payments').insert({ order_id: order.id, provider: 'paymob', provider_reference: providerReference, idempotency_key: idempotencyKey, amount_minor: amountMinor, currency: String(transaction.currency ?? 'EGP'), status: desiredStatus, raw_event: payload });
+      const { error: insertError } = await supabase.from('payments').insert({ order_id: order.id, provider: 'paymob', provider_reference: providerReference, idempotency_key: idempotencyKey, amount_minor: amountMinor, currency: String(transaction.currency ?? 'EGP'), status: desiredStatus, raw_event: sanitizedPayload });
       if (insertError && !insertError.message.toLowerCase().includes('duplicate')) throw insertError;
     }
 

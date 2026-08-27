@@ -1,3 +1,5 @@
+import { sanitizePaymobPayload } from './paymob-pii';
+
 /**
  * Paymob webhook helpers. Pure functions that the route delegates to so they
  * can be unit-tested without a real Supabase client.
@@ -29,10 +31,13 @@ export type QuarantineResult = { quarantined: true; status: 200 } | { quarantine
 
 export async function handlePaymobAmountMismatch(input: QuarantineInput): Promise<QuarantineResult> {
   const errorMessage = `amount_mismatch: order=${input.orderTotalMinor} callback=${input.callbackAmountMinor}`;
+  // Mask PAN before persisting the forensic copy — webhook_quarantine is
+  // deny-all for anon/authenticated but the value still sits at rest.
+  const payload = sanitizePaymobPayload(input.payload) as Record<string, unknown>;
   const result = await Promise.resolve(input.client.from('webhook_quarantine').insert({
     provider: input.provider,
     provider_reference: input.providerReference,
-    payload: input.payload,
+    payload,
     error_message: errorMessage,
   }));
   if (result.error) {

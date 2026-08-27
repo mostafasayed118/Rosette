@@ -7,6 +7,7 @@ import { getRequiredServerEnv } from '@/lib/server-env';
 import type { CreatePaymentInput } from '@/features/payment/paymob-client';
 import { orderSelect, orderSelectWithItemsAndPayments } from '@/features/order/types';
 import { parsePaymobSpecialReference } from '@/features/payment/paymob-routing';
+import { sanitizePaymobPayload } from '@/features/payment/paymob-pii';
 
 type ChangeClient = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => unknown };
 
@@ -207,7 +208,8 @@ export async function handleChangePaymentCallback(
     if (amountMinor !== computed.deltaMinor) return { handled: true };
     const providerReference = String(transaction.id ?? transaction.order?.id ?? '');
     const idempotencyKey = `change-pay:${providerReference}:success`;
-    const { data: inserted, error: insertError } = await client.from('payments').insert({ order_id: order.id, provider: 'paymob', provider_reference: providerReference, idempotency_key: idempotencyKey, amount_minor: amountMinor, currency: String(transaction.currency ?? 'EGP'), status: 'paid', raw_event: transaction }).select('id').maybeSingle();
+    const sanitized = sanitizePaymobPayload(transaction) as Record<string, unknown>;
+    const { data: inserted, error: insertError } = await client.from('payments').insert({ order_id: order.id, provider: 'paymob', provider_reference: providerReference, idempotency_key: idempotencyKey, amount_minor: amountMinor, currency: String(transaction.currency ?? 'EGP'), status: 'paid', raw_event: sanitized }).select('id').maybeSingle();
     if (insertError && !insertError.message.toLowerCase().includes('duplicate')) throw insertError;
     if (!inserted && insertError) return { handled: true };
     const applied = await applyChangeToOrder(client, order, parsed.diff, null);
