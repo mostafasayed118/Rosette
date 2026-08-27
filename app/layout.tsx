@@ -10,6 +10,7 @@ import { resolveHtmlAttributes } from '@/features/i18n/server-html';
 import { resolveServerLocale } from '@/features/i18n/server-locale';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
 import { ChatWidget } from '@/features/chat/ChatWidget';
+import { MotionProvider } from '@/components/motion';
 import { getOptionalServerEnv } from '@/lib/server-env';
 
 const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
@@ -42,5 +43,5 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const store = await cookies();
   const locale = await resolveServerLocale();
   const attrs = resolveHtmlAttributes(locale, store.get('rosette.theme')?.value);
-  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${outfit.variable} ${jetbrains.variable} ${plexArabic.variable}${attrs.themeClass}`}><body><script dangerouslySetInnerHTML={{ __html: LOCALE_SYNC_SCRIPT }} /><ThemeProvider><I18nProvider initialLocale={locale}><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></body></html>;
+  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${outfit.variable} ${jetbrains.variable} ${plexArabic.variable}${attrs.themeClass}`}><body><script dangerouslySetInnerHTML={{ __html: LOCALE_SYNC_SCRIPT }} /><MotionProvider><ThemeProvider><I18nProvider initialLocale={locale}><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></MotionProvider></body></html>;
 }
