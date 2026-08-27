@@ -16,9 +16,15 @@ function MotionConfigInner({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function MotionProvider({ children }: { children: React.ReactNode }) {
+export function MotionProvider({
+  children,
+  initialReduceMotion,
+}: {
+  children: React.ReactNode;
+  initialReduceMotion?: boolean;
+}) {
   return (
-    <MotionPrefsProvider>
+    <MotionPrefsProvider initialReduceMotion={initialReduceMotion}>
       <div data-motion-root style={{ minHeight: "100%" }}>
         <MotionConfigInner>{children}</MotionConfigInner>
       </div>

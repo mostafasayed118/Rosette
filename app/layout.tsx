@@ -43,5 +43,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const store = await cookies();
   const locale = await resolveServerLocale();
   const attrs = resolveHtmlAttributes(locale, store.get('rosette.theme')?.value);
-  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${outfit.variable} ${jetbrains.variable} ${plexArabic.variable}${attrs.themeClass}`}><body><script dangerouslySetInnerHTML={{ __html: LOCALE_SYNC_SCRIPT }} /><MotionProvider><ThemeProvider><I18nProvider initialLocale={locale}><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></MotionProvider></body></html>;
+  const reduceMotionInitial = store.get('rosette-reduce-motion')?.value === '1';
+  return <html lang={attrs.lang} dir={attrs.dir} suppressHydrationWarning className={`${fraunces.variable} ${outfit.variable} ${jetbrains.variable} ${plexArabic.variable}${attrs.themeClass}`}><body><script dangerouslySetInnerHTML={{ __html: LOCALE_SYNC_SCRIPT }} /><MotionProvider initialReduceMotion={reduceMotionInitial}><ThemeProvider><I18nProvider initialLocale={locale}><CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider><ChatWidget whatsappNumber={getOptionalServerEnv('WHATSAPP_BUSINESS_NUMBER')} /></I18nProvider></ThemeProvider></MotionProvider></body></html>;
 }

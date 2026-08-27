@@ -6,7 +6,7 @@ import { ReduceMotionToggle } from "@/components/account/ReduceMotionToggle";
 vi.mock("@/lib/supabase/server", () => ({
   getServerSupabase: () => ({
     from: () => ({
-      update: () => ({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     }),
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: "test-user" } }, error: null }),
@@ -14,7 +14,7 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
   createClient: () => ({
     from: () => ({
-      update: () => ({ eq: vi.fn().mockResolvedValue({ error: null }) }),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     }),
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: "test-user" } }, error: null }),
@@ -44,6 +44,15 @@ describe("ReduceMotionToggle", () => {
     mockSetReduceMotion.mockClear();
     render(<ReduceMotionToggle initialValue={true} />);
     expect(screen.getByRole("checkbox")).toBeChecked();
+  });
+
+  it("keeps the clicked value when seeded via initialValue", async () => {
+    mockSetReduceMotion.mockClear();
+    render(<ReduceMotionToggle initialValue={true} />);
+    const checkbox = screen.getByRole("checkbox") as HTMLInputElement;
+    await userEvent.click(checkbox);
+    expect(checkbox.checked).toBe(false);
+    expect(mockSetReduceMotion).toHaveBeenCalledWith(false);
   });
 
   it("calls setReduceMotion on change", async () => {

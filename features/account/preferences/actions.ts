@@ -9,5 +9,7 @@ export async function setReduceMotionPref(value: boolean) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return;
-  await supabase.from("user_preferences").update({ reduce_motion: value }).eq("user_id", user.id);
+  await supabase
+    .from("user_preferences")
+    .upsert({ user_id: user.id, reduce_motion: value });
 }

@@ -9,8 +9,16 @@ type MotionPrefs = {
 
 const MotionPrefsContext = createContext<MotionPrefs | null>(null);
 
-export function MotionPrefsProvider({ children }: { children: ReactNode }) {
-  const [reduceMotion, setReduceMotion] = useState(false);
+type MotionPrefsProviderProps = {
+  children: ReactNode;
+  initialReduceMotion?: boolean;
+};
+
+export function MotionPrefsProvider({
+  children,
+  initialReduceMotion,
+}: MotionPrefsProviderProps) {
+  const [reduceMotion, setReduceMotion] = useState(initialReduceMotion ?? false);
   return (
     <MotionPrefsContext.Provider value={{ reduceMotion, setReduceMotion }}>
       {children}
