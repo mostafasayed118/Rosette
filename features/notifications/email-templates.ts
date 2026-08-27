@@ -13,9 +13,9 @@ const subjects = {
 const intlLocales = { en: 'en-EG', ar: 'ar-EG', fr: 'fr-FR' } as const;
 
 const copy = {
-  en: { title: 'Your order update', intro: (order: string) => `Your order number is ${order}.`, subtotal: 'Subtotal', delivery: 'Delivery', discount: 'Discount', total: 'Total', view: 'View order' },
-  ar: { title: 'تحديث طلبك', intro: (order: string) => `رقم طلبك هو ${order}.`, subtotal: 'المجموع الفرعي', delivery: 'التوصيل', discount: 'الخصم', total: 'الإجمالي', view: 'عرض الطلب' },
-  fr: { title: 'Mise à jour de votre commande', intro: (order: string) => `Votre numéro de commande est ${order}.`, subtotal: 'Sous-total', delivery: 'Livraison', discount: 'Remise', total: 'Total', view: 'Voir la commande' },
+  en: { title: 'Your order update', intro: (order: string) => `Your order number is ${order}.`, subtotal: 'Subtotal', delivery: 'Delivery', discount: 'Discount', total: 'Total', view: 'View order', deliveries: 'Deliveries' },
+  ar: { title: 'تحديث طلبك', intro: (order: string) => `رقم طلبك هو ${order}.`, subtotal: 'المجموع الفرعي', delivery: 'التوصيل', discount: 'الخصم', total: 'الإجمالي', view: 'عرض الطلب', deliveries: 'التوصيلات' },
+  fr: { title: 'Mise à jour de votre commande', intro: (order: string) => `Votre numéro de commande est ${order}.`, subtotal: 'Sous-total', delivery: 'Livraison', discount: 'Remise', total: 'Total', view: 'Voir la commande', deliveries: 'Livraisons' },
 } as const;
 
 export function renderOrderEmail(input: OrderNotificationInput) {
@@ -39,9 +39,12 @@ export function renderOrderEmail(input: OrderNotificationInput) {
   }
 
   const intro = c.intro(order);
-  const text = `${c.title}\n${intro}\n${lines.join('\n')}\n${input.orderUrl}`;
+  const groupLines = (input.groups ?? []).map((group) => `${escapeHtml(group.recipientName)} — ${escapeHtml(group.deliveryAddress)} · ${escapeHtml(group.deliveryDate)} · ${escapeHtml(group.deliveryWindow)}`);
+  const groupBlock = groupLines.length ? `\n${c.deliveries}:\n${groupLines.join('\n')}` : '';
+  const groupHtmlBlock = groupLines.length ? `<h2>${c.deliveries}</h2><ul>${groupLines.map((line) => `<li>${line}</li>`).join('')}</ul>` : '';
+  const text = `${c.title}\n${intro}\n${lines.join('\n')}${groupBlock}\n${input.orderUrl}`;
   const htmlLines = lines.map((line) => `<li>${line}</li>`).join('');
-  const html = `<!doctype html><html lang="${input.locale}" dir="${direction}"><body style="font-family:Arial,sans-serif;text-align:${isArabic ? 'right' : 'left'}"><h1>${c.title}</h1><p>${intro}</p><ul>${htmlLines}</ul><p><a href="${url}">${c.view}</a></p></body></html>`;
+  const html = `<!doctype html><html lang="${input.locale}" dir="${direction}"><body style="font-family:Arial,sans-serif;text-align:${isArabic ? 'right' : 'left'}"><h1>${c.title}</h1><p>${intro}</p><ul>${htmlLines}</ul>${groupHtmlBlock}<p><a href="${url}">${c.view}</a></p></body></html>`;
 
   return { subject: subjects[input.locale][input.type], text, html };
 }

@@ -41,6 +41,31 @@ describe('order email templates', () => {
     expect(text).not.toContain('Discount');
   });
 
+  it('enumerates delivery groups when present', () => {
+    const { text, html } = renderOrderEmail({
+      locale: 'en',
+      type: 'order_received',
+      orderNumber: 'RO-1',
+      totalMinor: 30000,
+      orderUrl: 'https://example.com/o/1',
+      groups: [
+        { recipientName: 'Mom', deliveryAddress: '1 Zamalek St', deliveryDate: '2026-09-02', deliveryWindow: '12-3' },
+        { recipientName: '<Dad>', deliveryAddress: '9 Maadi St', deliveryDate: '2026-09-03', deliveryWindow: '6-9' },
+      ],
+    });
+    expect(text).toContain('Deliveries:');
+    expect(text).toContain('Mom — 1 Zamalek St · 2026-09-02 · 12-3');
+    expect(text).toContain('&lt;Dad&gt;');
+    expect(html).toContain('<h2>Deliveries</h2>');
+    expect(html).toContain('&lt;Dad&gt;');
+  });
+
+  it('omits the deliveries block when groups are absent', () => {
+    const { text, html } = renderOrderEmail({ locale: 'en', type: 'order_received', orderNumber: 'RO-1', totalMinor: 10000, orderUrl: 'https://example.com/o/1' });
+    expect(text).not.toContain('Deliveries:');
+    expect(html).not.toContain('<h2>Deliveries</h2>');
+  });
+
   it('renders a subtotal/delivery/discount/total breakdown when fields are present', () => {
     const { text, html } = renderOrderEmail({ locale: 'en', type: 'payment_confirmed', orderNumber: 'RO-1', totalMinor: 16500, subtotalMinor: 10000, deliveryFeeMinor: 7500, discountMinor: 1000, orderUrl: 'https://example.com/o/1' });
     expect(text).toMatch(/Subtotal:\s*EGP\s*100/);

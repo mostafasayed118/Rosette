@@ -14,6 +14,7 @@ import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { checkTurnstileToken } from '@/lib/turnstile';
 import { runInBackground } from '@/lib/wait-until';
+import { fetchOrderDeliveryGroups } from '@/features/order/delivery-groups';
 import type { CartRecipient } from '@/features/cart/types';
 
 const ORDERS_PER_EMAIL = { bucket: 'orders-email', limit: 5, windowMs: 10 * 60_000 };
@@ -52,19 +53,25 @@ export async function POST(request: Request) {
     const order = result.value;
     const checkout = body.checkout as { senderEmail: string; recipientPhone: string; recipientName: string };
     // Email delivery is best-effort; on Cloudflare it rides ctx.waitUntil so
-    // the checkout response is never delayed by SMTP.
-    void runInBackground(() => deliverOrderNotification(getAdminSupabase(), {
-      orderId: order.id,
-      type: 'order_received',
-      recipient: checkout.senderEmail,
-      locale,
-      orderNumber: order.displayNumber,
-      totalMinor: order.totalMinor,
-      subtotalMinor: order.subtotalMinor,
-      deliveryFeeMinor: order.deliveryFeeMinor,
-      discountMinor: order.discountMinor,
-      orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}`,
-    }));
+    // the checkout response is never delayed by SMTP. Delivery groups are
+    // enumerated for multi-recipient orders so the confirmation lists every
+    // recipient stop.
+    void runInBackground(async () => {
+      const groups = await fetchOrderDeliveryGroups(getAdminSupabase(), order.id);
+      await deliverOrderNotification(getAdminSupabase(), {
+        orderId: order.id,
+        type: 'order_received',
+        recipient: checkout.senderEmail,
+        locale,
+        orderNumber: order.displayNumber,
+        totalMinor: order.totalMinor,
+        subtotalMinor: order.subtotalMinor,
+        deliveryFeeMinor: order.deliveryFeeMinor,
+        discountMinor: order.discountMinor,
+        orderUrl: `${getPublicOrigin(request)}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}`,
+        groups: (groups ?? []).map((group) => ({ recipientName: group.recipientName, deliveryAddress: group.deliveryAddress, deliveryDate: group.deliveryDate, deliveryWindow: group.deliveryWindow })),
+      });
+    });
     // Best-effort: an order must never fail because a cart could not be marked.
     await markCartConverted(getAdminSupabase(), { email: checkout.senderEmail });
     if (order.totalMinor === 0 && order.giftCardHoldId) {

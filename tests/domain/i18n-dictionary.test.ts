@@ -18,4 +18,18 @@ describe('i18n dictionaries', () => {
       expect(messages.fr[k], `fr.${k}`).toBeTruthy();
     }
   });
+
+  it('defines every recipients* key in en, ar and fr', () => {
+    const keys = [
+      'recipientsName', 'recipientsPhone', 'recipientsAddress', 'recipientsDate',
+      'recipientsWindow', 'recipientsAdd', 'recipientsEdit',
+      'recipientsUnassigned', 'recipientsAssign', 'recipientsMoveTo',
+      'recipientsIncomplete', 'recipientsTooMany', 'recipientsUnknown',
+    ];
+    for (const k of keys) {
+      expect(messages.en[k], `en.${k}`).toBeTruthy();
+      expect(messages.ar[k], `ar.${k}`).toBeTruthy();
+      expect(messages.fr[k], `fr.${k}`).toBeTruthy();
+    }
+  });
 });

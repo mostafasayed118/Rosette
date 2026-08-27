@@ -925,29 +925,27 @@ export async function insertQuizCompletion(client: Client, input: QuizCompletion
 }
 ```
 
-- [ ] **Step 4: Implement `action-internals.ts`**
+- [ ] **Step 4: Implement `action-internals.ts`** (validates with zod, per the spec)
 
 ```ts
+import { z } from 'zod';
 import type { CatalogRepository } from '@/features/catalog/types';
 import { scoreProducts } from './scoring';
 import { insertQuizCompletion } from './repository';
-import { GIFT_RECIPIENTS, GIFT_STYLES, GIFT_COLORS, BUDGET_BANDS } from './tags';
+import { GIFT_RECIPIENTS, GIFT_STYLES, GIFT_COLORS } from './tags';
 import type { GiftFinderOutcome, QuizAnswers } from './types';
 
 type Client = { from: (table: string) => any };
 export type Customer = { id: string; email: string; displayName: string; phone: string };
 
-const OCCASIONS = ['birthday', 'love', 'thank-you', 'new-home', 'congratulations', 'sympathy', 'just-because'];
-
-function parseAnswers(raw: Record<string, unknown> | undefined): QuizAnswers | null {
-  if (!raw) return null;
-  if (typeof raw.recipient !== 'string' || !(GIFT_RECIPIENTS as readonly string[]).includes(raw.recipient)) return null;
-  if (typeof raw.occasion !== 'string' || !OCCASIONS.includes(raw.occasion)) return null;
-  if (typeof raw.budget !== 'string' || !BUDGET_BANDS.some((b) => b.id === raw.budget)) return null;
-  if (typeof raw.color !== 'string' || !(GIFT_COLORS as readonly string[]).includes(raw.color)) return null;
-  if (typeof raw.style !== 'string' || !(GIFT_STYLES as readonly string[]).includes(raw.style)) return null;
-  return { recipient: raw.recipient, occasion: raw.occasion, budget: raw.budget, color: raw.color, style: raw.style };
-}
+// Spec: the action validates answers with zod, returning 'invalid' on failure.
+const quizAnswersSchema = z.object({
+  recipient: z.enum(GIFT_RECIPIENTS),
+  occasion: z.enum(['birthday', 'love', 'thank-you', 'new-home', 'congratulations', 'sympathy', 'just-because']),
+  budget: z.enum(['under-150', '150-250', 'over-250']),
+  color: z.enum(GIFT_COLORS),
+  style: z.enum(GIFT_STYLES),
+});
 
 // Identity and the database client are supplied explicitly by
 // features/gift-finder/actions.ts. Never export this as a remote-callable
@@ -960,8 +958,9 @@ export async function completeGiftFinderFor(opts: {
   client: Client;
   locale?: string;
 }): Promise<GiftFinderOutcome | 'invalid'> {
-  const answers = parseAnswers(opts.answers);
-  if (!answers) return 'invalid';
+  const parsed = quizAnswersSchema.safeParse(opts.answers);
+  if (!parsed.success) return 'invalid';
+  const answers: QuizAnswers = parsed.data;
 
   const page = await opts.catalogRepo.list({});
   const results = scoreProducts(page.products, answers);
@@ -1655,7 +1654,7 @@ Run: `npx tsc --noEmit`
 Expected: no errors. Then:
 
 ```bash
-git add features/gift-finder/GiftFinderQuiz.tsx features/gift-finder/GiftFinderResults.tsx features/gift-finder/labels.ts "app/[locale]/[city]/gift-finder/page.tsx" tests/components/gift-finder-quiz.test.tsx features/i18n/locales/en.json features/i18n/locales/ar.json features/i18n/locales/fr.json
+git add features/gift-finder/GiftFinderQuiz.tsx features/gift-finder/GiftFinderResults.tsx features/gift-finder/labels.ts "app/[locale]/[city]/gift-finder/page.tsx" tests/components/gift-finder-quiz.test.tsx
 git commit -m "feat(gift-finder): quiz, results grid, and route"
 ```
 

@@ -2,7 +2,7 @@ import { getOptionalServerEnv } from '@/lib/server-env';
 import { logger } from '@/lib/logger';
 import { sendOrderNotification } from './notification-service';
 import { sendOrderEmailResend } from './resend-mailer';
-import type { EmailLocale, NotificationType } from './email-types';
+import type { EmailLocale, NotificationType, OrderNotificationGroup } from './email-types';
 
 export type DeliveryClient = { from: (table: string) => any };
 
@@ -17,6 +17,7 @@ export type DeliverNotificationInput = {
   deliveryFeeMinor?: number;
   discountMinor?: number;
   orderUrl: string;
+  groups?: OrderNotificationGroup[];
 };
 
 /**
@@ -52,6 +53,7 @@ export async function deliverOrderNotification(
         discountMinor: input.discountMinor,
         recipientEmail: input.recipient,
         orderUrl: input.orderUrl,
+        groups: input.groups,
       })
         .then(
           () => ({ accepted: true as const }),
@@ -70,6 +72,7 @@ export async function deliverOrderNotification(
         discountMinor: input.discountMinor,
         recipientEmail: input.recipient,
         orderUrl: input.orderUrl,
+        groups: input.groups,
       });
 
   if ('skipped' in result && result.skipped) {
