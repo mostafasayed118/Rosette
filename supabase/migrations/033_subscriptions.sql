@@ -300,3 +300,78 @@ begin
   return jsonb_build_object('cancelled', true, 'unmaterialized_count', v_unmaterialized);
 end; $$;
 grant execute on function public.cancel_subscription(uuid) to service_role;
+
+-- Materialize one scheduled delivery into a paid order (zero-total; money was booked
+-- at bundle purchase) and reserve inventory.
+
+create or replace function public.materialize_subscription_delivery(
+  p_subscription_id uuid,
+  p_delivery_id uuid
+)
+returns jsonb
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_delivery record;
+  v_sub record;
+  v_product record;
+  v_price_minor int;
+  v_customer_email text;
+  v_order_id uuid;
+  v_display_number text;
+  v_public_token text;
+begin
+  select d.id, d.position, d.status as dstatus into v_delivery
+    from public.subscription_deliveries d
+   where d.id = p_delivery_id and d.subscription_id = p_subscription_id;
+  if v_delivery.id is null then return jsonb_build_object('status', 'not_found'); end if;
+  if v_delivery.dstatus <> 'scheduled' then return jsonb_build_object('status', 'already_ordered'); end if;
+
+  select s.product_id, s.variant_id, s.locale, s.customer_id, s.recipient_name, s.recipient_phone,
+         s.delivery_address, s.delivery_city_code, s.delivery_window, s.gift_message
+    into v_sub from public.subscriptions s where s.id = p_subscription_id and s.status = 'active';
+  if v_sub.product_id is null then return jsonb_build_object('status', 'not_active'); end if;
+
+  select coalesce(p.email, '') into v_customer_email from public.profiles p where p.id = v_sub.customer_id;
+
+  select name_en, name_ar, name_fr into v_product from public.products p where p.id = v_sub.product_id;
+  select coalesce(price_minor, 0) into v_price_minor from public.product_variants where id = v_sub.variant_id;
+
+  v_display_number := 'RO-' || upper(to_hex(extract(epoch from clock_timestamp())::bigint)) || '-' || upper(substring(md5(random()::text) for 4));
+  v_public_token := encode(extensions.gen_random_bytes(24), 'hex');
+
+  insert into public.orders(
+    display_number, public_token, customer_id, customer_email, customer_phone,
+    recipient_name, recipient_phone, delivery_address, delivery_city_code, delivery_date, delivery_window, locale,
+    subtotal_minor, delivery_fee_minor, total_minor, discount_minor,
+    payment_status, fulfillment_status, subscription_id, subscription_delivery_id
+  ) values (
+    v_display_number, v_public_token, v_sub.customer_id, coalesce(v_customer_email, ''), '',
+    v_sub.recipient_name, v_sub.recipient_phone, v_sub.delivery_address, v_sub.delivery_city_code, v_delivery.scheduled_date, v_sub.delivery_window, v_sub.locale,
+    0, 0, 0, 0, 'paid', 'confirmed', p_subscription_id, p_delivery_id
+  ) returning id into v_order_id;
+
+  insert into public.order_items(
+    order_id, product_id, variant_id, product_slug, product_name_en, product_name_ar, product_name_fr,
+    unit_price_minor, quantity, add_ons, gift_message
+  ) values (
+    v_order_id, v_sub.product_id, v_sub.variant_id, coalesce(v_product.name_en, ''),
+    coalesce(v_product.name_en, ''), coalesce(v_product.name_ar, ''), coalesce(v_product.name_fr, ''),
+    0, 1, '[]'::jsonb, coalesce(v_sub.gift_message, '')
+  );
+
+  perform public.reserve_order_inventory(v_order_id, jsonb_build_array(jsonb_build_object('variant_id', v_sub.variant_id, 'quantity', 1)));
+
+  update public.subscription_deliveries set status = 'ordered', order_id = v_order_id, updated_at = now()
+   where id = p_delivery_id and status = 'scheduled';
+
+  insert into public.order_events(order_id, event_type, from_status, to_status, metadata)
+  values (v_order_id, 'subscription_materialized', 'scheduled', 'ordered',
+          jsonb_build_object('subscription_id', p_subscription_id, 'delivery_position', v_delivery.position));
+  insert into public.subscription_events(subscription_id, delivery_id, actor, event_type, payload)
+  values (p_subscription_id, p_delivery_id, 'system', 'materialized', jsonb_build_object('order_id', v_order_id, 'position', v_delivery.position));
+
+  return jsonb_build_object('status', 'ordered', 'order_id', v_order_id);
+end;
+$$;
+grant execute on function public.materialize_subscription_delivery(uuid, uuid) to service_role;
