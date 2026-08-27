@@ -1,9 +1,26 @@
 import { describe, expect, it, vi } from 'vitest';
 import { isReviewImageUrl, reviewImagePathFromUrl, REVIEW_PHOTO_MAX_BYTES, uploadReviewPhotos, validateReviewPhotos, type ReviewPhotoInput } from '@/features/reviews/review-storage';
 
-const photo = (overrides: Partial<ReviewPhotoInput> = {}): ReviewPhotoInput => ({
-  name: 'a.jpg', type: 'image/jpeg', size: 1024, bytes: new ArrayBuffer(4), ...overrides,
-});
+function validBytesFor(type: string): ArrayBuffer {
+  if (type === 'image/jpeg') return new Uint8Array([0xff, 0xd8, 0xff, 0x00]).buffer;
+  if (type === 'image/png') return new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).buffer;
+  if (type === 'image/webp') return new Uint8Array([0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50]).buffer;
+  return new ArrayBuffer(4);
+}
+
+const photo = (overrides: Partial<ReviewPhotoInput> = {}): ReviewPhotoInput => {
+  const type = (overrides.type as string) ?? 'image/jpeg';
+  const base: ReviewPhotoInput = {
+    name: 'a.jpg',
+    type,
+    size: 1024,
+    bytes: validBytesFor(type),
+  };
+  const merged = { ...base, ...overrides };
+  // If the test overrode the type but not the bytes, make bytes match the new type.
+  if (overrides.type && !('bytes' in overrides)) merged.bytes = validBytesFor(overrides.type as string);
+  return merged;
+};
 
 describe('validateReviewPhotos', () => {
   it('accepts up to 3 valid photos', () => {

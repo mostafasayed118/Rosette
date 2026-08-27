@@ -11,10 +11,45 @@ const EXT_BY_TYPE: Record<string, string> = {
   'image/webp': 'webp',
 };
 
+function hasValidMagicBytes(file: ReviewPhotoInput): boolean {
+  const bytes = new Uint8Array(file.bytes);
+  if (file.type === 'image/jpeg') {
+    return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+  if (file.type === 'image/png') {
+    return (
+      bytes.length >= 8 &&
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47 &&
+      bytes[4] === 0x0d &&
+      bytes[5] === 0x0a &&
+      bytes[6] === 0x1a &&
+      bytes[7] === 0x0a
+    );
+  }
+  if (file.type === 'image/webp') {
+    return (
+      bytes.length >= 12 &&
+      bytes[0] === 0x52 && // R
+      bytes[1] === 0x49 && // I
+      bytes[2] === 0x46 && // F
+      bytes[3] === 0x46 && // F
+      bytes[8] === 0x57 && // W
+      bytes[9] === 0x45 && // E
+      bytes[10] === 0x42 && // B
+      bytes[11] === 0x50 // P
+    );
+  }
+  return false;
+}
+
 export function validateReviewPhotos(files: ReviewPhotoInput[]): ReviewPhotoValidation {
   if (files.length > REVIEW_PHOTO_MAX) return { ok: false, reason: 'too_many' };
   if (files.some((file) => file.size > REVIEW_PHOTO_MAX_BYTES)) return { ok: false, reason: 'too_large' };
   if (files.some((file) => !(REVIEW_PHOTO_TYPES as readonly string[]).includes(file.type))) return { ok: false, reason: 'invalid_type' };
+  if (files.some((file) => !hasValidMagicBytes(file))) return { ok: false, reason: 'invalid_type' };
   return { ok: true, photos: files };
 }
 
