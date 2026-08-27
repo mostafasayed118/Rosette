@@ -44,4 +44,20 @@ describe('validateCartLines', () => {
     const lines = Array.from({ length: 21 }, (_, i) => ({ ...base, id: `l${i}` }));
     expect(validateCartLines(lines, 20)).toBeNull();
   });
+
+  it('accepts a line with a recipientId (multi-recipient round-trip)', () => {
+    const lines = [{ ...base, recipientId: 'r1' }];
+    const result = validateCartLines(lines);
+    expect(result).not.toBeNull();
+    expect(result![0]!.recipientId).toBe('r1');
+  });
+
+  it('still rejects invalid lines in multi-recipient mode', () => {
+    const lines = [{ ...base, productSlug: '', quantity: 0, unitPrice: -1, recipientId: 'r1' }];
+    expect(validateCartLines(lines)).toBeNull();
+  });
+
+  it('rejects a non-string recipientId', () => {
+    expect(validateCartLines([{ ...base, recipientId: 42 as unknown as string }])).toBeNull();
+  });
 });

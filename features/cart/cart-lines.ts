@@ -3,7 +3,9 @@ import type { CartLine } from './types';
 function isCartLine(value: unknown): value is CartLine {
   if (typeof value !== 'object' || value === null) return false;
   const line = value as Record<string, unknown>;
+  const hasValidRecipient = line.recipientId === undefined || typeof line.recipientId === 'string';
   return (
+    hasValidRecipient &&
     typeof line.id === 'string' &&
     typeof line.productSlug === 'string' && line.productSlug.length > 0 &&
     typeof line.quantity === 'number' && Number.isInteger(line.quantity) && line.quantity > 0 &&
