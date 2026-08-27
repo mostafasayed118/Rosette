@@ -10,6 +10,9 @@ type SupabaseProductRow = {
   description_fr?: string;
   category: string;
   occasions: string[];
+  gift_recipients?: string[];
+  gift_styles?: string[];
+  gift_colors?: string[];
   price_minor: number;
   tone: string;
   image_url?: string | null;
@@ -43,6 +46,9 @@ export function mapSupabaseProduct(row: SupabaseProductRow): Product {
     descriptionFr: row.description_fr,
     category: row.category,
     occasions: row.occasions,
+    giftRecipients: row.gift_recipients ?? [],
+    giftStyles: row.gift_styles ?? [],
+    giftColors: row.gift_colors ?? [],
     price: row.price_minor,
     tone: row.tone,
     imageUrl: row.image_url ?? null,

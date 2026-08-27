@@ -81,7 +81,7 @@ on conflict (id) do update
 -- ---------------------------------------------------------------------------
 -- Products (tone = hex visual color; add_ons ids match CartAddOn ids)
 -- ---------------------------------------------------------------------------
-insert into public.products (id, slug, name_en, name_ar, name_fr, description_en, description_ar, description_fr, category, occasions, price_minor, tone, image_url, delivery, add_ons, created_at)
+insert into public.products (id, slug, name_en, name_ar, name_fr, description_en, description_ar, description_fr, category, occasions, price_minor, tone, image_url, delivery, add_ons, gift_recipients, gift_styles, gift_colors, created_at)
 values
   ('00000000-0000-4000-8000-000000000001', 'rose-hour', 'Rose Hour', 'ساعة الورد', 'L’Heure des Roses',
    'Soft garden roses in a hand-tied bouquet, wrapped the way a quiet message deserves.',
@@ -91,6 +91,7 @@ values
    NULL,
    'Same-day in Greater Cairo and Alexandria',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
+   array['partner','family'], array['romantic'], array['pink','pastel'],
    '2026-01-02T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000002', 'green-morning', 'Green Morning', 'صباح أخضر', 'Matin Vert',
    'A leafy vase arrangement with the calm of a window left open.',
@@ -100,6 +101,7 @@ values
    NULL,
    'Next-day delivery',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
+   array['colleague','family'], array['minimal','classic'], array['mixed'],
    '2026-03-02T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000003', 'sunlit-stems', 'Sunlit Stems', 'سيقان مضيئة', 'Tiges Ensoleillées',
    'Golden stems with a little movement, gathered for a bright day.',
@@ -109,6 +111,7 @@ values
    NULL,
    'Same-day in Greater Cairo and Alexandria',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"balloon","name_en":"Celebration balloon","name_ar":"بالون احتفالي","name_fr":"Ballon de fête","price_minor":1200}]'::jsonb,
+   array['friend','family'], array['playful','bold'], array['bright'],
    '2026-02-14T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000004', 'terracotta-love', 'Terracotta Love', 'حب بلون الطين', 'Amour Terracotta',
    'Warm ranunculus with a sculptural wrap — a gesture from the heart.',
@@ -118,6 +121,7 @@ values
    NULL,
    'Next-day delivery',
    '[{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
+   array['partner'], array['romantic','bold'], array['pastel'],
    '2026-02-01T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000005', 'quiet-orchid', 'Quiet Orchid', 'أوركيد هادئ', 'Orchidée Sereine',
    'An elegant orchid plant that keeps the sentiment alive for months.',
@@ -127,6 +131,7 @@ values
    NULL,
    'Next-day delivery',
    '[]'::jsonb,
+   array['family','colleague'], array['minimal','classic'], array['pastel'],
    '2026-01-20T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000006', 'wild-meadow', 'Wild Meadow', 'مرج بري', 'Prairie Sauvage',
    'Loose seasonal color, as if gathered on a morning walk.',
@@ -136,6 +141,7 @@ values
    NULL,
    'Next-day delivery',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
+   array['friend','colleague'], array['playful'], array['mixed','bright'],
    '2026-03-10T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000007', 'little-thanks', 'Little Thanks', 'شكر صغير', 'Petit Merci',
    'A petite posy for the people who make our days brighter.',
@@ -145,6 +151,7 @@ values
    NULL,
    'Same-day in Greater Cairo and Alexandria',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
+   array['colleague','friend'], array['classic','minimal'], array['pastel','pink'],
    '2026-01-09T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000008', 'citrus-cloud', 'Citrus Cloud', 'سحابة حمضية', 'Nuage d’Agrumes',
    'A light, fragrant arrangement with a zesty touch.',
@@ -154,6 +161,7 @@ values
    NULL,
    'Next-day delivery',
    '[]'::jsonb,
+   array['friend','family'], array['playful','minimal'], array['bright'],
    '2026-02-28T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000009', 'midnight-roses', 'Midnight Roses', 'ورد منتصف الليل', 'Roses de Minuit',
    'Deep wine-red roses on tall stems — dramatic and unforgettable.',
@@ -163,6 +171,7 @@ values
    NULL,
    'Same-day in Greater Cairo and Alexandria',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
+   array['partner'], array['bold','romantic'], array['red'],
    '2026-04-08T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000010', 'sakura-breath', 'Breath of Sakura', 'نَفَس الساكورا', 'Souffle de Sakura',
    'Pale pink blossoms arranged like a spring breeze in a vase.',
@@ -172,6 +181,7 @@ values
    NULL,
    'Same-day in Greater Cairo and Alexandria',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
+   array['friend','partner'], array['romantic','minimal'], array['pink','pastel'],
    '2026-06-15T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000011', 'white-lotus', 'White Lotus', 'لوتس أبيض', 'Lotus Blanc',
    'A calm white lotus arrangement — serenity for a new beginning.',
@@ -181,6 +191,7 @@ values
    NULL,
    'Next-day delivery',
    '[]'::jsonb,
+   array['family','colleague'], array['minimal','classic'], array['white'],
    '2026-04-21T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000012', 'petal-box', 'Petal Box', 'علبة البتلات', 'Coffret de Pétales',
    'A tidy box of loose petals and stems — the modern way to say it.',
@@ -190,6 +201,7 @@ values
    NULL,
    'Same-day in Greater Cairo and Alexandria',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
+   array['partner','friend'], array['playful','bold'], array['pink'],
    '2026-05-12T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000013', 'roses-in-a-box', 'Roses in a Box', 'ورد في علبة', 'Roses en Coffret',
    'A dozen long-stemmed roses in a keepsake box, door to door.',
@@ -199,6 +211,7 @@ values
    NULL,
    'Same-day in Greater Cairo and Alexandria',
    '[{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800},{"id":"balloon","name_en":"Celebration balloon","name_ar":"بالون احتفالي","name_fr":"Ballon de fête","price_minor":1200}]'::jsonb,
+   array['partner'], array['bold','romantic'], array['red'],
    '2026-06-01T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000014', 'white-serenade', 'White Serenade', 'سيريناد أبيض', 'Sérénade Blanche',
    'A quiet arrangement of white blooms for a moment of respect.',
@@ -208,6 +221,7 @@ values
    NULL,
    'Next-day delivery',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500}]'::jsonb,
+   array['family','colleague'], array['classic','minimal'], array['white'],
    '2026-05-20T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000015', 'quiet-remembrance', 'Quiet Remembrance', 'ذكرى هادئة', 'Souvenir Discret',
    'A calm green plant that keeps a memory growing.',
@@ -217,6 +231,7 @@ values
    NULL,
    'Next-day delivery',
    '[]'::jsonb,
+   array['family'], array['minimal','classic'], array['mixed','white'],
    '2026-05-20T09:00:00Z'),
   ('00000000-0000-4000-8000-000000000016', 'grand-roses', 'Grand Roses', 'ورود فاخرة', 'Roses Grandioses',
    'A generous hand-tied armful of long roses, nothing held back.',
@@ -226,6 +241,7 @@ values
    NULL,
    'Same-day in Greater Cairo and Alexandria',
    '[{"id":"note","name_en":"Handwritten note","name_ar":"بطاقة بخط اليد","name_fr":"Carte manuscrite","price_minor":500},{"id":"chocolate","name_en":"Dark chocolate","name_ar":"شوكولاتة داكنة","name_fr":"Chocolat noir","price_minor":1800}]'::jsonb,
+   array['partner'], array['romantic','bold'], array['red'],
    '2026-07-01T09:00:00Z')
 on conflict (id) do update
   set slug = excluded.slug,
@@ -240,7 +256,10 @@ on conflict (id) do update
       price_minor = excluded.price_minor,
       tone = excluded.tone,
       delivery = excluded.delivery,
-      add_ons = excluded.add_ons;
+      add_ons = excluded.add_ons,
+      gift_recipients = excluded.gift_recipients,
+      gift_styles = excluded.gift_styles,
+      gift_colors = excluded.gift_colors;
 
 -- ---------------------------------------------------------------------------
 -- Variants (every product has at least one so it can be ordered)
