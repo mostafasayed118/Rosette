@@ -14,6 +14,7 @@ import { RATE_LIMITS, enforceRateLimit } from '@/lib/rate-limit-guard';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { checkTurnstileToken } from '@/lib/turnstile';
 import { runInBackground } from '@/lib/wait-until';
+import type { CartRecipient } from '@/features/cart/types';
 
 const ORDERS_PER_EMAIL = { bucket: 'orders-email', limit: 5, windowMs: 10 * 60_000 };
 
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, RATE_LIMITS.orders);
   if (limited) return limited;
   try {
-    const body = await request.json() as { cart?: unknown; destination?: unknown; checkout?: { senderEmail?: unknown }; locale?: unknown; turnstileToken?: unknown };
+    const body = await request.json() as { cart?: unknown; destination?: unknown; checkout?: { senderEmail?: unknown }; recipients?: unknown; locale?: unknown; turnstileToken?: unknown };
     // Enforced only when TURNSTILE_SECRET_KEY is set; runs before the email
     // bucket so bots cannot consume per-address quota.
     const turnstile = await checkTurnstileToken(body.turnstileToken, getOptionalServerEnv('TURNSTILE_SECRET_KEY'), getClientIp(request));
@@ -45,7 +46,8 @@ export async function POST(request: Request) {
     if (!paymentPath.allowed) return NextResponse.json({ error: 'Payment method unavailable' }, { status: 409 });
 
     const customer = await getCurrentCustomer();
-    const result = await getOrderRepository().createPending({ cart: body.cart as never, destination: body.destination as never, checkout: body.checkout as never, locale: body.locale, customerId: customer?.id ?? null });
+    const recipients = (Array.isArray(body.recipients) ? body.recipients : []) as CartRecipient[];
+    const result = await getOrderRepository().createPending({ cart: body.cart as never, destination: body.destination as never, checkout: body.checkout as never, locale: body.locale, customerId: customer?.id ?? null, recipients });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.error === 'invalid_promo' || result.error === 'invalid_gift_card' ? 400 : 409 });
     const order = result.value;
     const checkout = body.checkout as { senderEmail: string; recipientPhone: string; recipientName: string };
@@ -84,7 +86,7 @@ export async function POST(request: Request) {
         amountMinor: order.totalMinor,
         orderReference: order.displayNumber,
         integrationId: Number(getRequiredServerEnv('PAYMOB_INTEGRATION_ID')),
-        customer: { name: checkout.recipientName, email: checkout.senderEmail, phone: checkout.recipientPhone },
+        customer: { name: checkout.recipientName || recipients[0]?.recipientName || 'Customer', email: checkout.senderEmail, phone: checkout.recipientPhone || recipients[0]?.recipientPhone || '' },
         notificationUrl: `${origin}/api/webhooks/paymob`,
         redirectionUrl: `${origin}/orders/${order.id}?token=${encodeURIComponent(order.publicToken ?? '')}`,
       });

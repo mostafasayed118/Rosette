@@ -1,4 +1,5 @@
 import { calculateCartTotals } from '@/features/cart/pricing';
+import { checkoutDeliveryFeeMinor, validateRecipientGroups } from '@/features/checkout/recipient-groups';
 import { applyPromoToOrderTotals, validatePromo } from '@/features/promo/apply';
 import { fetchPromo } from '@/features/promo/repository';
 import { applyDeliveryRule, fetchDeliveryRule } from './delivery-rules';
@@ -36,6 +37,9 @@ export const supabaseOrderRepository: OrderRepository = {
   async createPending(input: CreatePendingOrderInput): Promise<Result<PendingOrder, OrderCreateError>> {
     if (!input.cart.lines.length) return { ok: false, error: 'empty_cart' };
     try {
+      const recipients = input.recipients ?? [];
+      if (recipients.length && validateRecipientGroups(recipients, input.cart.lines)) return { ok: false, error: 'invalid' };
+      const multiRecipient = recipients.length > 0;
       const supabase = getAdminSupabase();
       const lines = await authoritativeLines(supabase, input.cart.lines);
       if (!lines || lines.some((line) => line === null)) return { ok: false, error: 'invalid' };
@@ -45,7 +49,8 @@ export const supabaseOrderRepository: OrderRepository = {
       const rule = await fetchDeliveryRule(supabase, input.destination.cityCode);
       const { feeMinor, belowMinimum } = applyDeliveryRule(rule, subtotal);
       if (belowMinimum) return { ok: false, error: 'invalid' };
-      let totals = calculateCartTotals(safeLines, feeMinor);
+      const groupFeeMinor = multiRecipient ? checkoutDeliveryFeeMinor(feeMinor, recipients) : feeMinor;
+      let totals = calculateCartTotals(safeLines, groupFeeMinor);
       let discountMinor = 0;
       let promoCode: string | null = null;
       const requestedPromo = input.checkout.promoCode?.trim();
@@ -83,16 +88,17 @@ export const supabaseOrderRepository: OrderRepository = {
           quantity: line.quantity,
           addOns: line.addOns,
           message: line.message,
+          ...(multiRecipient ? { groupIndex: Math.max(0, recipients.findIndex((r) => r.id === line.recipientId)) } : {}),
         })),
         p_destination: { cityCode: input.destination.cityCode },
         p_checkout: {
           customerEmail: input.checkout.senderEmail,
           customerPhone: input.checkout.recipientPhone,
-          recipientName: input.checkout.recipientName,
-          recipientPhone: input.checkout.recipientPhone,
-          deliveryAddress: input.checkout.address,
-          deliveryDate: input.checkout.deliveryDate,
-          deliveryWindow: input.checkout.deliveryWindow,
+          recipientName: multiRecipient ? recipients[0]!.recipientName : input.checkout.recipientName,
+          recipientPhone: multiRecipient ? recipients[0]!.recipientPhone : input.checkout.recipientPhone,
+          deliveryAddress: multiRecipient ? recipients[0]!.address : input.checkout.address,
+          deliveryDate: multiRecipient ? recipients[0]!.deliveryDate : input.checkout.deliveryDate,
+          deliveryWindow: multiRecipient ? recipients[0]!.deliveryWindow : input.checkout.deliveryWindow,
           locale: input.locale,
           giftCardCodeHash,
           giftCardId,
@@ -105,6 +111,16 @@ export const supabaseOrderRepository: OrderRepository = {
         p_total_minor: totals.total,
         p_promo_code: promoCode,
         p_gift_card_minor: giftCardMinor,
+        ...(multiRecipient ? {
+          p_groups: recipients.map((r) => ({
+            recipientName: r.recipientName,
+            recipientPhone: r.recipientPhone,
+            deliveryAddress: r.address,
+            deliveryDate: r.deliveryDate,
+            deliveryWindow: r.deliveryWindow,
+            deliveryFeeMinor: feeMinor,
+          })),
+        } : {}),
       });
       if (error || !data) return { ok: false, error: 'unavailable' };
       const rpc = data as unknown as RpcResponse;
