@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ProfileForm } from '@/components/account/ProfileForm';
 import { EmailPreferences } from '@/components/account/EmailPreferences';
+import { ReduceMotionToggle } from '@/components/account/ReduceMotionToggle';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { getEngagementPreference } from '@/features/email-preferences/preferences-service';
@@ -220,6 +221,14 @@ export default async function AccountProfilePage({ params }: { params: Promise<{
       {/* Email preferences — Stitch parity section */}
       <section id="email-preferences" className="border-t border-outline-variant/30 pt-10">
         <EmailPreferences initialEnabled={preference.status === 'enabled'} loadFailed={preference.status === 'error'} accountPath={accountPath} />
+      </section>
+
+      {/* Motion preferences */}
+      <section className="border-t border-outline-variant/30 pt-10">
+        <h2 className="font-display text-[1.5rem] font-medium leading-tight text-on-surface">Preferences</h2>
+        <div className="mt-4">
+          <ReduceMotionToggle />
+        </div>
       </section>
     </div>
   );
