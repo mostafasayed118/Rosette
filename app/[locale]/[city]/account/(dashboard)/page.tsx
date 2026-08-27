@@ -34,6 +34,14 @@ export default async function AccountProfilePage({ params }: { params: Promise<{
   const supabase = await getServerSupabase();
   const orders = supabase ? await listCustomerOrders(supabase, customer.id) : [];
 
+  let reduceMotionInitial = false;
+  if (supabase) {
+    try {
+      const { data } = await supabase.from("user_preferences").select("reduce_motion").eq("user_id", customer.id).single();
+      if (data) reduceMotionInitial = Boolean((data as { reduce_motion?: boolean }).reduce_motion);
+    } catch {}
+  }
+
   // wishlist preview: up to 3 items
   let wishlistCount = 0;
   let wishlistProducts: Array<{ slug: string; name: string; nameAr?: string; nameFr?: string; price: number; imageUrl: string | null; tone: string; delivery: string }> = [];
@@ -227,7 +235,7 @@ export default async function AccountProfilePage({ params }: { params: Promise<{
       <section className="border-t border-outline-variant/30 pt-10">
         <h2 className="font-display text-[1.5rem] font-medium leading-tight text-on-surface">Preferences</h2>
         <div className="mt-4">
-          <ReduceMotionToggle />
+          <ReduceMotionToggle initialValue={reduceMotionInitial} />
         </div>
       </section>
     </div>

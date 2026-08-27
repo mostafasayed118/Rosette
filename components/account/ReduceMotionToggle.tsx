@@ -16,20 +16,23 @@ export function ReduceMotionToggle({ initialValue }: Props) {
   return (
     <div className="flex items-center gap-2">
       <input
+        id="reduce-motion-toggle"
         type="checkbox"
-        role="checkbox"
         aria-label="Reduce motion"
         checked={checked}
         disabled={pending}
         onChange={(e) => {
           const next = e.target.checked;
           setReduceMotion(next);
+          document.cookie = `rosette-reduce-motion=${next ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`;
           startTransition(async () => {
             await setReduceMotionPref(next);
           });
         }}
       />
-      <label className="text-sm">Reduce motion (overrides OS preference)</label>
+      <label htmlFor="reduce-motion-toggle" className="text-sm">
+        Reduce motion (overrides OS preference)
+      </label>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { motion, type HTMLMotionProps } from "motion/react";
 import { Slot } from "radix-ui";
-import { cva, type VariantProps } from "class-variance-authority";
+import { type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -58,9 +58,26 @@ export const AnimatedButton = React.forwardRef<HTMLButtonElement, AnimatedButton
     );
 
     if (asChild) {
+      const childElement = children as React.ReactElement<{ children?: React.ReactNode }>;
+      if (isLoading) {
+        return (
+          <Slot.Root ref={ref as React.Ref<HTMLElement>} className={classes} {...(props as Record<string, unknown>)}>
+            {React.cloneElement(
+              childElement,
+              {},
+              <>
+                <Spinner size="sm" className="shrink-0" />
+                <span className={cn("transition-opacity", "opacity-70")}>
+                  {loadingText ? loadingText : childElement.props.children}
+                </span>
+              </>
+            )}
+          </Slot.Root>
+        );
+      }
       return (
         <Slot.Root ref={ref as React.Ref<HTMLElement>} className={classes} {...(props as Record<string, unknown>)}>
-          {(children as React.ReactElement) ?? inner}
+          {childElement}
         </Slot.Root>
       );
     }

@@ -252,9 +252,9 @@ main { flex: 1; }
 .animate-shimmer {
   background: linear-gradient(
     90deg,
-    var(--muted) 0%,
-    color-mix(in oklch, var(--muted-foreground) 10%, transparent) 50%,
-    var(--muted) 100%
+    var(--color-muted) 0%,
+    color-mix(in oklch, var(--color-muted-foreground) 10%, transparent) 50%,
+    var(--color-muted) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s linear infinite;
