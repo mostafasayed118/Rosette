@@ -32,6 +32,7 @@ export function SiteHeader({ cityName, cartCount }: SiteHeaderProps) {
   const count = cartCount ?? (cart.ready ? cart.itemCount : 0);
 
   const navItems = [
+    { label: t('navGiftFinder'), path: '/gift-finder' },
     { label: t('navCollections'), path: '/shop' },
     { label: t('navBespoke'), path: '/shop?category=vase-arrangement' },
     { label: t('navAtelier'), path: '/blog' },

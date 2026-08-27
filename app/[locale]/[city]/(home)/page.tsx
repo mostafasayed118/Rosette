@@ -105,6 +105,18 @@ export default async function HomePage({ params }: HomePageParams) {
           </div>
         </section>
 
+        {/* Gift finder prompt */}
+        <section className="mx-auto max-w-[1280px] px-5 md:px-[64px] py-20">
+          <div className="ambient-glow flex flex-col items-center gap-5 rounded-[1.25rem] border border-outline-variant/30 bg-surface-container-low px-8 py-14 text-center md:px-20">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-tertiary">{t('giftFinderHomeEyebrow')}</p>
+            <h2 className="max-w-xl font-display text-[32px] leading-tight tracking-[-0.015em] text-on-surface">{t('giftFinderTitle')}</h2>
+            <p className="max-w-lg text-on-surface-variant">{t('giftFinderLede')}</p>
+            <Link href={`/${locale}/${cityCode}/gift-finder`} className="lift press mt-2 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-sm font-semibold text-on-primary transition-colors hover:bg-on-primary-fixed-variant">
+              {t('giftFinderStart')} <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
+
         {/* Editorial split */}
         <section className="mx-auto max-w-[1280px] px-5 md:px-[64px] py-24 mt-16 mb-32">
           <div className="mb-20 text-center">

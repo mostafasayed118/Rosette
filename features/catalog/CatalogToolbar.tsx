@@ -1,16 +1,19 @@
 'use client';
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import { useStorePath } from '@/features/i18n/use-store-path';
 import { categories, occasions } from './data';
 import { categoryMessageKeys, occasionMessageKeys } from './catalog-labels';
 import { parseCatalogQuery, serializeCatalogQuery } from './catalog-utils';
 
 export function CatalogToolbar() {
   const { t } = useI18n();
+  const { href } = useStorePath();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -58,6 +61,10 @@ export function CatalogToolbar() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-outline-variant/30 bg-surface-container px-5 py-4">
+        <p className="text-sm font-medium text-on-surface">{t('giftFinderShopBanner')}</p>
+        <Link href={href('/gift-finder')} className="text-sm font-semibold text-primary underline underline-offset-4 hover:text-on-primary-fixed-variant">{t('giftFinderShopBannerAction')} ↗</Link>
       </div>
     </section>
   );

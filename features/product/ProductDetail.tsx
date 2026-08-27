@@ -74,6 +74,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <p className="price text-lg font-medium text-on-surface-variant">{t('from')} {formatMoney(unitPrice, locale)}</p>
           {product.rating && product.rating.count > 0 ? <p className="text-sm text-muted-foreground">★ {product.rating.average.toFixed(1)} · {product.rating.count}</p> : null}
           <p className="max-w-prose text-[1.05rem] leading-relaxed text-on-surface-variant">{description}</p>
+          <Link href={href('/gift-finder')} className="mt-1 text-sm text-primary underline underline-offset-4 hover:text-on-primary-fixed-variant">{t('giftFinderPdpLink')} ↗</Link>
         </div>
 
         <form className="grid gap-6" onSubmit={submit}>
