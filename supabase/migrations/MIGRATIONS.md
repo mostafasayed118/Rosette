@@ -11,3 +11,7 @@
 - **032_orders_locale_fr.sql** widens `orders.locale` to `('en','ar','fr')`.
   Before it, French checkouts violated `orders_locale_check` and the whole
   order transaction rolled back.
+- **034_gift_finder.sql** adds product gift-tag columns, `quiz_completions`,
+  and the seed-catalog tag updates for the gift finder quiz. It was created as
+  `033_…` and renamed because `033_multi_recipient_orders.sql` had already been
+  committed.

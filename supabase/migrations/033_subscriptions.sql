@@ -232,3 +232,71 @@ begin
 end;
 $$;
 grant execute on function public.activate_subscription(uuid, jsonb) to service_role;
+
+-- pause/resume/reschedule/skip/cancel. p_dates arrays are pre-computed by schedule.ts.
+
+create or replace function public.pause_subscription(p_subscription_id uuid)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  update public.subscriptions set status = 'paused', updated_at = now()
+   where id = p_subscription_id and status = 'active';
+  if not found then return false; end if;
+  insert into public.subscription_events(subscription_id, actor, event_type, payload)
+  values (p_subscription_id, 'customer', 'paused', '{}'::jsonb);
+  return true;
+end; $$;
+grant execute on function public.pause_subscription(uuid) to service_role;
+
+create or replace function public.resume_subscription(p_subscription_id uuid, p_dates jsonb)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare v_pos int; v_date text;
+begin
+  v_pos := 1;
+  for v_date in select jsonb_array_elements_text(p_dates) loop
+    update public.subscription_deliveries set scheduled_date = v_date::date, updated_at = now()
+     where subscription_id = p_subscription_id and status = 'scheduled' and position = v_pos;
+    v_pos := v_pos + 1;
+  end loop;
+  update public.subscriptions set status = 'active', updated_at = now()
+   where id = p_subscription_id and status = 'paused';
+  if not found then return false; end if;
+  insert into public.subscription_events(subscription_id, actor, event_type, payload)
+  values (p_subscription_id, 'customer', 'resumed', jsonb_build_object('deliveries', v_pos - 1));
+  return true;
+end; $$;
+grant execute on function public.resume_subscription(uuid, jsonb) to service_role;
+
+create or replace function public.reDateSubsequentDeliveries(
+  p_subscription_id uuid, p_from_position integer, p_dates jsonb
+)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare v_sub record; v_offset int; v_date text;
+begin
+  select status into v_sub from public.subscriptions where id = p_subscription_id;
+  if v_sub.status is null then return false; end if;
+  if v_sub.status not in ('active', 'paused') then return false; end if;
+  v_offset := p_from_position;
+  for v_date in select jsonb_array_elements_text(p_dates) loop
+    update public.subscription_deliveries set scheduled_date = v_date::date, updated_at = now()
+     where subscription_id = p_subscription_id and status = 'scheduled' and position = v_offset;
+    v_offset := v_offset + 1;
+  end loop;
+  return true;
+end; $$;
+grant execute on function public.reDateSubsequentDeliveries(uuid, integer, jsonb) to service_role;
+
+create or replace function public.cancel_subscription(p_subscription_id uuid)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_unmaterialized int;
+begin
+  update public.subscription_deliveries set status = 'cancelled', updated_at = now()
+   where subscription_id = p_subscription_id and status = 'scheduled';
+  get diagnostics v_unmaterialized = row_count;
+  update public.subscriptions set status = 'cancelled', cancelled_at = now(), updated_at = now()
+   where id = p_subscription_id and status in ('active', 'paused');
+  if not found then return jsonb_build_object('cancelled', false, 'unmaterialized_count', 0); end if;
+  insert into public.subscription_events(subscription_id, actor, event_type, payload)
+  values (p_subscription_id, 'customer', 'cancelled', jsonb_build_object('unmaterialized_count', v_unmaterialized));
+  return jsonb_build_object('cancelled', true, 'unmaterialized_count', v_unmaterialized);
+end; $$;
+grant execute on function public.cancel_subscription(uuid) to service_role;
