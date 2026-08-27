@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/admin/delivery', key: 'deliveryRules' },
   { href: '/admin/promos', key: 'promos' },
   { href: '/admin/gift-cards', key: 'giftCards' },
+  { href: '/admin/subscriptions', key: 'subscriptionsTitle' },
   { href: '/admin/blog', key: 'blogTitle' },
   { href: '/admin/authors', key: 'authors' },
   { href: '/admin/notifications', key: 'notifications' },
