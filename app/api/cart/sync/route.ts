@@ -15,6 +15,13 @@ export async function POST(request: Request) {
     const customer = await getCurrentCustomer();
     const body = (await request.json().catch(() => null)) as { email?: unknown; locale?: unknown; city?: unknown; lines?: unknown } | null;
     if (!body) return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+    // For signed-in customers the email is taken from the session so an
+    // attacker cannot overwrite an account-bound bag by guessing the victim's
+    // email. Guest saves (SaveBagField) use the body email and remain
+    // keyed by (email, customer_id IS NULL) — overwriting a guest bag
+    // requires knowing the victim's email, is rate-limited per IP+email,
+    // and cannot exfiltrate the bag (restore requires the 24-byte random
+    // token). This is accepted residual risk for the guest flow.
     const email = (customer?.email ?? (typeof body.email === 'string' ? body.email : '')).trim().toLowerCase();
     const locale = body.locale === 'ar' || body.locale === 'fr' ? body.locale : 'en';
     const city = typeof body.city === 'string' && body.city.length > 0 ? body.city.slice(0, 40) : 'cairo';
