@@ -1,0 +1,27 @@
+name: Subscriptions daily cron
+
+on:
+  schedule:
+    # Daily. Deliveries materialize on a 2-day horizon and stale
+    # pending_payment subscriptions expire after 24h, so one run per day
+    # covers both passes with margin.
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger subscriptions cron
+        env:
+          CRON_ENDPOINT: ${{ secrets.CRON_ENDPOINT_SUBSCRIPTIONS }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET_SUBSCRIPTIONS }}
+        run: |
+          curl --fail --silent --show-error --max-time 120 \
+            --request POST \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            "${CRON_ENDPOINT}"
