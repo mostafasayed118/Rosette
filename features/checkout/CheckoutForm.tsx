@@ -7,19 +7,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusMessage } from '@/components/ui/status-message';
-import { defaultDeliveryDate, minDeliveryDate } from '@/features/delivery/dates';
 import { calculateCartTotals, calculateLineTotal } from '@/features/cart/pricing';
+import { defaultDeliveryDate, minDeliveryDate } from '@/features/delivery/dates';
+import { groupLinesByRecipient } from '@/features/cart/cart-utils';
 import { useCart } from '@/features/cart/CartProvider';
 import { CartLineItem } from '@/features/cart/CartLineItem';
 import { RecipientEditorDialog } from '@/features/cart/RecipientEditorDialog';
 import { RecipientGroupCard } from '@/features/cart/RecipientGroupCard';
-import { groupLinesByRecipient } from '@/features/cart/cart-utils';
+import { useI18n } from '@/features/i18n/I18nProvider';
 import type { CartRecipient } from '@/features/cart/types';
 import { useDeliveryFee } from '@/features/delivery/useDeliveryFee';
 import { usePromoCode } from '@/features/promo/usePromoCode';
 import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
 import { getCity } from '@/features/destination/data';
-import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
 import { deferToTask } from '@/hooks/use-deferred-task';
 import { formatMoney } from '@/features/money';
@@ -30,13 +30,15 @@ import { validateCheckout } from './validation';
 import { checkoutDeliveryFeeMinor, validateRecipientGroups } from './recipient-groups';
 import type { CheckoutErrors, CheckoutInput } from './types';
 import type { PaymentMethod } from './types';
+import type { AddressBookEntry } from '@/features/account/addresses/types';
 
 const defaultPaymentMethods: PaymentMethod[] = ['paymob', 'pay-on-delivery', 'demo-card'];
 
 type OrderApiResponse = { orderId?: string; checkoutUrl?: string | null; error?: string };
-
 const stitchInput =
   'h-auto w-full rounded-t-md rounded-b-none border-0 border-b border-outline-variant bg-surface-container-low px-4 py-3 text-[15px] leading-normal text-on-surface placeholder:text-on-surface-variant/60 shadow-none focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0';
+
+type SavedAddress = Pick<AddressBookEntry, 'id' | 'label' | 'recipientName' | 'recipientPhone' | 'address' | 'isDefault'>;
 const stitchLabel = 'text-[14px] font-medium text-on-surface-variant';
 
 function toISODate(d: Date): string {
@@ -46,7 +48,7 @@ function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymentMethods, turnstileSiteKey }: { cityCode: string; availablePaymentMethods?: PaymentMethod[]; turnstileSiteKey?: string }) {
+export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymentMethods, turnstileSiteKey, savedAddresses = [] }: { cityCode: string; availablePaymentMethods?: PaymentMethod[]; turnstileSiteKey?: string; savedAddresses?: SavedAddress[] }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const { href } = useStorePath();
@@ -206,8 +208,8 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
                       <RecipientGroupCard
                         key={recipient.id}
                         recipient={recipient}
-                        itemCount={groupLines.reduce((s, l) => s + l.quantity, 0)}
-                        subtotalMinor={groupLines.reduce((s, l) => s + calculateLineTotal(l), 0)}
+                        itemCount={groupLines.reduce((s: number, l) => s + l.quantity, 0)}
+                        subtotalMinor={groupLines.reduce((s: number, l) => s + calculateLineTotal(l), 0)}
                         onEdit={() => setEditingRecipient(recipient)}
                         onRemove={() => removeRecipient(recipient.id)}
                       />
@@ -251,6 +253,31 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
                 {errors.recipientPhone ? <small className="text-sm text-destructive">{errors.recipientPhone}</small> : null}
               </div>
             </div>
+
+            {savedAddresses.length > 0 ? (
+              <div className="grid gap-1.5">
+                <Label className={stitchLabel}>{t('savedAddress')}</Label>
+                <div className="flex flex-wrap gap-2">
+                  {savedAddresses.map((entry) => {
+                    const active = input.address === entry.address && input.recipientName === entry.recipientName && input.recipientPhone === entry.recipientPhone;
+                    return (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        onClick={() => {
+                          setInput((current) => ({ ...current, recipientName: entry.recipientName, recipientPhone: entry.recipientPhone, address: entry.address }));
+                        }}
+                        aria-pressed={active}
+                        className={`rounded-full border px-4 py-2 text-left text-sm transition-colors ${active ? 'border-primary bg-primary/10 text-primary' : 'border-outline-variant text-on-surface hover:border-primary/50'}`}
+                      >
+                        <span className="font-medium">{entry.label}</span>
+                        <span className="block text-xs text-on-surface-variant">{entry.recipientName} · {entry.address}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
 
             <div className="grid gap-1.5">
               <Label htmlFor="address" className={stitchLabel}>
