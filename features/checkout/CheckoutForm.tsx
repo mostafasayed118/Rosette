@@ -18,7 +18,7 @@ import type { CartRecipient } from '@/features/cart/types';
 import { useDeliveryFee } from '@/features/delivery/useDeliveryFee';
 import { usePromoCode } from '@/features/promo/usePromoCode';
 import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
-import { getCityBySlug } from '@/features/destination/data';
+import { getCity } from '@/features/destination/data';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
 import { deferToTask } from '@/hooks/use-deferred-task';
@@ -170,7 +170,7 @@ export function CheckoutForm({ cityCode, availablePaymentMethods = defaultPaymen
   const todayISO = toISODate(mountNow);
   const tomorrowISO = toISODate(new Date(mountNow.getTime() + 86400000));
   const nextDay2ISO = toISODate(new Date(mountNow.getTime() + 86400000 * 2));
-  const cityLabel = getCityBySlug(cityCode)?.name ?? cityCode;
+  const cityLabel = getCity(cityCode)?.name ?? cityCode;
   const firstGiftLine = cart.lines.find((l) => l.message?.trim());
   const buckets = groupLinesByRecipient(cart.lines);
 

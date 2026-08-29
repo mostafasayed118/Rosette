@@ -42,13 +42,18 @@ export async function POST(request: Request) {
     if (!body.destination || !body.checkout || (body.locale !== 'ar' && body.locale !== 'en' && body.locale !== 'fr')) return NextResponse.json({ error: 'Incomplete checkout details' }, { status: 400 });
     const locale = body.locale as 'ar' | 'en' | 'fr';
 
-    const checkoutPayment = (body.checkout as { paymentMethod?: string }).paymentMethod;
-    const paymentPath = resolvePaymentMethodAvailability((checkoutPayment as 'paymob' | 'pay-on-delivery' | 'demo-card') ?? 'pay-on-delivery');
+    const checkoutPayment = (body.checkout as { paymentMethod?: unknown }).paymentMethod;
+    const paymentPath = resolvePaymentMethodAvailability((typeof checkoutPayment === 'string' ? checkoutPayment : 'pay-on-delivery') as 'paymob' | 'pay-on-delivery' | 'demo-card');
     if (!paymentPath.allowed) return NextResponse.json({ error: 'Payment method unavailable' }, { status: 409 });
 
     const customer = await getCurrentCustomer();
     const recipients = (Array.isArray(body.recipients) ? body.recipients : []) as CartRecipient[];
-    const result = await getOrderRepository().createPending({ cart: body.cart as never, destination: body.destination as never, checkout: body.checkout as never, locale: body.locale, customerId: customer?.id ?? null, recipients });
+    const result = await getOrderRepository().createPending({
+      cart: body.cart as Parameters<ReturnType<typeof getOrderRepository>['createPending']>[0]['cart'],
+      destination: body.destination as Parameters<ReturnType<typeof getOrderRepository>['createPending']>[0]['destination'],
+      checkout: body.checkout as Parameters<ReturnType<typeof getOrderRepository>['createPending']>[0]['checkout'],
+      locale: body.locale, customerId: customer?.id ?? null, recipients,
+    });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.error === 'invalid_promo' || result.error === 'invalid_gift_card' ? 400 : 409 });
     const order = result.value;
     const checkout = body.checkout as { senderEmail: string; recipientPhone: string; recipientName: string };

@@ -10,8 +10,11 @@ export async function POST(request: Request) {
   const limited = await enforceRateLimit(request, RATE_LIMITS.giftCardPurchase);
   if (limited) return limited;
   try {
-    const body = await request.json() as { purchase?: unknown; locale?: unknown };
+    const body = (await request.json()) as { purchase?: unknown; locale?: unknown };
     if (!body.purchase || typeof body.purchase !== 'object') return NextResponse.json({ error: 'Invalid gift-card details' }, { status: 400 });
+    if (body.locale !== undefined && body.locale !== 'ar' && body.locale !== 'en' && body.locale !== 'fr') {
+      return NextResponse.json({ error: 'Invalid locale' }, { status: 400 });
+    }
     const result = await createGiftCardPurchase(getAdminSupabase(), body.purchase as GiftCardPurchaseInput, { origin: getPublicOrigin(request) });
     if (!result.ok) return NextResponse.json({ error: result.error === 'invalid_input' ? 'Invalid gift-card details' : 'Gift-card checkout is temporarily unavailable.' }, { status: result.error === 'invalid_input' ? 400 : 503 });
     return NextResponse.json({ purchaseReference: result.value.reference, checkoutUrl: result.value.checkoutUrl });

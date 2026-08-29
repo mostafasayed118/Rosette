@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { defaultDeliveryDate, minDeliveryDate } from '@/features/delivery/dates';
 import { createRecipientId, type CartRecipient } from './recipient-types';
+import { deferToTask } from '@/hooks/use-deferred-task';
 
 const WINDOWS = ['9-12', '12-3', '3-6', '6-9'];
 const EMPTY: Omit<CartRecipient, 'id'> = { recipientName: '', recipientPhone: '', address: '', deliveryDate: '', deliveryWindow: '12-3' };
@@ -20,13 +21,19 @@ export function RecipientEditorDialog({ value, open, onClose, onSave }: {
   const { t } = useI18n();
   const [form, setForm] = useState<Omit<CartRecipient, 'id'>>(EMPTY);
   useEffect(() => {
-    if (value) {
-      const { id: _id, ...rest } = value;
-      setForm(rest);
-    } else {
-      const now = new Date();
-      setForm({ ...EMPTY, deliveryDate: defaultDeliveryDate(now), deliveryWindow: '12-3' });
-    }
+    if (!open) return;
+    // Defer the state sync off the effect body so React's commit phase can
+    // finish before we cascade another render. Bootstrap reads after mount are
+    // exactly the case the React team recommends deferring.
+    deferToTask(() => {
+      if (value) {
+        const { id: _id, ...rest } = value;
+        setForm(rest);
+      } else {
+        const now = new Date();
+        setForm({ ...EMPTY, deliveryDate: defaultDeliveryDate(now), deliveryWindow: '12-3' });
+      }
+    });
   }, [value, open]);
 
   if (!open) return null;

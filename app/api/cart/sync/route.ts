@@ -5,6 +5,7 @@ import { getAdminSupabase } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 import { enforceRateLimit } from '@/lib/rate-limit-guard';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import type { CartLine } from '@/features/cart/types';
 
 const CART_SYNC_EMAIL = { bucket: 'cart-sync-email', limit: 5, windowMs: 12_000 };
 
@@ -30,7 +31,8 @@ export async function POST(request: Request) {
     // spoofed emails cannot each open a fresh write window.
     const emailResult = await checkRateLimit({ ...CART_SYNC_EMAIL, identifier: `${getClientIp(request)}:${email}` });
     if (!emailResult.allowed) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-    const result = await upsertCart(getAdminSupabase(), { email, customerId: customer?.id ?? null, locale, city, lines: (body.lines as never) ?? [] });
+    const lines = Array.isArray(body.lines) ? (body.lines as CartLine[]) : [];
+    const result = await upsertCart(getAdminSupabase(), { email, customerId: customer?.id ?? null, locale, city, lines });
     if (result.status === 'invalid') return NextResponse.json({ error: 'Invalid cart' }, { status: 400 });
     if (result.status === 'failure') return NextResponse.json({ error: 'Could not save the cart' }, { status: 500 });
     return NextResponse.json({ restoreToken: result.restoreToken }, { status: 200 });

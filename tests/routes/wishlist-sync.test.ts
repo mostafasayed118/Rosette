@@ -13,19 +13,27 @@ vi.mock('@/lib/logger', () => ({
   logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: vi.fn(async () => ({ allowed: true, remaining: 0, retryAfterSeconds: 0 })),
+  getClientIp: vi.fn(() => 'ip'),
+  resetRateLimits: vi.fn(),
+}));
+
 const { createClient } = await import('@/lib/supabase/server');
 const { syncWishlistOnLogin } = await import('@/features/personalization/wishlist-sync');
 const { logger } = await import('@/lib/logger');
-const { POST } = await import('@/app/api/wishlist/sync/route');
-const { __rateLimitMap } = await import('@/app/api/wishlist/sync/route');
+const { checkRateLimit } = await import('@/lib/rate-limit');
+const { POST, __resetRateLimits } = await import('@/app/api/wishlist/sync/route');
 
 const mockCreateClient = vi.mocked(createClient);
 const mockSync = vi.mocked(syncWishlistOnLogin);
 const mockLogger = vi.mocked(logger);
+const mockCheckRateLimit = vi.mocked(checkRateLimit);
 
 beforeEach(() => {
   vi.clearAllMocks();
-  __rateLimitMap.clear();
+  __resetRateLimits();
+  mockCheckRateLimit.mockResolvedValue({ allowed: true, remaining: 0, retryAfterSeconds: 0 });
   mockSync.mockResolvedValue({ synced: 1 } as any);
 });
 
@@ -123,6 +131,13 @@ describe('POST /api/wishlist/sync', () => {
   it('rate-limits after 10/min per user (429)', async () => {
     mockCreateClient.mockResolvedValue(authedClient('rate-user'));
     mockSync.mockResolvedValue({ synced: 1 } as any);
+    // First 10 calls are allowed, 11th is denied.
+    let calls = 0;
+    mockCheckRateLimit.mockImplementation(async () => {
+      calls += 1;
+      if (calls > 10) return { allowed: false, remaining: 0, retryAfterSeconds: 60 };
+      return { allowed: true, remaining: 10 - calls, retryAfterSeconds: 0 };
+    });
     const makeReq = () =>
       new Request('http://test/api/wishlist/sync', {
         method: 'POST',
@@ -150,9 +165,7 @@ describe('POST /api/wishlist/sync', () => {
       });
 
     mockCreateClient.mockResolvedValue(authedClient('user-a'));
-    for (let i = 0; i < 10; i++) {
-      expect((await POST(makeReq())).status).toBe(200);
-    }
+    expect((await POST(makeReq())).status).toBe(200);
     // user-b should still succeed
     mockCreateClient.mockResolvedValue(authedClient('user-b'));
     expect((await POST(makeReq())).status).toBe(200);

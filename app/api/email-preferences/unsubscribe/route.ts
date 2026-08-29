@@ -5,6 +5,8 @@ import { logger } from '@/lib/logger';
 import { renderUnsubscribeConfirmation, preferenceLocale } from '@/features/email-preferences/engagement-footer';
 import { setEngagementPreference, verifyPreferenceToken } from '@/features/email-preferences/preferences-service';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 async function values(request: Request) {
   const url = new URL(request.url);
   let email = url.searchParams.get('email');
@@ -23,6 +25,11 @@ async function handle(request: Request) {
   const isPost = request.method === 'POST';
   try {
     const input = await values(request);
+    if (input.email && !EMAIL_RE.test(input.email)) {
+      return isPost
+        ? NextResponse.json({ error: 'Invalid unsubscribe link' }, { status: 400 })
+        : new Response('Invalid unsubscribe link', { status: 400 });
+    }
     const secret = getRequiredServerEnv('EMAIL_PREFERENCES_SECRET');
     const verifiedEmail = input.email && input.token ? verifyPreferenceToken(input.email, input.token, secret) : null;
     if (!verifiedEmail) {
