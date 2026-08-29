@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { CalendarHeart, Heart, Mail, Package, PackageCheck, Star, User } from 'lucide-react';
+import { CalendarHeart, Heart, Mail, MapPin, Package, PackageCheck, Star, User } from 'lucide-react';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
 
@@ -19,10 +19,12 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const emailPrefsHref = href('/account');
 
   const occasionsHref = href('/account/occasions');
+  const addressesHref = href('/account/addresses');
   const subscriptionsHref = href('/account/subscriptions');
   const isOrdersActive = pathname === ordersHref || pathname.startsWith(`${ordersHref}/`);
   const isWishlistActive = pathname === wishlistHref || pathname.startsWith(`${wishlistHref}/`);
   const isOccasionsActive = pathname === occasionsHref || pathname.startsWith(`${occasionsHref}/`);
+  const isAddressesActive = pathname === addressesHref || pathname.startsWith(`${addressesHref}/`);
   const isSubscriptionsActive = pathname === subscriptionsHref || pathname.startsWith(`${subscriptionsHref}/`);
   const isProfileActive = pathname === profileHref;
 
@@ -50,6 +52,10 @@ export function AccountShell({ children }: { children: ReactNode }) {
           <Link className={navClasses(isOccasionsActive)} href={occasionsHref} aria-current={isOccasionsActive ? 'page' : undefined}>
             <CalendarHeart className="h-4 w-4 shrink-0" aria-hidden />
             <span>{t('occasionsTitle')}</span>
+  </Link>
+          <Link className={navClasses(isAddressesActive)} href={addressesHref} aria-current={isAddressesActive ? 'page' : undefined}>
+            <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+            <span>{t('addressesTitle')}</span>
           </Link>
           <Link className={navClasses(isSubscriptionsActive)} href={subscriptionsHref} aria-current={isSubscriptionsActive ? 'page' : undefined}>
             <PackageCheck className="h-4 w-4 shrink-0" aria-hidden />
