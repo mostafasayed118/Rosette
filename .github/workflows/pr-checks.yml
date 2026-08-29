@@ -1,0 +1,37 @@
+name: PR checks
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Same gates the deploy workflow runs on master: full vitest suite,
+      # then typecheck + eslint. Build is intentionally skipped here -
+      # merge-time deploy (deploy-cloudflare.yml) owns it.
+      - name: Run tests
+        run: npm test
+
+      - name: Typecheck and lint
+        run: npm run lint
