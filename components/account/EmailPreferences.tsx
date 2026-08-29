@@ -83,7 +83,7 @@ export function EmailPreferences({ initialEnabled, loadFailed = false, accountPa
     setSaving(true);
     setMessage('');
     setError(false);
-    const result = await setEmailEngagementPreference(nextEnabled, undefined, accountPath);
+    const result = await setEmailEngagementPreference(nextEnabled, accountPath);
     if (result === 'saved') {
       setEnabled(nextEnabled);
       setMessage(t('emailPreferencesSaved'));
@@ -98,7 +98,7 @@ export function EmailPreferences({ initialEnabled, loadFailed = false, accountPa
     setSaving(true);
     setMessage('');
     setError(false);
-    const result = await setEmailEngagementPreference(enabled, undefined, accountPath);
+    const result = await setEmailEngagementPreference(enabled, accountPath);
     if (result === 'saved') {
       setMessage(t('emailPreferencesSaved'));
     } else {

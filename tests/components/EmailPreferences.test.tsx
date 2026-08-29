@@ -16,7 +16,7 @@ describe('EmailPreferences', () => {
     const checkbox = screen.getByRole('checkbox', { name: /email preferences/i });
     expect(checkbox).toBeChecked();
     fireEvent.click(checkbox);
-    expect(setPreference).toHaveBeenCalledWith(false, undefined, undefined);
+    expect(setPreference).toHaveBeenCalledWith(false, undefined);
     expect(await screen.findByText(/email preferences updated/i)).toBeTruthy();
   });
 
