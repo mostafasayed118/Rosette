@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const sql = readFileSync(join('supabase/migrations', '033_subscriptions.sql'), 'utf8');
+const sql = readFileSync(join('supabase/migrations', '037_subscriptions.sql'), 'utf8');
 
-describe('033_subscriptions migration', () => {
+describe('037_subscriptions migration', () => {
   it('creates the four subscription tables', () => {
     for (const table of ['subscription_plans', 'subscriptions', 'subscription_deliveries', 'subscription_events']) {
       expect(sql).toContain(`create table if not exists public.${table} (`);
