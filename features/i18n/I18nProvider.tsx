@@ -33,7 +33,9 @@ export function I18nProvider({ children, initialLocale = 'en' }: { children: Rea
   };
   useEffect(() => {
     // Deferred one frame: after hydration the pathname/localStorage snapshot
-    // wins without cascading a render inside the commit phase.
+    // wins without cascading a render inside the commit phase. Only re-run on
+    // pathname change to avoid a feedback loop where setLocaleState would
+    // re-trigger this effect.
     deferToTask(() => {
       const fromPath = localeFromPath(pathname);
       if (fromPath && fromPath !== locale) {
@@ -47,7 +49,8 @@ export function I18nProvider({ children, initialLocale = 'en' }: { children: Rea
         if ((saved === 'ar' || saved === 'en' || saved === 'fr') && saved !== locale) setLocaleState(saved);
       }
     });
-  }, [pathname, locale]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- locale is read via the latest state inside the deferred callback; depending on it would cause a re-render loop.
+  }, [pathname]);
   useEffect(() => {
     document.documentElement.lang = locale;
     document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';

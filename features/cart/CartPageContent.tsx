@@ -7,7 +7,7 @@ import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
 import { useDeliveryFee } from '@/features/delivery/useDeliveryFee';
 import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
-import { getCityBySlug } from '@/features/destination/data';
+import { getCity } from '@/features/destination/data';
 import { useCart } from './CartProvider';
 import { SaveBagField } from './SaveBagField';
 import { RestoreCart } from './RestoreCart';
@@ -37,7 +37,7 @@ export function CartPageContent({ cityCode }: { cityCode?: string }) {
       </>
     );
 
-  const cityLabel = cityCode ? (getCityBySlug(cityCode)?.name ?? cityCode) : null;
+  const cityLabel = cityCode ? (getCity(cityCode)?.name ?? cityCode) : null;
   const deliveryLabel = cityLabel ? `${t('delivery')} — ${cityLabel}` : t('delivery');
   const firstGiftLine = cart.lines.find((l) => l.message?.trim());
 

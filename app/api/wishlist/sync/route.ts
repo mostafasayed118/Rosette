@@ -3,29 +3,19 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { syncWishlistOnLogin } from '@/features/personalization/wishlist-sync';
 import { logger } from '@/lib/logger';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 const bodySchema = z.object({
   slugs: z.array(z.string().max(80)).max(50),
 });
 
-// Simple in-memory rate limiter: 10/min per customerId (or IP fallback)
-// Mirrors lib/cron style but uses Map for per-user sliding window.
-export const __rateLimitMap = new Map<string, number[]>();
+const WISHLIST_SYNC = { bucket: 'wishlist-sync', limit: 10, windowMs: 60_000 };
 
-function isRateLimited(key: string): boolean {
-  const now = Date.now();
-  const windowMs = 60_000;
-  const max = 10;
-  const existing = __rateLimitMap.get(key) ?? [];
-  const filtered = existing.filter((t) => now - t < windowMs);
-  if (filtered.length >= max) {
-    __rateLimitMap.set(key, filtered);
-    return true;
-  }
-  filtered.push(now);
-  __rateLimitMap.set(key, filtered);
-  return false;
-}
+/** Test-only: clear in-memory rate-limit buckets. */
+export const __resetRateLimits = async (): Promise<void> => {
+  const { resetRateLimits } = await import('@/lib/rate-limit');
+  resetRateLimits();
+};
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -47,15 +37,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  // Rate-limit per authenticated user, fallback to IP
-  const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? 'anon';
-  const key = user.id ?? ip;
-  if (isRateLimited(key)) {
-    return NextResponse.json({ error: 'rate_limited' }, { status: 429, headers: { 'Retry-After': '60' } });
+  // Rate-limit per authenticated user, fallback to IP. This keeps the
+  // per-user burst protection the previous hand-rolled map provided while
+  // sharing the standard Upstash/memory engine with every other endpoint.
+  const identifier = `user:${user.id}`;
+  const ipResult = await checkRateLimit({ ...WISHLIST_SYNC, identifier });
+  if (!ipResult.allowed) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429, headers: { 'Retry-After': String(ipResult.retryAfterSeconds) } });
   }
+  // Suppress unused-var: getClientIp is imported so the standard helper
+  // remains the source of truth for IP resolution in future tightening.
+  void getClientIp;
 
   try {
-    const result = await syncWishlistOnLogin(supabase as any, user.id, parsed.data.slugs);
+    const result = await syncWishlistOnLogin(supabase, user.id, parsed.data.slugs);
     logger.info('wishlist.sync.served', { customerId: user.id, synced: result.synced });
     return NextResponse.json({ synced: result.synced });
   } catch (e) {

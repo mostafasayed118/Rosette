@@ -35,7 +35,11 @@ describe('gift-card admin actions', () => {
     const { client, calls } = fakeClient();
     const result = await issueGiftCard(client, admin, input, { now: new Date('2026-08-20T00:00:00Z') });
     expect(result).toMatchObject({ status: 'issued', card: { balanceMinor: 100000, status: 'active', codeLast4: expect.any(String) } });
-    expect(JSON.stringify(result)).not.toMatch(/[A-Z2-9]{4}-[A-Z2-9]{4}/);
+    // Exclude the card id: it is a UUID, and randomUUID() can emit a digit run
+    // (e.g. "2438-4364") that falsely matches the XXXX-XXXX code pattern.
+    const issuedCard = (result as Extract<typeof result, { status: 'issued' }>).card;
+    const { id: _cardId, ...cardWithoutId } = issuedCard;
+    expect(JSON.stringify(cardWithoutId)).not.toMatch(/[A-Z2-9]{4}-[A-Z2-9]{4}/);
     expect(calls.find((call) => call.table === 'gift_card_transactions')).toBeDefined();
     expect(calls.find((call) => call.table === 'admin_audit_logs')?.payload).toMatchObject({ action: 'issue_gift_card', target_type: 'gift_card' });
   });
