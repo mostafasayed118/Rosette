@@ -73,5 +73,11 @@ alter table public.quiz_completions enable row level security;
 -- No client reads/writes of completions; everything goes through the service
 -- role via getAdminSupabase(), matching how other system-owned tables work.
 -- An explicit deny-all block makes that intent visible and guards the table.
-create policy "no client access to quiz completions" on public.quiz_completions
-  for all using (false) with check (false);
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'quiz_completions' and policyname = 'no client access to quiz completions') then
+    create policy "no client access to quiz completions" on public.quiz_completions
+      for all using (false) with check (false);
+  end if;
+end
+$$;
