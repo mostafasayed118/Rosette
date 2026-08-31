@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { submitChangeRequest } from '@/features/orders/change-request-service';
+import { submitChangeRequest } from '@/features/order-mutations/change-request-service';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getPublicOrigin } from '@/lib/origin';

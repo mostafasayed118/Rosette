@@ -7,6 +7,7 @@ type CronClient = { from: (table: string) => any };
 type PreferenceLookup = (email: string) => Promise<EngagementPreference>;
 
 export type OccasionCronSummary = { checked: number; sent: number; failed: number; suppressed: number };
+export const OCCASION_BATCH_SIZE = 500;
 
 const select = 'id,customer_id,recipient_id,kind,recurrence,month,day,event_date,lead_days,locale,active,recipients(id,name),profiles(email)';
 
@@ -26,13 +27,15 @@ function shiftDays(date: string, delta: number): string {
  * which point this becomes exact.
  */
 async function findCoveringOrder(client: CronClient, customerId: string, recipientName: string, occurrence: string): Promise<string | null> {
-  const { data } = await client
+  const baseQuery = client
     .from('orders')
     .select('id,recipient_name,delivery_date,payment_status')
     .eq('customer_id', customerId)
     .eq('payment_status', 'paid')
     .gte('delivery_date', shiftDays(occurrence, -3))
     .lte('delivery_date', shiftDays(occurrence, 3));
+  const boundedQuery = typeof baseQuery.limit === 'function' ? baseQuery.limit(50) : baseQuery;
+  const { data } = await boundedQuery;
   const rows = (data ?? []) as Array<{ id: string; recipient_name?: string | null }>;
   const wanted = recipientName.trim().toLowerCase();
   const hit = rows.find((row) => (row.recipient_name ?? '').trim().toLowerCase() === wanted);
@@ -49,7 +52,11 @@ export async function runOccasionCron(
   const getPreference = deps.getPreference ?? ((email: string) => getEngagementPreference(client, email));
   const summary: OccasionCronSummary = { checked: 0, sent: 0, failed: 0, suppressed: 0 };
 
-  const { data } = await client.from('occasions').select(select);
+  const baseQuery = client.from('occasions').select(select);
+  const activeQuery = typeof baseQuery.eq === 'function' ? baseQuery.eq('active', true) : baseQuery;
+  const orderedQuery = typeof activeQuery.order === 'function' ? activeQuery.order('id', { ascending: true }) : activeQuery;
+  const boundedQuery = typeof orderedQuery.limit === 'function' ? orderedQuery.limit(OCCASION_BATCH_SIZE) : orderedQuery;
+  const { data } = await boundedQuery;
   const rows = (data ?? []) as Array<Record<string, any>>;
 
   for (const row of rows) {

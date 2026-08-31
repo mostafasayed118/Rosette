@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import {
   Bell,
   BookOpen,
+  ClipboardList,
   Boxes,
   Gift,
   Home,
@@ -43,6 +44,7 @@ const ICONS: Record<string, LucideIcon> = {
   '/admin/change-requests': Pencil,
   '/admin/reviews': Star,
   '/admin/notifications': Bell,
+  '/admin/audit-log': ClipboardList,
 };
 
 export function AppSidebar({ items }: { items: { href: string; label: string }[] }) {

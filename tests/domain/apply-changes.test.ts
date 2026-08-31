@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyChanges } from '@/features/orders/change-request';
+import { applyChanges } from '@/features/order-mutations/change-request';
 
 const order = { subtotal_minor: 10000, delivery_fee_minor: 1500, discount_minor: 0, total_minor: 11500 };
 const items = [

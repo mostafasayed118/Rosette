@@ -12,7 +12,7 @@ import type { PromoInput } from '@/features/admin/promo-actions';
 export function PromoForm({ promo }: { promo: PromoInput }) {
   const router = useRouter();
   const { t } = useI18n();
-  const [type, setType] = useState<'percent' | 'fixed'>(promo.type);
+  const [type, setType] = useState<'percent' | 'fixed' | 'free_shipping'>(promo.type);
   const [percent, setPercent] = useState(String(promo.percentOff ?? 0));
   const [value, setValue] = useState(minorToEgp(promo.valueMinor ?? 0));
   const [minimum, setMinimum] = useState(minorToEgp(promo.minimumOrderMinor));
@@ -36,6 +36,7 @@ export function PromoForm({ promo }: { promo: PromoInput }) {
       startsAt: startsAt ? `${startsAt}T00:00:00Z` : null,
       expiresAt: expiresAt ? `${expiresAt}T00:00:00Z` : null,
       maxUses: Number.parseInt(maxUses, 10),
+      perUserLimit: promo.perUserLimit ?? 0,
       active,
     };
     const response = await fetch('/api/admin/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update-promo', promo: body }) });
@@ -46,7 +47,7 @@ export function PromoForm({ promo }: { promo: PromoInput }) {
   return <form className="flex flex-wrap items-end gap-2" onSubmit={submit}>
     <Select value={type} onValueChange={(v) => setType(v as 'percent' | 'fixed')}>
       <SelectTrigger className="h-10 w-24" aria-label={t('promoType')}><SelectValue /></SelectTrigger>
-      <SelectContent><SelectItem value="percent">%</SelectItem><SelectItem value="fixed">EGP</SelectItem></SelectContent>
+      <SelectContent><SelectItem value="percent">%</SelectItem><SelectItem value="fixed">EGP</SelectItem><SelectItem value="free_shipping">Free shipping</SelectItem></SelectContent>
     </Select>
     {type === 'percent'
       ? <Input className="h-10 w-24" type="number" min={0} max={100} value={percent} onChange={(e) => setPercent(e.target.value)} aria-label={t('percentOff')} />

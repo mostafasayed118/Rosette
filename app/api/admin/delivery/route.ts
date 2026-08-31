@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { saveDeliveryRule, createCityWithRule } from '@/features/admin/delivery-actions';
-import { getCurrentAdmin } from '@/features/auth/server';
+import { getCurrentContentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { respond } from '@/lib/api';
 
 export async function POST(request: Request) {
-  const admin = await getCurrentAdmin();
+  const admin = await getCurrentContentAdmin();
   if (!admin) return NextResponse.json({ error: 'Admin authorization required' }, { status: 403 });
   const body = (await request.json()) as Record<string, unknown>;
 

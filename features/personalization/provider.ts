@@ -9,7 +9,7 @@ export async function getPersonalizationProvider(): Promise<PersonalizationRepos
   if (url && key) {
     try {
       const supabase = await createClient();
-      return createSupabasePersonalizationRepository(supabase as any);
+      return createSupabasePersonalizationRepository(supabase);
     } catch {
       // fall through to local repository
     }

@@ -3,8 +3,14 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// Cloudflare Workers Free plan limit on the compressed worker script.
-const LIMIT_BYTES = 3 * 1024 * 1024;
+// Cloudflare Workers script limits are plan-dependent: 1 MiB on Free and
+// 10 MiB on Paid. The CI default is the conservative Free limit; paid deploys
+// can opt in with CLOUDFLARE_WORKERS_PLAN=paid or an explicit
+// CLOUDFLARE_WORKER_LIMIT_MIB value.
+const plan = String(process.env.CLOUDFLARE_WORKERS_PLAN ?? 'free').toLowerCase();
+const configuredMiB = Number(process.env.CLOUDFLARE_WORKER_LIMIT_MIB);
+const limitMiB = Number.isFinite(configuredMiB) && configuredMiB > 0 ? configuredMiB : plan === 'paid' ? 10 : 1;
+const LIMIT_BYTES = limitMiB * 1024 * 1024;
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -78,7 +84,7 @@ function main() {
 
   console.log(`Worker upload gzip size: ${match[1]} ${match[2]}`);
   if (bytes > LIMIT_BYTES) {
-    console.error('Worker exceeds the 3 MiB free-plan limit.');
+    console.error(`Worker exceeds the ${limitMiB} MiB ${plan} plan limit.`);
     process.exit(1);
   }
 }

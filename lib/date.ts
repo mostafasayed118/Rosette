@@ -13,10 +13,17 @@ function localeTag(locale: Locale): string {
 
 export function formatDateTime(value: string | Date, locale: Locale): string {
   const date = typeof value === 'string' ? new Date(value) : value;
-  return date.toLocaleString(localeTag(locale), { dateStyle: 'medium', timeStyle: 'short' });
+  return date.toLocaleString(localeTag(locale), {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Africa/Cairo',
+  });
 }
 
 export function formatDate(value: string | Date, locale: Locale): string {
   const date = typeof value === 'string' ? new Date(value) : value;
-  return date.toLocaleDateString(localeTag(locale), { dateStyle: 'medium' });
+  return date.toLocaleDateString(localeTag(locale), {
+    dateStyle: 'medium',
+    timeZone: 'Africa/Cairo',
+  });
 }

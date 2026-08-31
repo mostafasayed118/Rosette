@@ -15,7 +15,7 @@ function mapPlan(row: any): Plan {
 }
 export async function getActivePlans(client: Client): Promise<Plan[]> {
   const { data, error } = await client.from('subscription_plans').select('*').eq('active', true).order('sort_order', { ascending: true });
-  return error || !data ? [] : ((data as any[]) ?? []).map(mapPlan);
+  return error || !data ? [] : ((data as Array<Record<string, unknown>>) ?? []).map(mapPlan);
 }
 export async function getPlanBySlug(client: Client, slug: string): Promise<Plan | null> {
   const { data, error } = await client.from('subscription_plans').select('*').eq('slug', slug).maybeSingle();

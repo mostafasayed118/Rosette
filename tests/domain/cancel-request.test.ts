@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canRequestCancellation, requiresReview } from '@/features/orders/cancel-request';
+import { canRequestCancellation, requiresReview } from '@/features/order-mutations/cancel-request';
 
 describe('canRequestCancellation', () => {
   const active = { fulfillmentStatus: 'confirmed', paymentStatus: 'pending', hasPendingRequest: false };

@@ -23,7 +23,9 @@ export async function answerStoreQuestion(input: { message: string; language: 'e
   if (!apiKey) return { ...fallback(input.language), answer: input.language === 'ar' ? 'المساعد الذكي غير متاح الآن. يمكن لفريقنا مساعدتك عبر واتساب.' : input.language === 'fr' ? 'L’assistant intelligent est indisponible pour le moment. Notre équipe peut vous aider sur WhatsApp.' : 'The smart assistant is unavailable right now. Our team can help you on WhatsApp.' };
 
   try {
-    const groq = new Groq({ apiKey });
+    // Keep a slow model from pinning a Worker isolate. The model chain handles
+    // the timeout as a normal provider failure and falls back to the next model.
+    const groq = new Groq({ apiKey, timeout: 10_000, maxRetries: 1 });
     const context = await getStoreContext(input.message);
     const modelChain = getModelChain();
     const messages = [

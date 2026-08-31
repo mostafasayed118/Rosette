@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Rosette — thoughtful flowers, delivered</title>
+  <desc id="desc">A warm botanical editorial card for Rosette flower delivery.</desc>
+  <rect width="1200" height="630" fill="#fdf6f0"/>
+  <circle cx="1040" cy="-10" r="270" fill="#c9ecc4" opacity=".48"/>
+  <circle cx="1100" cy="585" r="220" fill="#ffd9e0" opacity=".55"/>
+  <path d="M820 560c-34-142 4-258 111-348M930 420c-58-58-108-83-161-89M879 512c83-42 155-52 226-24" fill="none" stroke="#476647" stroke-width="5" stroke-linecap="round" opacity=".72"/>
+  <g fill="#8e1a3f" opacity=".88">
+    <ellipse cx="954" cy="202" rx="34" ry="72" transform="rotate(28 954 202)"/>
+    <ellipse cx="1016" cy="228" rx="34" ry="72" transform="rotate(112 1016 228)"/>
+    <ellipse cx="964" cy="272" rx="34" ry="72" transform="rotate(198 964 272)"/>
+    <ellipse cx="900" cy="248" rx="34" ry="72" transform="rotate(286 900 248)"/>
+    <circle cx="958" cy="240" r="25" fill="#d6b56d"/>
+  </g>
+  <g fill="#597358" opacity=".8">
+    <ellipse cx="1040" cy="430" rx="20" ry="70" transform="rotate(65 1040 430)"/>
+    <ellipse cx="890" cy="395" rx="18" ry="64" transform="rotate(-52 890 395)"/>
+    <ellipse cx="1060" cy="505" rx="17" ry="61" transform="rotate(70 1060 505)"/>
+  </g>
+  <text x="96" y="250" fill="#1a0f14" font-family="Georgia, serif" font-size="92" letter-spacing="-2">Rosette</text>
+  <text x="102" y="326" fill="#5a3d47" font-family="Arial, sans-serif" font-size="27" letter-spacing="5">THOUGHTFUL FLOWERS, DELIVERED</text>
+  <line x1="102" y1="370" x2="510" y2="370" stroke="#a37a83" stroke-width="2"/>
+  <text x="102" y="426" fill="#5a3d47" font-family="Arial, sans-serif" font-size="25">Botanical gifts for the moments that matter.</text>
+</svg>

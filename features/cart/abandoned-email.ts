@@ -1,6 +1,6 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
-import { createMailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
-import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
+import { sendEmailResend, type MailTransport } from '@/features/notifications/resend-mailer';
+import { getOptionalServerEnv } from '@/lib/server-env';
 import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 import { pickLocalized } from '@/features/i18n/pick';
 import { renderEngagementFooter } from '@/features/email-preferences/engagement-footer';
@@ -45,14 +45,15 @@ export async function sendAbandonedCartEmail(
 ): Promise<void> {
   if (!injectedTransport && isEmailDeliveryDisabled()) throw new Error('Email delivery disabled');
   const { subject, text, html } = renderAbandonedCartEmail(input);
-  const transport = injectedTransport ?? createMailTransport();
-  const from = injectedTransport ? (getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@rosette.example>') : getRequiredServerEnv('GMAIL_FROM');
-  await transport.sendMail({
-    from,
-    to: input.to,
-    subject,
-    text,
-    html,
-    ...(input.unsubscribeUrl ? { headers: { 'List-Unsubscribe': `<${input.unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } } : {}),
-  });
+  const headers = input.unsubscribeUrl
+    ? { 'List-Unsubscribe': `<${input.unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
+    : undefined;
+  if (injectedTransport) {
+    const from = getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@rosette.example>';
+    const message: Parameters<MailTransport['sendMail']>[0] = { from, to: input.to, subject, text, html };
+    if (headers) message.headers = headers;
+    await injectedTransport.sendMail(message);
+    return;
+  }
+  await sendEmailResend({ to: input.to, subject, html, text, locale: input.locale, ...(headers ? { headers } : {}) });
 }

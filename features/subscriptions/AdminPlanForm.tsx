@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useI18n } from '@/features/i18n/I18nProvider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +18,7 @@ const FREQUENCIES = ['weekly', 'biweekly', 'monthly'] as const;
 
 export function AdminPlanForm({ initial = {} }: { initial?: AdminPlanFormInitial }) {
   const router = useRouter();
+  const { t } = useI18n();
   const editing = Boolean(initial.id);
   const [slug, setSlug] = useState(initial.slug ?? '');
   const [nameEn, setNameEn] = useState(initial.nameEn ?? '');
@@ -54,7 +56,7 @@ export function AdminPlanForm({ initial = {} }: { initial?: AdminPlanFormInitial
       : await fetch('/api/admin/subscriptions/plans', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     if (!response.ok) {
       const data = await response.json().catch(() => null);
-      setError(data?.error ?? 'Save failed');
+      setError(data?.error ?? t('adminPlanSaveFailed'));
       setBusy(false);
       return;
     }
@@ -66,38 +68,38 @@ export function AdminPlanForm({ initial = {} }: { initial?: AdminPlanFormInitial
     <form className="grid gap-4" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="grid gap-1.5">
-          <Label htmlFor="planSlug">Slug</Label>
+          <Label htmlFor="planSlug">{t('adminPlanSlug')}</Label>
           <Input id="planSlug" value={slug} disabled={editing} onChange={(e) => setSlug(e.target.value)} required />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="planNameEn">Name (EN)</Label>
+          <Label htmlFor="planNameEn">{t('nameEn')}</Label>
           <Input id="planNameEn" value={nameEn} onChange={(e) => setNameEn(e.target.value)} required />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="planNameAr">Name (AR)</Label>
+          <Label htmlFor="planNameAr">{t('nameAr')}</Label>
           <Input id="planNameAr" value={nameAr} onChange={(e) => setNameAr(e.target.value)} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="planNameFr">Name (FR)</Label>
+          <Label htmlFor="planNameFr">{t('nameFr')}</Label>
           <Input id="planNameFr" value={nameFr} onChange={(e) => setNameFr(e.target.value)} />
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <div className="grid gap-1.5">
-          <Label htmlFor="planDescEn">Description (EN)</Label>
+          <Label htmlFor="planDescEn">{t('descriptionEn')}</Label>
           <Input id="planDescEn" value={descriptionEn} onChange={(e) => setDescriptionEn(e.target.value)} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="planDescAr">Description (AR)</Label>
+          <Label htmlFor="planDescAr">{t('descriptionAr')}</Label>
           <Input id="planDescAr" value={descriptionAr} onChange={(e) => setDescriptionAr(e.target.value)} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="planDescFr">Description (FR)</Label>
+          <Label htmlFor="planDescFr">{t('descriptionFr')}</Label>
           <Input id="planDescFr" value={descriptionFr} onChange={(e) => setDescriptionFr(e.target.value)} />
         </div>
       </div>
       <fieldset className="grid gap-2">
-        <Label>Frequencies</Label>
+        <Label>{t('adminPlanFrequencies')}</Label>
         <div className="flex flex-wrap gap-2">
           {FREQUENCIES.map((f) => (
             <button key={f} type="button" onClick={() => toggleFrequency(f)} aria-pressed={frequencies.includes(f)}
@@ -113,15 +115,15 @@ export function AdminPlanForm({ initial = {} }: { initial?: AdminPlanFormInitial
           <Input id="planPrices" value={pricesText} onChange={(e) => setPricesText(e.target.value)} placeholder="4:120000, 8:220000" required />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="planSort">Sort order</Label>
+          <Label htmlFor="planSort">{t('adminPlanSortOrder')}</Label>
           <Input id="planSort" type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} />
         </div>
       </div>
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> Active
+        <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> {t('active')}
       </label>
       <div className="flex justify-end">
-        <Button type="submit" disabled={busy}>{editing ? 'Save' : 'Create plan'}</Button>
+        <Button type="submit" disabled={busy}>{editing ? t('save') : t('adminPlanCreate')}</Button>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </form>

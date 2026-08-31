@@ -11,7 +11,7 @@ export default async function WishlistPage({ params }: WishlistPageParams) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-[80rem] flex-1 px-5 py-8 pb-24 md:px-16 md:py-16">
+      <main id="main-content" className="mx-auto w-full max-w-[80rem] flex-1 px-5 py-8 pb-24 md:px-16 md:py-16">
         <WishlistPageContent />
       </main>
       <SiteFooter locale={locale} city={city} />

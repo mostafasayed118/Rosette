@@ -1,10 +1,18 @@
 import type { Frequency, Plan } from './types';
 
+export type SubscriptionCheckoutValue = {
+  frequency: Frequency;
+  bundleSize: number;
+  priceMinor: number;
+  /** Gift-card amount applied to this checkout, if any (EGP minor units). */
+  giftCardMinor?: number;
+};
+
 export function validateSubscriptionCheckout(
   plan: Plan,
   input: Record<string, unknown>,
   now = new Date(),
-): { ok: true; value: Record<string, unknown> } | { ok: false; error: string } {
+): { ok: true; value: SubscriptionCheckoutValue } | { ok: false; error: string } {
   if (!plan.active) return { ok: false, error: 'plan_unavailable' };
   const frequency = input.frequency as Frequency;
   if (!plan.frequencies.includes(frequency)) return { ok: false, error: 'invalid_frequency' };
@@ -16,5 +24,12 @@ export function validateSubscriptionCheckout(
   const date = new Date(`${input.deliveryDate}T00:00:00Z`);
   const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   if (date.getTime() < todayStart.getTime() + 86_400_000) return { ok: false, error: 'lead_time' };
-  return { ok: true, value: { frequency, bundleSize, ...input, priceMinor: plan.bundlePrices.find((p) => p.deliveries === bundleSize)!.priceMinor } };
+  return {
+    ok: true,
+    value: {
+      frequency,
+      bundleSize,
+      priceMinor: plan.bundlePrices.find((p) => p.deliveries === bundleSize)!.priceMinor,
+    },
+  };
 }

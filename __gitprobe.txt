@@ -1,0 +1,7 @@
+git-dir: fatal: not a git repository (or any of the parent directories): .git
+HEAD: fatal: not a git repository (or any of the parent directories): .git
+refs/heads exists: False
+status lines: 0
+write-tree: fatal: not a git repository (or any of the parent directories): .git
+git bin: C:\Program Files\Git\cmd\git.exe
+git ver: git version 2.50.1.windows.1

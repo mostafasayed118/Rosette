@@ -50,7 +50,9 @@ function pickPlural(locale: Locale, raw: string, values: Record<string, string |
   const count = Number(values?.[name as keyof typeof values]);
   const cat = selectPlural(locale, count);
   const picked = branches[cat] ?? branches.other ?? '';
-  return picked;
+  // ICU plural branches use `#` for the current count; replace it before
+  // recursively interpolating nested placeholders in the selected branch.
+  return picked.replaceAll('#', String(count));
 }
 
 function findNextPlaceholder(template: string, startIndex: number): { full: string; raw: string; start: number; end: number } | null {
@@ -101,24 +103,80 @@ export type LocaleFormatter = {
   relativeTime: (date: Date | string | number, base?: Date) => string;
 };
 
+// Cairo local time zone — Cloudflare Workers run in UTC, so all absolute
+// date/time display must be pinned to Africa/Cairo (R-05).
+const CAIRO_TZ = 'Africa/Cairo';
+
+const DEFAULT_DATE_OPTS: Intl.DateTimeFormatOptions = {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+};
+
+// Module-level caches so we don't allocate Intl.* objects per call (R-31).
+const currencyFmtCache = new Map<string, Intl.NumberFormat>();
+const numberFmtCache = new Map<string, Intl.NumberFormat>();
+const dateFmtCache = new Map<string, Intl.DateTimeFormat>();
+const rtfFmtCache = new Map<string, Intl.RelativeTimeFormat>();
+
+function getCurrencyFormatter(lc: string, currency: string): Intl.NumberFormat {
+  const key = `${lc}:${currency}`;
+  let fmt = currencyFmtCache.get(key);
+  if (!fmt) {
+    fmt = new Intl.NumberFormat(lc, { style: 'currency', currency, maximumFractionDigits: 0 });
+    currencyFmtCache.set(key, fmt);
+  }
+  return fmt;
+}
+
+function getNumberFormatter(lc: string, opts?: Intl.NumberFormatOptions): Intl.NumberFormat {
+  const key = `${lc}:${opts ? JSON.stringify(opts) : ''}`;
+  let fmt = numberFmtCache.get(key);
+  if (!fmt) {
+    fmt = new Intl.NumberFormat(lc, opts);
+    numberFmtCache.set(key, fmt);
+  }
+  return fmt;
+}
+
+function getDateFormatter(lc: string, opts?: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const merged = { ...(opts ?? DEFAULT_DATE_OPTS), timeZone: CAIRO_TZ };
+  const key = `${lc}:${JSON.stringify(merged)}`;
+  let fmt = dateFmtCache.get(key);
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat(lc, merged);
+    dateFmtCache.set(key, fmt);
+  }
+  return fmt;
+}
+
+function getRelativeTimeFormatter(lc: string): Intl.RelativeTimeFormat {
+  let fmt = rtfFmtCache.get(lc);
+  if (!fmt) {
+    fmt = new Intl.RelativeTimeFormat(lc, { numeric: 'auto' });
+    rtfFmtCache.set(lc, fmt);
+  }
+  return fmt;
+}
+
 export function createFormatter(locale: Locale): LocaleFormatter {
   const lc = intlLocale(locale);
   return {
     currency(amount, currency = 'EGP') {
-      return new Intl.NumberFormat(lc, { style: 'currency', currency, maximumFractionDigits: 0 }).format(amount);
+      return getCurrencyFormatter(lc, currency).format(amount);
     },
     number(n, opts) {
-      return new Intl.NumberFormat(lc, opts).format(n);
+      return getNumberFormatter(lc, opts).format(n);
     },
     date(date, opts) {
       const d = date instanceof Date ? date : new Date(date);
-      return new Intl.DateTimeFormat(lc, opts ?? { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+      return getDateFormatter(lc, opts).format(d);
     },
     relativeTime(date, base = new Date()) {
       const d = date instanceof Date ? date : new Date(date);
       const diffMs = d.getTime() - base.getTime();
       const diffDays = Math.round(diffMs / 86_400_000);
-      const rtf = new Intl.RelativeTimeFormat(lc, { numeric: 'auto' });
+      const rtf = getRelativeTimeFormatter(lc);
       if (Math.abs(diffDays) < 1) {
         const diffHours = Math.round(diffMs / 3_600_000);
         if (Math.abs(diffHours) < 1) return rtf.format(Math.round(diffMs / 60_000), 'minute');

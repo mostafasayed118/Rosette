@@ -98,7 +98,7 @@ export function GiftCardPurchaseForm({ cityCode }: { cityCode: string }) {
       </section>
 
       {/* Right Column: Form Area */}
-      <section className="lg:col-span-7 lg:pl-8 order-1 lg:order-2 flex flex-col justify-center min-h-[716px]">
+      <section className="order-1 flex min-w-0 flex-col justify-center lg:col-span-7 lg:order-2 lg:pl-8">
         <div className="mb-8">
           <p className="font-meta-mono text-meta-mono uppercase text-on-surface-variant mb-4">{t('giftCardsEyebrow')}</p>
           <h1 className="font-display-xl-mobile md:font-display-xl text-display-xl-mobile md:text-display-xl text-on-surface tracking-tight">
@@ -111,12 +111,20 @@ export function GiftCardPurchaseForm({ cityCode }: { cityCode: string }) {
           {error ? <StatusMessage title={error} tone="error" /> : null}
 
           {/* Amount Selection */}
-          <div>
-            <fieldset>
+          {/* min-w-0: the horizontally scrollable amount row is inside a grid
+              item, so without it the row's content width expands the track and
+              pushes the whole page into horizontal overflow on phones. */}
+          <div className="min-w-0">
+            <fieldset className="min-w-0">
               <legend className="font-meta-mono text-meta-mono uppercase text-on-surface-variant mb-4">
                 {t('giftCardAmount')}
               </legend>
-              <div className="flex overflow-x-auto hide-scrollbar gap-2 pb-2 -mx-5 px-5 md:mx-0 md:px-0 md:flex-wrap">
+              {/* `relative` is required, not decorative: the sr-only radio
+                  inputs are absolutely positioned, so without a containing
+                  block here they anchor further up the tree, escape this
+                  scroll container's clip, and push ~44px of horizontal
+                  overflow onto the whole page on phones. */}
+              <div className="hide-scrollbar relative flex gap-2 overflow-x-auto pb-2 md:flex-wrap">
                 {FIXED_GIFT_CARD_AMOUNTS.map((value) => (
                   <label key={value} className="cursor-pointer flex-shrink-0">
                     <input

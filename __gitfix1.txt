@@ -1,0 +1,7 @@
+
+refs/heads exists: True
+commit 5ef34d0 type: commit
+update-ref rc: 0
+HEAD: 5ef34d0deef3d8002c46f5f926b33da99e354c4a
+branch: audit-remediation
+git-dir: .git

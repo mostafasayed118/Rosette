@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { savePromoCode, createPromoCode, type PromoInput } from '@/features/admin/promo-actions';
+import { savePromoCode, createPromoCode } from '@/features/admin/promo-actions';
+import { promoPayloadSchema } from '@/features/admin/catalog-validation';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { respond } from '@/lib/api';
@@ -7,10 +8,11 @@ import { respond } from '@/lib/api';
 export async function POST(request: Request) {
   const admin = await getCurrentAdmin();
   if (!admin) return NextResponse.json({ error: 'Admin authorization required' }, { status: 403 });
-  const body = (await request.json()) as Record<string, unknown>;
-  const input = body.promo as unknown;
-  if (!input || typeof input !== 'object') return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
-  const promo = input as PromoInput;
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
+  const parsed = promoPayloadSchema.safeParse((body as { promo?: unknown }).promo);
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid promo data' }, { status: 400 });
+  const promo = parsed.data;
   if (body.action === 'update-promo') {
     const result = await savePromoCode(getAdminSupabase(), admin, promo);
     return respond(result, {

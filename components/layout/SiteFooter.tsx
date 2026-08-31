@@ -16,16 +16,16 @@ export function SiteFooter({ locale = 'en', city = 'cairo' }: { locale?: string;
           <p className="max-w-[36ch] leading-relaxed text-on-surface-variant">{t('brandTagline')}</p>
           <p className={`mt-4 text-xs text-on-surface-variant ${activeLocale === 'ar' ? 'font-body tracking-normal' : 'font-mono tracking-[0.05em]'}`}>{t('footerCopyright', { year })}</p>
         </div>
-        <nav className="flex flex-col gap-3" aria-label={t('navFooter')}>
-          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={`/${locale}`}>{t('footerCitySelector')}</Link>
-          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/gift-cards')}>{t('footerGiftServices')}</Link>
-          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/delivery')}>{t('footerShippingPolicy')}</Link>
-          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/track')}>{t('trackOrder')}</Link>
+        <nav className="flex flex-col gap-1 md:gap-3" aria-label={t('navFooter')}>
+          <Link className="flex min-h-11 items-center text-on-surface-variant transition-colors hover:text-primary md:min-h-0" href={`/${locale}`}>{t('footerCitySelector')}</Link>
+          <Link className="flex min-h-11 items-center text-on-surface-variant transition-colors hover:text-primary md:min-h-0" href={href('/gift-cards')}>{t('footerGiftServices')}</Link>
+          <Link className="flex min-h-11 items-center text-on-surface-variant transition-colors hover:text-primary md:min-h-0" href={href('/delivery')}>{t('footerShippingPolicy')}</Link>
+          <Link className="flex min-h-11 items-center text-on-surface-variant transition-colors hover:text-primary md:min-h-0" href={href('/track')}>{t('trackOrder')}</Link>
         </nav>
-        <nav className="flex flex-col gap-3" aria-label={t('navFooterCompany')}>
-          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/about')}>{t('footerOurStory')}</Link>
-          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/contact')}>{t('footerContactUs')}</Link>
-          <Link className="text-on-surface-variant transition-colors hover:text-primary" href={href('/privacy')}>{t('footerPrivacy')}</Link>
+        <nav className="flex flex-col gap-1 md:gap-3" aria-label={t('navFooterCompany')}>
+          <Link className="flex min-h-11 items-center text-on-surface-variant transition-colors hover:text-primary md:min-h-0" href={href('/about')}>{t('footerOurStory')}</Link>
+          <Link className="flex min-h-11 items-center text-on-surface-variant transition-colors hover:text-primary md:min-h-0" href={href('/contact')}>{t('footerContactUs')}</Link>
+          <Link className="flex min-h-11 items-center text-on-surface-variant transition-colors hover:text-primary md:min-h-0" href={href('/privacy')}>{t('footerPrivacy')}</Link>
         </nav>
       </div>
     </footer>

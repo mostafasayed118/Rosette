@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { reviewCancellationRequest } from '@/features/orders/cancel-actions';
+import { reviewCancellationRequest } from '@/features/order-mutations/cancel-actions';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getPublicOrigin } from '@/lib/origin';

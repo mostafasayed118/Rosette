@@ -46,28 +46,31 @@ export function SiteHeader({ cityName, cartCount }: SiteHeaderProps) {
   }
 
   const bag = (
-    <Link className="flex items-center gap-2" href={href('/cart')}>{t('bag')} <span className="grid h-6 min-w-6 place-items-center rounded-full bg-primary px-1.5 font-mono text-xs text-primary-foreground">{count}</span></Link>
+    <Link className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 px-1.5" href={href('/cart')}>{t('bag')} <span className="grid h-6 min-w-6 place-items-center rounded-full bg-primary px-1.5 font-mono text-xs text-primary-foreground">{count}</span></Link>
   );
   const wishlist = <WishlistLink />;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex w-[min(calc(100%-3rem),80rem)] items-center justify-between gap-4 py-4">
-        <Link className="font-display text-3xl tracking-tight text-primary" href={href('/')}>Rosette</Link>
-        <nav className="hidden items-center gap-7 text-sm md:flex" aria-label={t('navPrimary')}>
+    <header className="sticky top-0 z-40 min-h-[var(--site-header-height)] border-b border-border/60 bg-background/85 backdrop-blur-md">
+      <div className="site-container flex min-h-[var(--site-header-height)] items-center justify-between gap-3 py-3 md:py-4 lg:gap-6">
+        <Link className="flex min-h-11 shrink-0 items-center font-display text-2xl tracking-tight text-primary md:text-3xl" href={href('/')}>Rosette</Link>
+        {/* The full nav plus the utility cluster needs ~930px, so it only takes
+            over from the drawer at the laptop breakpoint — not at md (768px),
+            where it previously forced horizontal overflow on tablets. */}
+        <nav className="hidden items-center gap-4 text-sm lg:flex xl:gap-7" aria-label={t('navPrimary')}>
           {navItems.map((item) => (
             <Link key={item.path} className={navClasses(item.path)} href={href(item.path)}>{item.label}</Link>
           ))}
         </nav>
-        <div className="hidden items-center gap-3 text-sm md:flex">
-          <Link className="text-xs text-muted-foreground hover:text-primary" href={`/${locale}`}>{cityName ? t('deliveringTo', { city: cityName }) : t('chooseDestination')}</Link>
+        <div className="hidden items-center gap-2 text-sm lg:flex xl:gap-3">
+          <Link className="max-w-[12rem] truncate text-xs text-muted-foreground hover:text-primary" href={`/${locale}`}>{cityName ? t('deliveringTo', { city: cityName }) : t('chooseDestination')}</Link>
           <AccountNavItem />
           {bag}
           {wishlist}
           <LanguageToggle />
           <ThemeToggle />
         </div>
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
           {bag}
           {wishlist}
           <Sheet>

@@ -14,7 +14,7 @@ import { getServerT } from '@/features/i18n/server';
 import { formatDateTime } from '@/lib/date';
 import { formatMoney } from '@/features/money';
 import { fulfillmentBadgeVariant, fulfillmentLabel, paymentBadgeVariant, paymentLabel } from '@/features/admin/status-labels';
-import { parseChangeRequestDiff, applyChanges, type ChangeRequestDiff } from '@/features/orders/change-request';
+import { parseChangeRequestDiff, applyChanges, type ChangeRequestDiff } from '@/features/order-mutations/change-request';
 
 type ChangeRequestRow = {
   id: string;

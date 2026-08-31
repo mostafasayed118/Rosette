@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-const sql = readFileSync(join('supabase/migrations', '033_subscriptions.sql'), 'utf8');
+const sql = readFileSync(join('supabase/migrations', '037_subscriptions.sql'), 'utf8');
 function fn(name: string): string {
   const s = sql.indexOf(`create or replace function public.${name}`);
   if (s === -1) return '';

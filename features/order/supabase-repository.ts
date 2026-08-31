@@ -10,24 +10,32 @@ import { getRequiredServerEnv } from '@/lib/server-env';
 import type { CartLine } from '@/features/cart/types';
 import type { OrderRepository, CreatePendingOrderInput, Order, PendingOrder, Result, OrderCreateError } from './types';
 
-type ProductRow = { id: string; slug: string; name_en: string; name_ar: string; name_fr?: string; price_minor: number; add_ons: Array<{ id: string; name_en: string; price_minor: number }>; product_variants: Array<{ id: string; name_en: string; price_delta_minor: number }> };
+type ProductRow = { id: string; slug: string; name_en: string; name_ar: string; name_fr?: string; price_minor: number; add_ons: Array<{ id: string; name_en: string; price_minor: number }>; product_variants: Array<{ id: string; name_en: string; price_delta_minor: number; active?: boolean }> };
 
 async function authoritativeLines(supabase: ReturnType<typeof getAdminSupabase>, lines: CartLine[]) {
   const slugs = [...new Set(lines.map((line) => line.productSlug))];
-  const { data, error } = await supabase.from('products').select('id,slug,name_en,name_ar,name_fr,price_minor,add_ons,product_variants(name_en,price_delta_minor)').in('slug', slugs).eq('active', true);
+  const { data, error } = await supabase.from('products').select('id,slug,name_en,name_ar,name_fr,price_minor,add_ons,product_variants(id,name_en,price_delta_minor,active)').in('slug', slugs).eq('active', true);
   if (error) throw error;
   const products = (data ?? []) as unknown as ProductRow[];
   if (products.length !== slugs.length) return null;
   return lines.map((line) => {
     const product = products.find((candidate) => candidate.slug === line.productSlug);
     if (!product) return null;
-    const variant = product.product_variants.find((candidate) => candidate.name_en === line.variantName);
+    const activeVariants = (product.product_variants ?? []).filter((candidate) => candidate.active !== false);
+    // Never trust the client-supplied variantId for price or inventory. Resolve
+    // the variant from the server's product row using the displayed variant name;
+    // a supplied id is retained only as a compatibility hint when it matches
+    // that server-resolved row.
+    const namedVariants = activeVariants.filter((candidate) => candidate.name_en === line.variantName);
+    const variant = namedVariants.length === 1
+      ? namedVariants[0]
+      : (line.variantName == null && activeVariants.length === 1 ? activeVariants[0] : undefined);
     const allowedAddOns = new Map((product.add_ons ?? []).map((addOn) => [addOn.id, addOn]));
     const addOns = line.addOns.flatMap((addOn) => {
       const authoritative = allowedAddOns.get(addOn.id);
       return authoritative ? [{ id: authoritative.id, name: authoritative.name_en, price: authoritative.price_minor }] : [];
     });
-    return { ...line, productName: product.name_en, productNameAr: product.name_ar, productNameFr: product.name_fr, unitPrice: product.price_minor + (variant?.price_delta_minor ?? 0), variantId: line.variantId ?? variant?.id, addOns };
+    return { ...line, productId: product.id, productName: product.name_en, productNameAr: product.name_ar, productNameFr: product.name_fr, unitPrice: product.price_minor + (variant?.price_delta_minor ?? 0), variantId: variant?.id, addOns };
   });
 }
 
@@ -43,7 +51,7 @@ export const supabaseOrderRepository: OrderRepository = {
       const supabase = getAdminSupabase();
       const lines = await authoritativeLines(supabase, input.cart.lines);
       if (!lines || lines.some((line) => line === null)) return { ok: false, error: 'invalid' };
-      const safeLines = lines as CartLine[];
+      const safeLines = lines as (CartLine & { productId: string })[];
       if (safeLines.some((line) => !line.variantId)) return { ok: false, error: 'invalid' };
       const subtotal = calculateCartTotals(safeLines, 0).subtotal;
       const rule = await fetchDeliveryRule(supabase, input.destination.cityCode);
@@ -80,6 +88,7 @@ export const supabaseOrderRepository: OrderRepository = {
       const { data, error } = await supabase.rpc('create_pending_order', {
         p_lines: safeLines.map((line) => ({
           variantId: line.variantId,
+          productId: line.productId,
           productSlug: line.productSlug,
           productName: line.productName,
           productNameAr: line.productNameAr ?? '',

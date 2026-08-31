@@ -7,41 +7,33 @@ import { Progress } from '@/components/ui/progress';
 import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/admin/PageHeader';
-import { computeDashboardStats, computeSubscriptionTiles, LOW_STOCK_THRESHOLD, type InventoryRow, type OrderRow } from '@/features/admin/dashboard-stats';
+import { LOW_STOCK_THRESHOLD } from '@/features/admin/dashboard-stats';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
 import { formatMoney } from '@/features/money';
 import { fulfillmentBadgeVariant, fulfillmentLabel } from '@/features/admin/status-labels';
 
-type InventoryRowWithVariant = { variant_id: string; quantity: number; reserved_quantity: number; product_variants?: { name_en: string } | null };
+type DashboardRpcResult = {
+  awaitingFulfillment: number;
+  revenueTodayMinor: number;
+  revenueAllTimeMinor: number;
+  pipeline: Record<string, number>;
+  lowStock: Array<{ variant_id: string; name: string; available: number }>;
+  activeSubscriptions: number;
+  deliveriesThisWeek: number;
+};
 
 export default async function AdminPage() {
   const admin = await getCurrentAdmin();
   if (!admin) redirect('/login');
   const { t, locale } = await getServerT();
-  const [ordersResult, inventoryResult, subscriptionsResult, deliveriesResult] = await Promise.all([
-    getAdminSupabase().from('orders').select('payment_status,fulfillment_status,total_minor,created_at'),
-    getAdminSupabase().from('inventory').select('variant_id,quantity,reserved_quantity,product_variants(name_en)'),
-    getAdminSupabase().from('subscriptions').select('status'),
-    getAdminSupabase().from('subscription_deliveries').select('status,scheduled_date'),
-  ]);
-  const stats = computeDashboardStats(
-    (ordersResult.data ?? []) as OrderRow[],
-    // PostgREST embeds the PK-backed to-one `product_variants` as an object, not an array.
-    ((inventoryResult.data ?? []) as unknown as InventoryRowWithVariant[]).map((row): InventoryRow => ({
-      variant_id: row.variant_id,
-      variant_name_en: row.product_variants?.name_en ?? t('unknownVariant'),
-      quantity: row.quantity,
-      reserved_quantity: row.reserved_quantity,
-    })),
-  );
+  const { data, error } = await getAdminSupabase().rpc('get_admin_dashboard_stats');
+  if (error) throw new Error(`Dashboard stats query failed: ${error.message}`);
+  const stats = data as DashboardRpcResult;
   const pipelineEntries = Object.entries(stats.pipeline) as Array<[string, number]>;
   const maxPipeline = Math.max(1, ...pipelineEntries.map(([, count]) => count));
-  const subTiles = computeSubscriptionTiles(
-    (subscriptionsResult.data ?? []) as Array<{ status: string }>,
-    (deliveriesResult.data ?? []) as Array<{ status: string; scheduled_date: string }>,
-  );
+  const subTiles = { activeSubscriptions: stats.activeSubscriptions, deliveriesThisWeek: stats.deliveriesThisWeek };
   return <>
     <PageHeader eyebrow={t('adminEyebrow')} title={t('adminDashboard')} description={t('signedInAs', { role: admin.role })} />
     <div className="mb-8 mt-6 grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">

@@ -7,6 +7,7 @@ import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { useCart } from './CartProvider';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
+import { rosetteToast } from '@/lib/feedback';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -19,7 +20,11 @@ export function SaveBagField() {
 
   async function save() {
     const trimmed = email.trim();
-    if (!EMAIL_RE.test(trimmed)) { setState('invalid'); return; }
+    if (!EMAIL_RE.test(trimmed)) {
+      setState('invalid');
+      // Keep inline validation only — toast would duplicate the field error
+      return;
+    }
     setState('saving');
     try {
       const response = await fetch('/api/cart/sync', {
@@ -27,9 +32,16 @@ export function SaveBagField() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: trimmed, locale, city, lines: cart.lines }),
       });
-      setState(response.ok ? 'saved' : 'error');
+      if (response.ok) {
+        setState('saved');
+        rosetteToast.success(t('bagSaved'), { description: t('saveBagHint') });
+      } else {
+        setState('error');
+        rosetteToast.error(t('toastError'), { description: t('temporaryError') });
+      }
     } catch {
       setState('error');
+      rosetteToast.error(t('toastError'), { description: t('temporaryError') });
     }
   }
 

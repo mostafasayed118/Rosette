@@ -20,7 +20,7 @@ export interface ErrorShellProps {
 
 export function ErrorShell({ status, eyebrow, title, lede, action, secondaryAction, digest, digestLabel, children }: ErrorShellProps) {
   return (
-    <main className="mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start" role="alert" aria-labelledby="error-status-heading">
+    <main id="main-content" className="mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start" role="alert" aria-labelledby="error-status-heading">
       <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{eyebrow}</p>
       <p
         id="error-status-heading"

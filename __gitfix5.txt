@@ -1,0 +1,20 @@
+
+git : error: Could not read 74c0f1a0d2e672c3aa310534aeff8ab06c9ebe34
+At line:449 char:1
++ git checkout $stash -- . 2>&1 | Out-File -FilePath $out -Append -Enco ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (error: Could no...eff8ab06c9ebe34 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+error: unable to read sha1 file of __gitfix2.txt 
+(86098cc1c14a3c2c23317d35fb1049f46ba3f165)
+checkout rc: 255
+staged: 0
+unstaged: 0
+untracked: 3
+key new files:
+  live-db-checks.cjs: True
+  webhook-replay-test.cjs: True
+  LIVE_SMOKE_TEST_PLAN.md: True
+full status count: 0

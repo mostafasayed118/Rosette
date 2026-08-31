@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { href: '/admin/blog', key: 'blogTitle' },
   { href: '/admin/authors', key: 'authors' },
   { href: '/admin/notifications', key: 'notifications' },
+  { href: '/admin/audit-log', key: 'auditLog' },
 ] as const;
 
 export async function AdminShell({ children }: { children: ReactNode }) {
@@ -34,7 +35,7 @@ export async function AdminShell({ children }: { children: ReactNode }) {
           <span className="font-display text-lg text-primary md:hidden">Rosette</span>
           <form action={signOut} className="ms-auto"><Button variant="outline" size="sm" type="submit">{t('signOut')}</Button></form>
         </header>
-        <main className="p-4 md:p-8">{children}</main>
+        <main id="main-content" className="p-4 md:p-8">{children}</main>
       </SidebarInset>
     </>
   );

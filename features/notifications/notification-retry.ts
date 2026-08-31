@@ -35,6 +35,7 @@ export function resolveRetryLimits(env: Record<string, string | undefined> = pro
 
 type RetryClient = { from: (table: string) => any };
 export type RetrySummary = { retried: number; sent: number; failed: number; skipped: number };
+export const NOTIFICATION_RETRY_BATCH_SIZE = 500;
 
 type DeliveryRow = { id: string; order_id: string; type: string; recipient: string; locale: string; attempts: number; status: string; created_at: string };
 type OrderRow = { display_number: string; total_minor: number; public_token: string | null };
@@ -55,7 +56,12 @@ export async function retryStuckNotifications(
   const limits: RetryLimits = { maxAttempts: deps.maxAttempts ?? MAX_ATTEMPTS, stalePendingMs: deps.stalePendingMs ?? STALE_PENDING_MS };
   const summary: RetrySummary = { retried: 0, sent: 0, failed: 0, skipped: 0 };
 
-  const { data } = await client.from('notification_deliveries').select('id,order_id,type,recipient,locale,attempts,status,created_at').in('status', ['failed', 'pending']);
+  const baseQuery = client.from('notification_deliveries')
+    .select('id,order_id,type,recipient,locale,attempts,status,created_at')
+    .in('status', ['failed', 'pending']);
+  const orderedQuery = typeof baseQuery.order === 'function' ? baseQuery.order('created_at', { ascending: true }) : baseQuery;
+  const boundedQuery = typeof orderedQuery.limit === 'function' ? orderedQuery.limit(NOTIFICATION_RETRY_BATCH_SIZE) : orderedQuery;
+  const { data } = await boundedQuery;
   const rows = (data ?? []) as DeliveryRow[];
 
   const candidates = rows.filter((row) => isStuckRow(row, now(), limits));

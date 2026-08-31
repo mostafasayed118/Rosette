@@ -10,7 +10,7 @@ import { useI18n } from '@/features/i18n/I18nProvider';
 import { toMinor } from '@/features/admin/money';
 import type { PromoInput } from '@/features/admin/promo-actions';
 
-const empty = { code: '', type: 'percent' as 'percent' | 'fixed', percent: '10', value: '', minimum: '', startsAt: '', expiresAt: '', maxUses: '0', active: true };
+const empty = { code: '', type: 'percent' as 'percent' | 'fixed', percent: '10', value: '', minimum: '', startsAt: '', expiresAt: '', maxUses: '0', perUserLimit: '0', active: true };
 
 export function AddPromoForm() {
   const router = useRouter();
@@ -34,6 +34,7 @@ export function AddPromoForm() {
       startsAt: form.startsAt ? `${form.startsAt}T00:00:00Z` : null,
       expiresAt: form.expiresAt ? `${form.expiresAt}T00:00:00Z` : null,
       maxUses: Number.parseInt(form.maxUses, 10),
+      perUserLimit: Number.parseInt(form.perUserLimit, 10),
       active: form.active,
     };
     const response = await fetch('/api/admin/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create-promo', promo: body }) });

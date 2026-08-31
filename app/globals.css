@@ -76,7 +76,7 @@
   --color-popover: var(--color-surface);
   --color-popover-foreground: var(--color-ink);
   --color-primary: var(--color-brand);
-  --color-primary-foreground: #ffffff;
+  --color-primary-foreground: var(--color-primary-foreground-token);
   --color-secondary: var(--color-surface-muted);
   --color-secondary-foreground: var(--color-ink);
   --color-muted: var(--color-surface-muted);
@@ -86,10 +86,14 @@
   --color-destructive: var(--color-danger);
   --color-destructive-foreground: var(--color-surface);
   --color-sage: var(--color-accent);
-  --color-success: #3e7a52;
-  --color-warning: #a06a1f;
-  --color-border: #e0c2c7;
-  --color-input: var(--color-border);
+  --color-sage-ink: var(--color-sage-ink-token);
+  --color-success: var(--color-success-token);
+  --color-warning: var(--color-warning-token);
+  /* Must be a var() reference, not a literal. `@theme inline` substitutes the
+     expression into the utility, so a literal here hardcodes the light-theme
+     colour into .border-border / .bg-border and dark mode never switches it. */
+  --color-border: var(--rt-outline-variant);
+  --color-input: var(--color-control-border);
   --color-ring: var(--color-brand);
 
   --radius-sm: 10px;
@@ -97,6 +101,9 @@
   --radius-lg: 16px;
   --radius-xl: 22px;
   --radius-2xl: 24px;
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --shadow-surface: 0 10px 40px -16px rgb(58 20 30 / 12%);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -108,20 +115,28 @@
 }
 
 :root.dark {
+  /* Shared geometry keeps sticky storefront regions below the header. */
+  --site-header-height: 4.25rem;
+  --radius-card: 1rem;
+  --radius-control: 0.75rem;
+  --shadow-surface: 0 10px 40px -16px rgb(0 0 0 / 24%);
+  --color-sage-ink-token: #a8c5a4;
   --color-canvas: #1a211e;
   --color-surface: #232a26;
   --color-surface-muted: #2c3530;
   --color-ink: #ece7df;
   --color-ink-muted: #a8a296;
-  --color-primary-foreground: #fbf5f7;
-  --color-brand: #d96a8e;
+  --color-primary-foreground-token: #1a0f14;
+  --color-destructive-foreground: #1a0f14;
+  --color-brand: #de7c9c;
   --color-brand-hover: #e582a2;
   --color-brand-soft: #3a2430;
   --color-accent: #8fa98d;
-  --color-border: #333d38;
-  --color-success: #5f9c74;
-  --color-warning: #c79a5a;
-  --color-danger: #e06a5c;
+  --color-border: #6c8176;
+  --color-control-border: #6c8176;
+  --color-success-token: #6ea781;
+  --color-warning-token: #c79a5a;
+  --color-danger: #e47d71;
   --motion-success: oklch(0.78 0.16 145);
   --sidebar: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);
@@ -144,8 +159,8 @@
   --rt-tertiary: #c6bdb1;
   --rt-tertiary-container: #33302c;
   --rt-on-tertiary-container: #f7efe9;
-  --rt-outline: #5c5357;
-  --rt-outline-variant: #333d38;
+  --rt-outline: #85787e;
+  --rt-outline-variant: #6c8176;
   --rt-inverse-surface: #f7efe9;
   --rt-inverse-on-surface: #33302c;
   --rt-inverse-primary: #ffb1c3;
@@ -154,19 +169,26 @@
 }
 
 :root {
+  /* Shared geometry keeps sticky storefront regions below the header. */
+  --site-header-height: 4.25rem;
+  --radius-card: 1rem;
+  --radius-control: 0.75rem;
+  --shadow-surface: 0 10px 40px -16px rgb(58 20 30 / 12%);
+  --color-sage-ink-token: #476647;
   --color-canvas: #fdf6f0;
   --color-surface: #ffffff;
   --color-surface-muted: #f4ede6;
   --color-ink: #1a0f14;
   --color-ink-muted: #5a3d47;
-  --color-primary-foreground: #ffffff;
+  --color-primary-foreground-token: #ffffff;
   --color-brand: #8e1a3f;
   --color-brand-hover: #6e1230;
   --color-brand-soft: #ffd9e0;
-  --color-accent: #6f8f6d;
-  --color-border: #e0c2c7;
-  --color-success: #3e7a52;
-  --color-warning: #a06a1f;
+  --color-accent: #597358;
+  --color-border: #a37a83;
+  --color-control-border: #a37a83;
+  --color-success-token: #3d7851;
+  --color-warning-token: #93621d;
   --color-danger: #c0392b;
   --motion-success: oklch(0.72 0.18 145);
   --text-xs: .75rem;
@@ -214,13 +236,16 @@
   --rt-tertiary-container: #777168;
   --rt-on-tertiary-container: #fff7ec;
   --rt-outline: #897175;
-  --rt-outline-variant: #ddbfc4;
+  --rt-outline-variant: #a37a83;
   --rt-inverse-surface: #33302c;
   --rt-inverse-on-surface: #f7efe9;
   --rt-inverse-primary: #ffb1c3;
   --rt-error-container: #ffdad6;
   --rt-on-error-container: #93000a;
 }
+
+:root { color-scheme: light; }
+:root.dark { color-scheme: dark; }
 
 html[lang='ar'] {
   --font-display: var(--font-arabic);
@@ -230,6 +255,11 @@ html[lang='ar'] {
 * { box-sizing: border-box; }
 html { background: var(--color-canvas); }
 body { margin: 0; color: var(--color-ink); background: var(--color-canvas); font-family: var(--font-body); line-height: 1.5; }
+.site-container { width: min(calc(100% - 2.5rem), var(--content-max)); margin-inline: auto; }
+/* Tablet gutters stay modest so 768–1279px keeps a usable content width; the
+   wide editorial gutters only return once there is room for them. */
+@media (min-width: 768px) { .site-container { width: min(calc(100% - 4rem), var(--content-max)); } }
+@media (min-width: 1280px) { .site-container { width: min(calc(100% - 8rem), var(--content-max)); } }
 .price { font-family: var(--font-jetbrains), ui-monospace, monospace; letter-spacing: .02em; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -262,6 +292,15 @@ body { margin: 0; color: var(--color-ink); background: var(--color-canvas); font
   button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
 }
 main { flex: 1; }
+/* WCAG 2.5.8 (Target Size Minimum): standalone text links need a 24px target.
+   Vertical padding grows the hit area without altering inline line height, so
+   running prose and card layouts stay visually identical. Links in sentences
+   and links wrapping media/cards are excluded — cards already meet the target. */
+@media (pointer: coarse) {
+  a:not(p a):not(li a):not(:has(img, svg, video, picture)) {
+    padding-block: 4px;
+  }
+}
 .pulse-ring { animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
 @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 80%, 100% { transform: scale(2); opacity: 0; } }
 
@@ -300,6 +339,307 @@ main { flex: 1; }
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s linear infinite;
+}
+
+/* ──────────────────────────────────────────────────────────
+   Rosette — Floral Toaster (sonner)
+   Modern, editorial, warm paper + soft bloom accent.
+   Reuses project tokens: --color-brand, --color-surface,
+   --color-ink, --rt-outline-variant, Fraunces/Outfit.
+   ────────────────────────────────────────────────────────── */
+[data-sonner-toaster] {
+  --width: 380px !important;
+  --front-toast-height: auto !important;
+  z-index: 9999 !important;
+}
+
+[data-sonner-toaster][data-x-position="center"] {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 640px) {
+  [data-sonner-toaster] {
+    --width: calc(100vw - 32px) !important;
+    left: 16px !important;
+    right: 16px !important;
+    transform: none !important;
+  }
+}
+
+/* Base toast — warm paper, blurred, soft shadow */
+[data-sonner-toast] {
+  --toast-accent: var(--color-brand);
+  --toast-icon-bg: var(--color-brand-soft);
+  --toast-icon-color: var(--color-brand);
+  background: color-mix(in oklch, var(--color-surface) 92%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
+  border: 1px solid color-mix(in oklch, var(--rt-outline-variant) 18%, transparent) !important;
+  box-shadow:
+    0 16px 40px -12px rgb(58 20 30 / 14%),
+    0 4px 16px -4px rgb(58 20 30 / 10%),
+    0 0 0 1px rgb(58 20 30 / 04%) !important;
+  border-radius: 16px !important;
+  padding: 14px 16px !important;
+  padding-right: 40px !important;
+  gap: 12px !important;
+  overflow: hidden !important;
+}
+
+/* Left bloom accent bar */
+[data-sonner-toast]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--toast-accent);
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+/* Subtle floral watermark in corner — very low opacity */
+[data-sonner-toast]::after {
+  content: "";
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  width: 72px;
+  height: 72px;
+  background: radial-gradient(
+    circle at 30% 30%,
+    color-mix(in oklch, var(--toast-accent) 18%, transparent) 0%,
+    transparent 62%
+  );
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+:root.dark [data-sonner-toast] {
+  background: color-mix(in oklch, var(--color-surface) 88%, transparent) !important;
+  border-color: color-mix(in oklch, var(--rt-outline-variant) 22%, transparent) !important;
+  box-shadow:
+    0 20px 48px -16px rgb(0 0 0 / 36%),
+    0 8px 20px -8px rgb(0 0 0 / 28%),
+    0 0 0 1px rgb(255 255 255 / 06%) !important;
+}
+
+:root.dark [data-sonner-toast]::after {
+  opacity: 0.28;
+}
+
+/* Per-type tokens */
+[data-sonner-toast][data-type="success"] {
+  --toast-accent: var(--color-success-token);
+  --toast-icon-bg: color-mix(in oklch, var(--color-success-token) 14%, var(--color-surface));
+  --toast-icon-color: var(--color-success-token);
+}
+[data-sonner-toast][data-type="error"] {
+  --toast-accent: var(--color-danger);
+  --toast-icon-bg: color-mix(in oklch, var(--color-danger) 12%, var(--color-surface));
+  --toast-icon-color: var(--color-danger);
+}
+[data-sonner-toast][data-type="warning"] {
+  --toast-accent: var(--color-warning-token);
+  --toast-icon-bg: color-mix(in oklch, var(--color-warning-token) 14%, var(--color-surface));
+  --toast-icon-color: var(--color-warning-token);
+}
+[data-sonner-toast][data-type="info"] {
+  --toast-accent: var(--color-brand);
+  --toast-icon-bg: var(--color-brand-soft);
+  --toast-icon-color: var(--color-brand);
+}
+[data-sonner-toast][data-styled="true"][data-type="loading"],
+[data-sonner-toast][data-type="loading"] {
+  --toast-accent: var(--color-ink-muted);
+  --toast-icon-bg: var(--color-surface-container);
+  --toast-icon-color: var(--color-ink-muted);
+}
+
+/* Icon badge — circular tint behind the lucide icon */
+.rosette-toast-icon,
+[data-sonner-toast] [data-icon] {
+  display: grid !important;
+  place-items: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  background: var(--toast-icon-bg) !important;
+  color: var(--toast-icon-color) !important;
+  flex-shrink: 0 !important;
+  border: 1px solid color-mix(in oklch, var(--toast-icon-color) 14%, transparent) !important;
+}
+
+.rosette-toast-icon svg,
+[data-sonner-toast] [data-icon] svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Text locks — Fraunces for title, Outfit for description */
+[data-sonner-toast] [data-title] {
+  font-family: var(--font-display), ui-serif, serif !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.1 !important;
+  color: var(--color-ink) !important;
+}
+
+[data-sonner-toast] [data-description] {
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+  color: var(--color-ink-muted) !important;
+  margin-top: 2px !important;
+}
+
+/* Close button — appears on hover/focus, keeps 44px target via padding */
+.rosette-toast-close,
+[data-sonner-toast] [data-close-button] {
+  position: absolute !important;
+  right: 6px !important;
+  top: 6px !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  border: 1px solid color-mix(in oklch, var(--rt-outline-variant) 16%, transparent) !important;
+  background: var(--color-surface-container) !important;
+  color: var(--color-ink-muted) !important;
+  opacity: 0 !important;
+  transform: scale(0.96);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    background 160ms ease,
+    color 160ms ease !important;
+}
+
+[data-sonner-toast]:hover [data-close-button],
+[data-sonner-toast]:focus-within [data-close-button],
+[data-sonner-toast][data-expanded="true"] [data-close-button] {
+  opacity: 1 !important;
+  transform: scale(1);
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  background: var(--color-surface-container-high) !important;
+  color: var(--color-ink) !important;
+}
+
+[data-sonner-toast] [data-close-button] svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Action / cancel buttons rendered inside toast */
+[data-sonner-toast] [data-button] {
+  font-family: var(--font-body) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  border-radius: 999px !important;
+  height: 30px !important;
+  padding-inline: 14px !important;
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease !important;
+}
+
+[data-sonner-toast] [data-button]:active {
+  transform: scale(0.97);
+}
+
+/* Success / primary action */
+[data-sonner-toast] [data-button]:not([data-cancel]) {
+  background: var(--color-brand) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 8px rgb(142 26 63 / 18%) !important;
+}
+
+[data-sonner-toast] [data-button]:not([data-cancel]):hover {
+  background: var(--color-brand-hover) !important;
+}
+
+/* Cancel / secondary */
+[data-sonner-toast] [data-cancel="true"] {
+  background: var(--color-surface-container) !important;
+  color: var(--color-ink) !important;
+  border: 1px solid color-mix(in oklch, var(--rt-outline-variant) 18%, transparent) !important;
+  box-shadow: none !important;
+}
+
+/* Wishlist heart pop — subtle bloom */
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.28); }
+  70% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+.animate-heart-pop {
+  animation: heart-pop 420ms cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-heart-pop { animation: none !important; }
+}
+
+/* Stacking — softer gap and lift for expanded stack */
+[data-sonner-toaster] [data-sonner-toast] + [data-sonner-toast] {
+  margin-top: 0 !important;
+}
+
+/* Touch: close affordance must be tappable without hover */
+@media (pointer: coarse) {
+  .rosette-toast-close,
+  [data-sonner-toast] [data-close-button] {
+    opacity: 0.92 !important;
+    transform: scale(1) !important;
+  }
+}
+
+/* RTL — Arabic: flip accent bar, padding, and close position */
+html[lang="ar"] [data-sonner-toast] {
+  direction: rtl;
+  text-align: right;
+}
+html[lang="ar"] [data-sonner-toast]::before {
+  left: auto;
+  right: 0;
+}
+html[lang="ar"] [data-sonner-toast] {
+  padding-right: 16px !important;
+  padding-left: 40px !important;
+}
+html[lang="ar"] [data-sonner-toast] [data-close-button],
+html[lang="ar"] .rosette-toast-close {
+  right: auto !important;
+  left: 6px !important;
+}
+
+/* Desktop: keep below sticky header */
+@media (min-width: 1024px) {
+  [data-sonner-toaster] {
+    top: calc(var(--site-header-height) + 14px) !important;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toast],
+  [data-sonner-toast]::before,
+  [data-sonner-toast]::after,
+  .rosette-toast-icon,
+  [data-sonner-toast] [data-icon],
+  [data-sonner-toast] [data-close-button] {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 

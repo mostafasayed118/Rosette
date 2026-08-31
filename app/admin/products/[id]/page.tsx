@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/admin/PageHeader';
-import { ProductForm, type ProductFormInitial } from '@/components/admin/ProductForm';
+import type { ProductFormInitial } from '@/components/admin/ProductForm';
+import ProductFormClient from '@/components/admin/ProductFormClient';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getServerT } from '@/features/i18n/server';
@@ -31,5 +32,5 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     })),
     addOns: ((data.add_ons ?? []) as AddOnRow[]).map((addOn) => ({ id: addOn.id, nameEn: addOn.name_en, nameAr: addOn.name_ar, priceMinor: addOn.price_minor })),
   };
-  return <><PageHeader eyebrow={t('catalogOperations')} title={data.name_en} /><ProductForm initial={initial} /></>;
+  return <><PageHeader eyebrow={t('catalogOperations')} title={data.name_en} /><ProductFormClient initial={initial} /></>;
 }

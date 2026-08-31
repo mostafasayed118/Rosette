@@ -1,5 +1,7 @@
 import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 import reactHooks from 'eslint-plugin-react-hooks';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 
 /**
  * Flat config for ESLint 9 + eslint-config-next 16.
@@ -11,18 +13,26 @@ const config = [
     ignores: [
       '.next/**',
       '.open-next/**',
+      '.wrangler/**',
       '.worktrees/**',
       'node_modules/**',
       'docs/stitch-export/**',
       'next-env.d.ts',
       'coverage/**',
       '.freebuff/**',
+      '.agents/**',
+      'docs/superpowers/**',
+      '.workbuddy-ai/**',
     ],
   },
   ...nextCoreWebVitals,
   {
     files: ['**/*.{ts,tsx}'],
-    plugins: { 'react-hooks': reactHooks },
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+    plugins: { 'react-hooks': reactHooks, '@typescript-eslint': tseslint },
     rules: {
       // React 19's compiler-era lint rules flag long-standing client patterns in
       // this app (hydrating state from localStorage/cookies inside an effect, and

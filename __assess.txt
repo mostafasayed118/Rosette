@@ -1,0 +1,16 @@
+
+probe files removed: False
+===== worktree vs HEAD diff stat (is WIP on disk?) =====
+  changed files: 0
+  sample:
+===== untracked files =====
+__assess.txt
+__gitfix3.txt
+__gitfix4.txt
+__gitfix5.txt
+  untracked count: 4
+===== is live-db-checks.cjs tracked? =====
+  ls-files: scripts/smoke/live-db-checks.cjs
+  on disk: True
+===== HEAD =====
+  5ef34d0deef3d8002c46f5f926b33da99e354c4a

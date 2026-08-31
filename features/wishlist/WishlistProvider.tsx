@@ -2,9 +2,11 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useI18n } from '@/features/i18n/I18nProvider';
-import { getBrowserSupabase } from '@/lib/supabase/browser';
 import { deferToTask } from '@/hooks/use-deferred-task';
 import { clearWishlistStorage, readWishlist, writeWishlist } from './storage';
+
+// Type-only reference: keeps `@supabase/ssr` out of the runtime module graph.
+type BrowserSupabase = NonNullable<ReturnType<(typeof import('@/lib/supabase/browser'))['getBrowserSupabase']>>;
 
 type WishlistContextValue = { ready: boolean; saved: string[]; isSaved: (slug: string) => boolean; count: number; toggle: (slug: string) => void };
 const WishlistContext = createContext<WishlistContextValue | null>(null);
@@ -30,16 +32,9 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    const supabase = getBrowserSupabase();
-    if (!supabase) {
-      deferToTask(() => {
-        if (!active) return;
-        setSaved(readWishlist());
-        setReady(true);
-      });
-      return;
-    }
-    const sync = async () => {
+    let subscription: { unsubscribe: () => void } | null = null;
+
+    const sync = async (supabase: BrowserSupabase) => {
       const guest = readWishlist();
       const locale = localeRef.current;
       const { data: { user } } = await supabase.auth.getUser();
@@ -71,16 +66,38 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       }
       setReady(true);
     };
-    void sync();
-    // The provider lives in the root layout and survives client-side
-    // navigation, so it must re-sync when the auth state changes (sign-in
-    // merges the guest list; sign-out drops back to guest storage).
-    // `localeRef` supplies the current locale without widening this dep array,
-    // which would tear down and recreate the auth subscription per switch.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') void sync();
-    });
-    return () => { active = false; subscription.unsubscribe(); };
+
+    // `@supabase/ssr` is only fetched once this effect runs. A static import
+    // ships it in the initial bundle of every page.
+    void (async () => {
+      const { getBrowserSupabase } = await import('@/lib/supabase/browser');
+      const supabase = getBrowserSupabase();
+      if (!active) return;
+      if (!supabase) {
+        deferToTask(() => {
+          if (!active) return;
+          setSaved(readWishlist());
+          setReady(true);
+        });
+        return;
+      }
+      // The provider lives in the root layout and survives client-side
+      // navigation, so it must re-sync when the auth state changes (sign-in
+      // merges the guest list; sign-out drops back to guest storage).
+      // `localeRef` supplies the current locale without widening this dep array,
+      // which would tear down and recreate the auth subscription per switch.
+      const { data } = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') void sync(supabase);
+      });
+      if (active) subscription = data.subscription;
+      else data.subscription.unsubscribe();
+      await sync(supabase);
+    })();
+
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // Session-scoped personalization sync. Fires once per browser session after

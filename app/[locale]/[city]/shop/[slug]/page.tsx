@@ -16,6 +16,7 @@ import { getServerT } from '@/features/i18n/server';
 import { getOptionalServerEnv } from '@/lib/server-env';
 import { LOCALES } from '@/lib/locale-routing';
 import { categoryMessageKeys } from '@/features/catalog/catalog-labels';
+import { products as catalogProducts } from '@/features/catalog/data';
 import { createClient } from '@/lib/supabase/server';
 import { RecommendedCarousel } from '@/features/personalization/components/RecommendedCarousel';
 import { PersonalizationSkeleton } from '@/features/personalization/components/PersonalizationSkeleton';
@@ -25,7 +26,23 @@ import type { Locale } from '@/features/i18n/types';
 
 type ProductPageParams = { params: Promise<{ locale: string; city: string; slug: string }> };
 
+// Catalog data is cacheable for an hour (R-08).
+export const revalidate = 3600;
+
 const getProduct = cache((slug: string) => getCatalogRepository().getBySlug(slug));
+
+export async function generateStaticParams() {
+  try {
+    // In supabase-backed deployments the real slugs live in the database and
+    // can't be fetched at build without a DB/cookies call, so we let those
+    // render on demand via ISR (revalidate). Only the local/demo catalog has a
+    // cheap, build-time slug list.
+    if (getOptionalServerEnv('NEXT_PUBLIC_SUPABASE_URL')) return [];
+    return catalogProducts.map((product) => ({ slug: product.slug }));
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: ProductPageParams): Promise<Metadata> {
   const { locale, city, slug } = await params;
@@ -49,20 +66,32 @@ export default async function ProductPage({ params }: ProductPageParams) {
   const reviewData = await getApprovedReviews(product.slug);
   const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  return <div className="flex min-h-screen flex-col"><ProductJsonLd product={product} reviews={reviewData?.reviews} /><BreadcrumbJsonLd base={base} items={[{ name: t('shop'), path: `/${locale}/${city}` }, { name: t('collectionTitle'), path: shopHref }, { name: product.name }]} /><SiteHeader /><main id="main-content" className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4"><Link className="text-sm text-primary underline underline-offset-4" href={shopHref}>← {t('backCollection')}</Link><ProductDetail product={product} /><ProductReviews productSlug={product.slug} locale={locale} data={reviewData} /><Suspense fallback={<PersonalizationSkeleton />}><PersonalizationSection locale={resolvedLocale} excludeSlug={slug} /></Suspense></main><SiteFooter locale={locale} city={city} /></div>;
+}
+
+/**
+ * Personalized "you may also like" strip. It performs its own Supabase auth
+ * read (which opts only THIS boundary into dynamic rendering) so the rest of
+ * the product page stays static/ISR. If the user is anonymous or personalization
+ * is disabled, it renders nothing.
+ */
+async function PersonalizationSection({ locale, excludeSlug }: { locale: Locale; excludeSlug: string }) {
+  const { t } = await getServerT(locale);
   let personalization: PersonalizationPicks | null = null;
-  if (user && process.env.ROSETTE_PERSONALIZATION_ENABLED !== 'false') {
+  if (process.env.ROSETTE_PERSONALIZATION_ENABLED !== 'false') {
     try {
-      personalization = await (await getPersonalizationProvider()).getPicks(user.id, { limit: 8, locale: resolvedLocale, excludeSlug: slug });
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        personalization = await (await getPersonalizationProvider()).getPicks(user.id, { limit: 8, locale, excludeSlug });
+      }
     } catch {
       personalization = null;
     }
   }
-  const showCarousel = personalization && personalization.recommended.length > 0;
-  const hintCategoryKey = personalization?.hintCategory
+  if (!personalization || personalization.recommended.length === 0) return null;
+  const hintCategoryKey = personalization.hintCategory
     ? t(categoryMessageKeys[personalization.hintCategory] ?? personalization.hintCategory)
     : null;
-
-  return <div className="flex min-h-screen flex-col"><ProductJsonLd product={product} reviews={reviewData?.reviews} /><BreadcrumbJsonLd base={base} items={[{ name: t('shop'), path: `/${locale}/${city}` }, { name: t('collectionTitle'), path: shopHref }, { name: product.name }]} /><SiteHeader /><main className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4"><Link className="text-sm text-primary underline underline-offset-4" href={shopHref}>← {t('backCollection')}</Link><ProductDetail product={product} /><ProductReviews productSlug={product.slug} locale={locale} data={reviewData} />{showCarousel ? (<Suspense fallback={<PersonalizationSkeleton />}><RecommendedCarousel products={personalization!.recommended} category={hintCategoryKey ?? undefined} /></Suspense>) : null}</main><SiteFooter locale={locale} city={city} /></div>;
+  return <RecommendedCarousel products={personalization.recommended} category={hintCategoryKey ?? undefined} />;
 }

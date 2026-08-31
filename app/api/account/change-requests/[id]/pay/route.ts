@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { payChangeRequestDelta } from '@/features/orders/change-request-service';
+import { payChangeRequestDelta } from '@/features/order-mutations/change-request-service';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getPublicOrigin } from '@/lib/origin';

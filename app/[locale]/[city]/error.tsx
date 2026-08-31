@@ -9,7 +9,7 @@ export default function StorefrontError({ error, reset }: { error: Error & { dig
   const { t } = useI18n();
   const { href } = useStorePath();
   return (
-    <main className="mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start py-24" role="alert">
+    <main id="main-content" className="mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start py-24" role="alert">
       <p className="text-xs font-bold uppercase tracking-[0.16em] text-sage">Rosette</p>
       <h1 className="mt-3 mb-5 max-w-[16ch] font-display text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em] text-primary">
         {t('temporaryError')}

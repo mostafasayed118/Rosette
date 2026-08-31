@@ -19,5 +19,14 @@ dev-restart.log
 
 .superpowers/
 
+# Vendored agent tooling. 670 files / 13.0 MB — 80% of the tracked repository by
+# size and none of it is a build input. Was committed by accident; the equivalent
+# material lives in a package manager, not in this repo.
+.agents/
+docs/superpowers/
+
+# WorkBuddy session state (memory, task lists, cache). Per-developer, never shared.
+.workbuddy-ai/
+
 # Stitch design export (source for /docs/stitch-export, not a build input)
 stitch_rosette_floral_e_commerce_system/

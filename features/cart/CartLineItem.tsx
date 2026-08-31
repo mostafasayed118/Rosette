@@ -39,9 +39,9 @@ export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemP
           <div className="flex items-center border border-outline-variant rounded-md overflow-hidden bg-surface-container-lowest">
             <button
               type="button"
-              aria-label="Decrease quantity"
+              aria-label={t('decreaseQuantity')}
               onClick={() => onQuantityChange(Math.max(1, line.quantity - 1))}
-              className="px-2.5 py-1 text-sm text-on-surface-variant hover:bg-surface-variant transition-colors disabled:opacity-40"
+              className="min-h-11 min-w-11 px-2.5 py-1 text-sm text-on-surface-variant hover:bg-surface-variant transition-colors disabled:opacity-40"
               disabled={line.quantity <= 1}
             >
               −
@@ -49,9 +49,9 @@ export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemP
             <span className="font-mono text-[12px] px-2.5 py-1 text-on-surface border-x border-outline-variant/50 min-w-8 text-center">{line.quantity}</span>
             <button
               type="button"
-              aria-label="Increase quantity"
+              aria-label={t('increaseQuantity')}
               onClick={() => onQuantityChange(Math.min(20, line.quantity + 1))}
-              className="px-2.5 py-1 text-sm text-on-surface-variant hover:bg-surface-variant transition-colors disabled:opacity-40"
+              className="min-h-11 min-w-11 px-2.5 py-1 text-sm text-on-surface-variant hover:bg-surface-variant transition-colors disabled:opacity-40"
               disabled={line.quantity >= 20}
             >
               +

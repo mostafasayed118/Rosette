@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { handleChangePaymentCallback, payChangeRequestDelta, reviewChangeRequest, submitChangeRequest } from '@/features/orders/change-request-service';
+import { handleChangePaymentCallback, payChangeRequestDelta, reviewChangeRequest, submitChangeRequest } from '@/features/order-mutations/change-request-service';
 
 const orderRow = {
   id: 'o1', display_number: 'RO-1', fulfillment_status: 'confirmed', payment_status: 'pending',

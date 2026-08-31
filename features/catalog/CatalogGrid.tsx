@@ -20,7 +20,9 @@ export function CatalogGrid({ products }: { products: Product[] }) {
           key={product.slug}
           product={product}
           aspectClass={ASPECTS[index % 3]}
-          className={index % 3 === 1 ? 'lg:mt-16' : ''}
+          // Short result sets should optimize for comparison; reserve the
+          // editorial stagger for collections with enough cards to sustain it.
+          className={products.length >= 5 && index % 3 === 1 ? 'lg:mt-16' : ''}
         />
       ))}
     </div>

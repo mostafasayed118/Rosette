@@ -107,14 +107,14 @@ export function SubscriptionCheckoutForm({ plan, cityCode, citySlug, turnstileSi
             <Input id="recipientName" value={recipientSelf ? '' : recipientName} disabled={recipientSelf} onChange={(e) => setRecipientName(e.target.value)} />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="recipientPhone">Phone</Label>
+            <Label htmlFor="recipientPhone">{t('subscriptionPhone')}</Label>
             <Input id="recipientPhone" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)} />
           </div>
         </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="deliveryAddress">Address</Label>
-          <Input id="deliveryAddress" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
-        </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="deliveryAddress">{t('subscriptionAddress')}</Label>
+            <Input id="deliveryAddress" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} />
+          </div>
       </fieldset>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -123,7 +123,7 @@ export function SubscriptionCheckoutForm({ plan, cityCode, citySlug, turnstileSi
           <Input id="deliveryDate" type="date" min={minDate} value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="deliveryWindow">Window</Label>
+          <Label htmlFor="deliveryWindow">{t('subscriptionWindow')}</Label>
           <select id="deliveryWindow" value={deliveryWindow} onChange={(e) => setDeliveryWindow(e.target.value)} className="rounded-md border border-outline-variant bg-background px-3 py-2 text-sm">
             {WINDOWS.map((w) => <option key={w} value={w}>{w}</option>)}
           </select>
@@ -136,10 +136,10 @@ export function SubscriptionCheckoutForm({ plan, cityCode, citySlug, turnstileSi
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="promoCode">Promo code</Label>
+        <Label htmlFor="promoCode">{t('subscriptionPromoCode')}</Label>
         <div className="flex gap-2">
           <Input id="promoCode" value={promo.code} onChange={(e) => promo.setCode(e.target.value)} />
-          <Button type="button" variant="outline" onClick={() => promo.confirm()}>Apply</Button>
+          <Button type="button" variant="outline" onClick={() => promo.confirm()}>{t('subscriptionApply')}</Button>
         </div>
         {promo.state === 'valid' && promo.discountMinor ? <small className="text-sm text-sage">−{formatMoney(promo.discountMinor, locale)}</small> : null}
         {promo.state === 'invalid' ? <small className="text-sm text-destructive">{promo.error}</small> : null}

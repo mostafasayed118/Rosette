@@ -15,7 +15,7 @@ export default async function ProductNotFound() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <main className="mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start py-24">
+      <main id="main-content" className="mx-auto grid min-h-[70vh] w-[min(calc(100%-3rem),80rem)] place-content-center justify-items-start py-24">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-sage">{t('productNotFoundEyebrow')}</p>
         <h1 className="mt-3 mb-6 max-w-[14ch] font-display text-[clamp(2.25rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-0.02em] text-primary">
           {t('productNotFoundTitle')}

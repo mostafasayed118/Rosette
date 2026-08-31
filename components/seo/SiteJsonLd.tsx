@@ -1,8 +1,9 @@
 import { buildBreadcrumbJsonLd, buildLocalBusinessJsonLd, buildOrganizationJsonLd, type BreadcrumbItem } from '@/features/seo/site-jsonld';
+import { serializeJsonLd } from '@/lib/sanitize-html';
 import type { Locale } from '@/features/i18n/types';
 
 function JsonLd({ data }: { data: object }) {
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }} />;
 }
 
 export function OrganizationJsonLd({ base, locale, sameAs }: { base: string; locale: Locale | string; sameAs?: string[] }) {

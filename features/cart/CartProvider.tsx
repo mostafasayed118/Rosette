@@ -5,6 +5,7 @@ import { addLine, addRecipient, assignLineToRecipient, isMultiRecipient, removeL
 import { calculateCartTotals } from './pricing';
 import { clearCartStorage, readCart, writeCart } from './storage';
 import { deferToTask } from '@/hooks/use-deferred-task';
+import { resolveDeliveryFee, DEFAULT_DELIVERY_FEE_MINOR } from '@/features/order/delivery-rules';
 import type { AddCartLineInput, Cart, CartLine, CartRecipient } from './types';
 
 type CartContextValue = {
@@ -39,7 +40,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     cart,
     ready,
     itemCount: cart.lines.reduce((sum, line) => sum + line.quantity, 0),
-    totals: calculateCartTotals(cart.lines, cart.lines.length ? 1500 : 0),
+    totals: calculateCartTotals(cart.lines, cart.lines.length ? resolveDeliveryFee(undefined, 0) ?? DEFAULT_DELIVERY_FEE_MINOR : 0),
     multiRecipient: isMultiRecipient(cart),
     recipients: cart.recipients,
     addItem: (input) => setCart((current) => addLine(current, input)),

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAdmin } from '@/features/auth/server';
-import { reviewChangeRequest } from '@/features/orders/change-request-service';
+import { reviewChangeRequest } from '@/features/order-mutations/change-request-service';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { getPublicOrigin } from '@/lib/origin';
 

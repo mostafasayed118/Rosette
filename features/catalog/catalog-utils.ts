@@ -34,6 +34,7 @@ export function filterProducts(products: Product[], query: CatalogQuery): Produc
   return candidates.filter((product) => {
     if (query.category && query.category !== 'all' && product.category !== query.category) return false;
     if (query.occasion && query.occasion !== 'all' && !product.occasions.includes(query.occasion)) return false;
+    if (query.color && query.color !== 'all' && !(product.giftColors ?? []).includes(query.color)) return false;
     if (query.minPrice !== undefined && product.price < query.minPrice) return false;
     if (query.maxPrice !== undefined && product.price > query.maxPrice) return false;
     return true;
@@ -54,11 +55,13 @@ export function parseCatalogQuery(params: URLSearchParams): CatalogQuery {
   const search = params.get('search');
   const category = params.get('category');
   const occasion = params.get('occasion');
+  const color = params.get('color');
   const sort = params.get('sort');
   const page = Number(params.get('page'));
   if (search) query.search = search;
   if (category) query.category = category;
   if (occasion) query.occasion = occasion;
+  if (color) query.color = color;
   if (sort === 'recommended' || sort === 'newest' || sort === 'price-asc' || sort === 'price-desc') query.sort = sort;
   if (Number.isInteger(page) && page > 1) query.page = page;
   return query;
@@ -66,7 +69,7 @@ export function parseCatalogQuery(params: URLSearchParams): CatalogQuery {
 
 export function serializeCatalogQuery(query: CatalogQuery): string {
   const params = new URLSearchParams();
-  for (const key of ['search', 'category', 'occasion', 'sort'] as const) {
+  for (const key of ['search', 'category', 'occasion', 'color', 'sort'] as const) {
     const value = query[key];
     if (value) params.set(key, String(value));
   }

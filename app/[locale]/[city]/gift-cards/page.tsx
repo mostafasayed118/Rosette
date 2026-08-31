@@ -9,7 +9,7 @@ export default async function GiftCardsPage({ params }: { params: Promise<{ loca
   return (
     <div className="flex min-h-screen flex-col bg-surface text-on-surface selection:bg-primary/20 selection:text-primary">
       <SiteHeader />
-      <main className="flex-grow w-full relative z-10 pt-8 pb-16 md:py-16">
+      <main id="main-content" className="flex-grow w-full relative z-10 pt-8 pb-16 md:py-16">
         <GiftCardPurchaseForm cityCode={cityCode} />
       </main>
       <SiteFooter locale={locale} city={city} />

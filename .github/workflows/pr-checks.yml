@@ -15,7 +15,7 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -35,3 +35,24 @@ jobs:
 
       - name: Typecheck and lint
         run: npm run lint
+
+      # Schema-drift gate (R-02 / R-10): fails CI when a local migration has not
+      # been applied to the live project (e.g. 038-040 are live-unapplied).
+      # Requires SUPABASE_ACCESS_TOKEN + SUPABASE_PROJECT_REF (or DATABASE_URL) as
+      # repo secrets; when absent the script prints "SKIPPED (no credentials)"
+      # and passes, so PRs are not blocked until secrets are configured.
+      - name: Check schema drift
+        run: node scripts/check-schema-drift.mjs
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+
+      - name: Install Chromium for E2E
+        run: npx playwright install --with-deps chromium
+
+      - name: Run deterministic E2E
+        run: npm run test:e2e

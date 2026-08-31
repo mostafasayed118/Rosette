@@ -27,7 +27,7 @@ export default async function GiftCardResultPage({
   return (
     <div className="flex min-h-screen flex-col bg-surface text-on-surface selection:bg-primary/20 selection:text-primary">
       <SiteHeader />
-      <main className="flex-grow w-full relative z-10 pt-8 pb-16 md:py-16">
+      <main id="main-content" className="flex-grow w-full relative z-10 pt-8 pb-16 md:py-16">
         <div className="max-w-[1280px] mx-auto px-5 md:px-[64px]">
           <GiftCardResultShell locale={locale} city={city} cityCode={cityCode}>
             <GiftCardCheckoutResult status={status} />

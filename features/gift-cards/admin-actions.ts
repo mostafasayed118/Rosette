@@ -52,10 +52,62 @@ export async function listGiftCards(client: AdminGiftCardClient, identity: Admin
   return ((data ?? []) as Record<string, any>[]).filter((row) => (!filters.status || row.status === filters.status) && (!filters.search || `${row.code_last4} ${row.recipient_email ?? ''} ${row.buyer_email ?? ''}`.toLowerCase().includes(filters.search.toLowerCase()))).map(maskedRow);
 }
 
-export async function listGiftCardTransactions(client: AdminGiftCardClient, identity: AdminIdentity, cardId: string) {
+export type GiftCardTransaction = {
+  type: string;
+  amountMinor: number;
+  orderId: string | null;
+  actorId: string | null;
+  idempotencyKey: string;
+  createdAt: string;
+};
+
+function mapGiftCardTransaction(row: Record<string, any>): GiftCardTransaction {
+  return {
+    type: String(row.type),
+    amountMinor: Number(row.amount_minor),
+    orderId: row.order_id ?? null,
+    actorId: row.actor_id ?? null,
+    idempotencyKey: `…:${String(row.idempotency_key).split(':').pop() ?? ''}`,
+    createdAt: String(row.created_at),
+  };
+}
+
+export async function listGiftCardTransactions(client: AdminGiftCardClient, identity: AdminIdentity, cardId: string): Promise<GiftCardTransaction[]> {
   if (!canOperate(identity)) return [];
-  const { data } = await client.from('gift_card_transactions').select('type,amount_minor,order_id,actor_id,idempotency_key,created_at').eq('gift_card_id', cardId);
-  return ((data ?? []) as Record<string, any>[]).map((row) => ({ type: row.type, amountMinor: Number(row.amount_minor), orderId: row.order_id ?? null, actorId: row.actor_id ?? null, idempotencyKey: `…:${String(row.idempotency_key).split(':').pop() ?? ''}`, createdAt: String(row.created_at) }));
+  const { data } = await client.from('gift_card_transactions')
+    .select('gift_card_id,type,amount_minor,order_id,actor_id,idempotency_key,created_at')
+    .eq('gift_card_id', cardId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  return ((data ?? []) as Record<string, any>[]).map(mapGiftCardTransaction);
+}
+
+/**
+ * Load transaction history for all visible cards in one bounded query.
+ * The previous page-level Promise.all issued one request per card and could
+ * exceed the Cloudflare Worker subrequest cap on a large gift-card account.
+ */
+export async function listGiftCardTransactionsByCard(
+  client: AdminGiftCardClient,
+  identity: AdminIdentity,
+  cardIds: string[],
+): Promise<Map<string, GiftCardTransaction[]>> {
+  const result = new Map<string, GiftCardTransaction[]>();
+  for (const id of cardIds) result.set(id, []);
+  if (!canOperate(identity) || cardIds.length === 0) return result;
+
+  const { data } = await client.from('gift_card_transactions')
+    .select('gift_card_id,type,amount_minor,order_id,actor_id,idempotency_key,created_at')
+    .in('gift_card_id', cardIds)
+    .order('created_at', { ascending: false })
+    .limit(Math.min(cardIds.length * 100, 5000));
+
+  for (const row of (data ?? []) as Array<Record<string, any>>) {
+    const cardId = String(row.gift_card_id);
+    const transactions = result.get(cardId);
+    if (transactions && transactions.length < 100) transactions.push(mapGiftCardTransaction(row));
+  }
+  return result;
 }
 
 export async function voidGiftCard(client: AdminGiftCardClient, identity: AdminIdentity, cardId: string): Promise<'voided' | 'already_void' | 'not_found' | 'held' | 'failure' | 'forbidden'> {

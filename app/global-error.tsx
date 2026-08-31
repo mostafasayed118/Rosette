@@ -8,7 +8,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <html lang="en">
       <body style={{ margin: 0, minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#fdf6f0', color: '#1a0f14', fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
-        <main style={{ maxWidth: '32rem', textAlign: 'center' }} role="alert">
+        <main id="main-content" style={{ maxWidth: '32rem', textAlign: 'center' }} role="alert">
           <p style={{ margin: 0, fontSize: '.75rem', fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: '#6f8f6d' }}>
             Rosette
           </p>

@@ -6,8 +6,8 @@ import { getCustomerOrder, getCancelRequestForOrder, getChangeRequestForOrder } 
 import { CancelRequestButton } from '@/components/account/CancelRequestButton';
 import { ChangeRequestForm } from '@/components/account/ChangeRequestForm';
 import { PayDifferenceButton } from '@/components/account/PayDifferenceButton';
-import { canRequestCancellation } from '@/features/orders/cancel-request';
-import { canRequestChange } from '@/features/orders/change-request';
+import { canRequestCancellation } from '@/features/order-mutations/cancel-request';
+import { canRequestChange } from '@/features/order-mutations/change-request';
 import { getCurrentCustomer } from '@/features/auth/customer';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { getServerT } from '@/features/i18n/server';

@@ -1,0 +1,9 @@
+
+HEAD: 5ef34d0deef3d8002c46f5f926b33da99e354c4a
+staged (cached) count: 0
+unstaged count: 0
+untracked count: 1
+stash list:
+stash list count: 0
+status --short sample (first 5):
+full status line count: 0

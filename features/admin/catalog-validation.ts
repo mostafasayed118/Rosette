@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { GIFT_RECIPIENTS, GIFT_STYLES, GIFT_COLORS } from '@/features/gift-finder/tags';
 
 export const CATEGORIES = ['hand-bouquet', 'vase-arrangement', 'plants', 'gift-boxes', 'sympathy'];
@@ -40,3 +41,84 @@ export function validateProductInput(input: SaveProductInput): string | null {
   }
   return null;
 }
+
+const categorySchema = z.enum(CATEGORIES as [string, ...string[]]);
+const occasionSchema = z.enum(OCCASIONS as [string, ...string[]]);
+const frequencySchema = z.enum(['weekly', 'biweekly', 'monthly']);
+const promoTypeSchema = z.enum(['percent', 'fixed', 'free_shipping']);
+const planSlugSchema = z.string().regex(/^[a-z0-9-]+$/);
+
+/** Route-level guard for the admin product create payload (mirrors `validateProductInput`). */
+export const productPayloadSchema = z.object({
+  nameEn: z.string().min(1),
+  nameAr: z.string().min(1),
+  descriptionEn: z.string(),
+  descriptionAr: z.string(),
+  category: categorySchema,
+  occasions: z.array(occasionSchema),
+  giftRecipients: z.array(z.string()),
+  giftStyles: z.array(z.string()),
+  giftColors: z.array(z.string()),
+  priceMinor: z.number().int().min(0),
+  tone: z.string().regex(TONE_PATTERN),
+  imageUrl: z.string().default('').refine((v) => v === '' || IMAGE_URL_PATTERN.test(v), 'invalid_image_url'),
+  delivery: z.string().min(1),
+  active: z.boolean(),
+  variants: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        nameEn: z.string().min(1),
+        nameAr: z.string().min(1),
+        priceDeltaMinor: z.number().int(),
+        active: z.boolean(),
+        quantity: z.number().int().min(0),
+      }),
+    )
+    .min(1),
+  addOns: z.array(
+    z.object({
+      id: z.string().min(1),
+      nameEn: z.string().min(1),
+      nameAr: z.string().min(1),
+      priceMinor: z.number().int().min(0),
+    }),
+  ),
+});
+
+/** Route-level guard for the admin promo create/update payload (mirrors `validatePromoInput`). */
+export const promoPayloadSchema = z.object({
+  code: z.string().regex(/^[A-Z0-9][A-Z0-9-]*$/),
+  type: promoTypeSchema,
+  percentOff: z.number().int().nullable(),
+  valueMinor: z.number().int().nullable(),
+  minimumOrderMinor: z.number().int().min(0),
+  startsAt: z.string().nullable().default(null),
+  expiresAt: z.string().nullable().default(null),
+  maxUses: z.number().int().min(0),
+  perUserLimit: z.number().int().min(0),
+  active: z.boolean(),
+});
+
+/** Route-level guard for the admin subscription plan create payload. */
+export const planPayloadSchema = z.object({
+  slug: planSlugSchema,
+  nameEn: z.string().min(1),
+  nameAr: z.string().min(1),
+  nameFr: z.string().min(1),
+  descriptionEn: z.string().default(''),
+  descriptionAr: z.string().default(''),
+  descriptionFr: z.string().default(''),
+  productId: z.string().uuid().nullable().optional(),
+  frequencies: z.array(frequencySchema).min(1),
+  bundlePrices: z
+    .array(
+      z.object({
+        deliveries: z.number().int().min(1),
+        priceMinor: z.number().int().min(1),
+      }),
+    )
+    .min(1),
+  active: z.boolean().default(true),
+  sortOrder: z.number().int().min(0).default(0),
+});

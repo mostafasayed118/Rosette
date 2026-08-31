@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Too many order attempts for this address. Please wait a moment.' }, { status: 429, headers: { 'Retry-After': String(emailResult.retryAfterSeconds) } });
       }
     }
-    const validation = validateOrderRequest(body as { cart?: { lines?: unknown[] }; total?: unknown });
+    const validation = validateOrderRequest(body);
     if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
     if (!body.destination || !body.checkout || (body.locale !== 'ar' && body.locale !== 'en' && body.locale !== 'fr')) return NextResponse.json({ error: 'Incomplete checkout details' }, { status: 400 });
     const locale = body.locale as 'ar' | 'en' | 'fr';

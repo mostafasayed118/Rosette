@@ -28,7 +28,14 @@ describe('CatalogGrid', () => {
     expect(screen.getByText('Bouquet a')).toBeInTheDocument();
   });
 
-  it('staggers every middle-column card on desktop', () => {
+  it('keeps sparse result sets balanced instead of creating an orphaned staggered card', () => {
+    renderGrid([product('a'), product('b'), product('c'), product('d')]);
+    const articles = screen.getAllByRole('article');
+    expect(articles[1]?.className).not.toContain('lg:mt-16');
+    expect(articles[3]?.className).not.toContain('lg:mt-16');
+  });
+
+  it('keeps the editorial stagger for larger result sets', () => {
     renderGrid([product('a'), product('b'), product('c'), product('d'), product('e'), product('f')]);
     const articles = screen.getAllByRole('article');
     expect(articles[1]?.className).toContain('lg:mt-16');
@@ -36,11 +43,12 @@ describe('CatalogGrid', () => {
     expect(articles[0]?.className).not.toContain('lg:mt-16');
   });
 
-  it('renders the Stitch card face: name, subtitle, price — no category eyebrow or delivery line', () => {
+  it('renders comparison data: name, subtitle, price, and delivery promise', () => {
     renderGrid([product('a')]);
     expect(screen.getByText('Bouquet a')).toBeInTheDocument();
     expect(screen.getByText('Soft seasonal stems')).toBeInTheDocument();
     expect(screen.getByText(/EGP/)).toBeInTheDocument();
+    expect(screen.getByText('Same-day delivery')).toBeInTheDocument();
     expect(screen.queryByText(/hand bouquet/i)).not.toBeInTheDocument();
   });
 });

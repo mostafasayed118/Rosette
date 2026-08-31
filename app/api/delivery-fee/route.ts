@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCity } from '@/features/destination/data';
-import { estimateDeliveryFeeMinor } from '@/features/destination/delivery-fee';
-import { applyDeliveryRule, DEFAULT_DELIVERY_FEE_MINOR, fetchDeliveryRule } from '@/features/order/delivery-rules';
+import { applyDeliveryRule, fetchDeliveryRule, resolveDeliveryFee, DEFAULT_DELIVERY_FEE_MINOR } from '@/features/order/delivery-rules';
 import { getServerSupabase } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
 
@@ -13,7 +12,7 @@ export async function GET(request: Request) {
 
     const supabase = await getServerSupabase();
     const rule = supabase ? await fetchDeliveryRule(supabase, city.code) : null;
-    const fallback = estimateDeliveryFeeMinor(city.code) ?? DEFAULT_DELIVERY_FEE_MINOR;
+    const fallback = resolveDeliveryFee(city.code, 0) ?? DEFAULT_DELIVERY_FEE_MINOR;
     const { feeMinor } = applyDeliveryRule(rule, 0, fallback);
     return NextResponse.json({ cityCode: city.code, feeMinor });
   } catch (error) {

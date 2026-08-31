@@ -13,7 +13,7 @@ export function StaticPageShell({ locale, city, eyebrow, title, lede, children }
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
-      <main className="mx-auto w-[min(calc(100%-3rem),80rem)] flex-1 py-16 md:py-24">
+      <main id="main-content" className="mx-auto w-[min(calc(100%-3rem),80rem)] flex-1 py-16 md:py-24">
         <article className="max-w-2xl">
           <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-sage">{eyebrow}</span>
           <h1 className="mt-3 font-display text-[clamp(2.5rem,6vw,4rem)] font-medium leading-[1.05] tracking-[-0.02em] text-on-surface">{title}</h1>

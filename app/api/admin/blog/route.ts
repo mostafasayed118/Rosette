@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createBlogPost, updateBlogPost } from '@/features/admin/blog-admin';
 import type { BlogPostInput } from '@/features/blog/types';
-import { getCurrentAdmin } from '@/features/auth/server';
+import { getCurrentContentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 
@@ -10,7 +10,7 @@ function badRequest(): NextResponse {
 }
 
 export async function POST(request: Request) {
-  const admin = await getCurrentAdmin();
+  const admin = await getCurrentContentAdmin();
   if (!admin) return NextResponse.json({ error: 'Admin authorization required' }, { status: 403 });
   const body = (await request.json()) as Record<string, unknown>;
   const input = body.post as unknown;

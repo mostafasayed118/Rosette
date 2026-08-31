@@ -1,11 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderToString } from 'react-dom/server';
+import { renderToPipeableStream } from 'react-dom/server';
+import { PassThrough } from 'node:stream';
 import { I18nProvider } from '@/features/i18n/I18nProvider';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
   getServerSupabase: vi.fn(),
+}));
+
+// `unstable_cache` (from next/cache) throws outside the Next.js runtime, so
+// stub it out to just execute the wrapped function (R-08 caching change).
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: (...args: any[]) => any) => fn,
 }));
 
 vi.mock('@/features/personalization/provider', () => ({
@@ -128,8 +135,23 @@ const productPageParams = {
   params: Promise.resolve({ locale: 'en', city: 'cairo', slug: 'rose-hour' }),
 };
 
-function renderWithProviders(node: any) {
-  return renderToString(<ThemeProvider><I18nProvider>{node}</I18nProvider></ThemeProvider>);
+async function renderWithProviders(node: any): Promise<string> {
+  const element = (
+    <ThemeProvider><I18nProvider>{node}</I18nProvider></ThemeProvider>
+  );
+  return new Promise<string>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    const sink = new PassThrough();
+    sink.on('data', (c: Buffer) => chunks.push(c));
+    sink.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    sink.on('error', reject);
+    const { pipe } = renderToPipeableStream(element, {
+      onShellError: reject,
+      // onAllReady waits for the Suspense boundary (PersonalizationSection) to
+      // resolve, then pipes the full stream (including the resolved section).
+      onAllReady: () => pipe(sink),
+    });
+  });
 }
 
 beforeEach(() => {
@@ -149,7 +171,7 @@ describe('ShopPage integration with personalization', () => {
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
     const node = await mod.default(shopPageParams);
-    const html = renderWithProviders(node);
+    const html = await renderWithProviders(node);
 
     expect(getPicks).toHaveBeenCalledWith('uid-123', expect.objectContaining({ limit: 8, locale: 'en' }));
     expect(html).toContain('data-testid="buy-again"');
@@ -167,7 +189,7 @@ describe('ShopPage integration with personalization', () => {
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
     const node = await mod.default(shopPageParams);
-    const html = renderWithProviders(node);
+    const html = await renderWithProviders(node);
 
     expect(getPicks).not.toHaveBeenCalled();
     expect(html).not.toContain('data-testid="buy-again"');
@@ -183,7 +205,7 @@ describe('ShopPage integration with personalization', () => {
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
     const node = await mod.default(shopPageParams);
-    const html = renderWithProviders(node);
+    const html = await renderWithProviders(node);
 
     expect(getPicks).not.toHaveBeenCalled();
     expect(html).not.toContain('data-testid="buy-again"');
@@ -200,7 +222,7 @@ describe('ShopPage integration with personalization', () => {
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
     const node = await mod.default(shopPageParams);
-    const html = renderWithProviders(node);
+    const html = await renderWithProviders(node);
 
     expect(getPicks).toHaveBeenCalledOnce();
     expect(html).not.toContain('data-testid="buy-again"');
@@ -214,7 +236,7 @@ describe('ShopPage integration with personalization', () => {
 
     const mod = await import('@/app/[locale]/[city]/shop/(list)/page');
     const node = await mod.default(shopPageParams);
-    const html = renderWithProviders(node);
+    const html = await renderWithProviders(node);
 
     expect(html).not.toContain('data-testid="buy-again"');
     expect(html).not.toContain('data-testid="recommended"');
@@ -230,7 +252,7 @@ describe('ProductPage integration with personalization', () => {
 
     const mod = await import('@/app/[locale]/[city]/shop/[slug]/page');
     const node = await mod.default(productPageParams);
-    const html = renderWithProviders(node);
+    const html = await renderWithProviders(node);
 
     expect(getPicks).toHaveBeenCalledWith('uid-123', expect.objectContaining({ limit: 8, locale: 'en', excludeSlug: 'rose-hour' }));
     expect(html).toContain('data-testid="recommended"');
@@ -245,7 +267,7 @@ describe('ProductPage integration with personalization', () => {
 
     const mod = await import('@/app/[locale]/[city]/shop/[slug]/page');
     const node = await mod.default(productPageParams);
-    const html = renderWithProviders(node);
+    const html = await renderWithProviders(node);
 
     expect(getPicks).not.toHaveBeenCalled();
     expect(html).not.toContain('data-testid="recommended"');
@@ -262,7 +284,7 @@ describe('ProductPage integration with personalization', () => {
 
     const mod = await import('@/app/[locale]/[city]/shop/[slug]/page');
     const node = await mod.default(productPageParams);
-    const html = renderWithProviders(node);
+    const html = await renderWithProviders(node);
 
     expect(html).not.toContain('data-testid="recommended"');
   });
