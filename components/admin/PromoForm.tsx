@@ -40,14 +40,20 @@ export function PromoForm({ promo }: { promo: PromoInput }) {
       active,
     };
     const response = await fetch('/api/admin/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update-promo', promo: body }) });
-    if (!response.ok) { setError(t('couldNotSavePromo')); setSaving(false); return; }
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { reason?: string } | null;
+      const reason = response.status === 409 ? 'code_taken' : payload?.reason;
+      setError(reason ? t(`promoError_${reason}`) : t('couldNotSavePromo'));
+      setSaving(false);
+      return;
+    }
     router.refresh();
   }
 
   return <form className="flex flex-wrap items-end gap-2" onSubmit={submit}>
-    <Select value={type} onValueChange={(v) => setType(v as 'percent' | 'fixed')}>
-      <SelectTrigger className="h-10 w-24" aria-label={t('promoType')}><SelectValue /></SelectTrigger>
-      <SelectContent><SelectItem value="percent">%</SelectItem><SelectItem value="fixed">EGP</SelectItem><SelectItem value="free_shipping">Free shipping</SelectItem></SelectContent>
+    <Select value={type} onValueChange={(v) => setType(v as 'percent' | 'fixed' | 'free_shipping')}>
+      <SelectTrigger className="h-10 w-32" aria-label={t('promoType')}><SelectValue /></SelectTrigger>
+      <SelectContent><SelectItem value="percent">%</SelectItem><SelectItem value="fixed">EGP</SelectItem><SelectItem value="free_shipping">{t('freeShipping')}</SelectItem></SelectContent>
     </Select>
     {type === 'percent'
       ? <Input className="h-10 w-24" type="number" min={0} max={100} value={percent} onChange={(e) => setPercent(e.target.value)} aria-label={t('percentOff')} />

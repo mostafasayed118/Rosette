@@ -11,7 +11,10 @@ const nextConfig: NextConfig = {
     // Enables forbidden() / unauthorized() so app/[locale]/forbidden.tsx and
     // app/[locale]/unauthorized.tsx render with the correct HTTP status.
     authInterrupts: true,
+    optimizePackageImports: ['lucide-react', 'radix-ui', 'motion', 'sonner'],
   },
+  // Reduce JS parse cost for admin-heavy pages
+  transpilePackages: ['radix-ui'],
   images: {
     // Cloudflare Workers cannot run Next's default (sharp-based) optimizer.
     // OpenNext serves these through the Workers image resizing pipeline instead.

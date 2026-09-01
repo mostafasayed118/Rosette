@@ -30,6 +30,20 @@ export default function LoginPage() {
       setSubmitting(false);
       return;
     }
+    // Verify the profile is an admin/operator before bouncing to /admin.
+    // Without this, a valid customer login would redirect to /admin and
+    // immediately bounce back to /login (appearing as "not login").
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+      const role = (profile as { role?: string } | null)?.role;
+      if (role !== 'admin' && role !== 'operator') {
+        await supabase.auth.signOut();
+        setError(t('signInFailed') + ' — ' + t('notAdmin'));
+        setSubmitting(false);
+        return;
+      }
+    }
     router.push('/admin');
     router.refresh();
   }

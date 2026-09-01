@@ -88,7 +88,10 @@ export const productPayloadSchema = z.object({
 
 /** Route-level guard for the admin promo create/update payload (mirrors `validatePromoInput`). */
 export const promoPayloadSchema = z.object({
-  code: z.string().regex(/^[A-Z0-9][A-Z0-9-]*$/),
+  code: z
+    .string()
+    .transform((v) => v.trim().toUpperCase())
+    .pipe(z.string().regex(/^[A-Z0-9][A-Z0-9-]*$/)),
   type: promoTypeSchema,
   percentOff: z.number().int().nullable(),
   valueMinor: z.number().int().nullable(),

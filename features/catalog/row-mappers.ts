@@ -35,6 +35,12 @@ function variantStock(variant: { inventory?: { quantity: number; reserved_quanti
   return Array.isArray(variant.inventory) ? variant.inventory[0] : variant.inventory;
 }
 
+function inferDeliveryTier(delivery: string): Product['deliveryTier'] {
+  return delivery.trim().toLowerCase().startsWith('same-day') ? 'same_day' : 'next_day';
+}
+// Export for tests that construct rows without a tier.
+export { inferDeliveryTier };
+
 export function mapSupabaseProduct(row: SupabaseProductRow): Product {
   // Inventory lives per-variant; the storefront model is product-level, so sum
   // the available stock (quantity - reserved) across all variants.
@@ -60,6 +66,7 @@ export function mapSupabaseProduct(row: SupabaseProductRow): Product {
     imageUrl: row.image_url ?? null,
     inventory: available,
     delivery: row.delivery,
+    deliveryTier: inferDeliveryTier(row.delivery),
     createdAt: row.created_at,
     variants: (row.product_variants ?? []).map((variant) => ({ id: variant.id, name: variant.name_en, nameFr: variant.name_fr, priceDelta: variant.price_delta_minor })),
     addOns: (row.add_ons ?? []).map((addOn) => ({ id: addOn.id, name: addOn.name_en, nameFr: addOn.name_fr, price: addOn.price_minor })),

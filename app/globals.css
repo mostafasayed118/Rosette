@@ -61,10 +61,10 @@
   --color-on-error: #ffffff;
   --color-error-container: var(--rt-error-container);
   --color-on-error-container: var(--rt-on-error-container);
-  --text-display-xl: 4rem;
-  --text-display-xl-mobile: 2.625rem;
-  --text-headline-lg: 2rem;
-  --text-headline-sm: 1.5rem;
+  --text-display-xl: clamp(2.5rem, 6vw, 4rem);
+  --text-display-xl-mobile: clamp(2rem, 8vw, 2.625rem);
+  --text-headline-lg: clamp(1.5rem, 4vw, 2rem);
+  --text-headline-sm: clamp(1.25rem, 3vw, 1.5rem);
   --text-body-lg: 1.125rem;
   --text-body-md: 1rem;
   --text-meta-mono: 0.875rem;
@@ -82,9 +82,9 @@
   --color-muted: var(--color-surface-muted);
   --color-muted-foreground: var(--color-ink-muted);
   --color-accent: var(--color-brand-soft);
-  --color-accent-foreground: var(--color-brand-hover);
+  --color-accent-foreground: var(--color-ink);
   --color-destructive: var(--color-danger);
-  --color-destructive-foreground: var(--color-surface);
+  --color-destructive-foreground: var(--color-primary-foreground-token);
   --color-sage: var(--color-accent);
   --color-sage-ink: var(--color-sage-ink-token);
   --color-success: var(--color-success-token);
@@ -104,6 +104,10 @@
   --radius-card: 16px;
   --radius-control: 12px;
   --shadow-surface: 0 10px 40px -16px rgb(58 20 30 / 12%);
+  /* Card/soft/ambient shadows are theme-aware — dark overrides defined in :root.dark */
+  --shadow-card: 0 2px 8px rgb(58 20 30 / 7%), 0 24px 48px -12px rgb(58 20 30 / 10%);
+  --shadow-soft: 0 16px 40px rgb(58 20 30 / 12%);
+  --shadow-ambient: 0 20px 50px -16px rgb(58 20 30 / 14%);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -119,7 +123,10 @@
   --site-header-height: 4.25rem;
   --radius-card: 1rem;
   --radius-control: 0.75rem;
-  --shadow-surface: 0 10px 40px -16px rgb(0 0 0 / 24%);
+  --shadow-surface: 0 10px 40px -16px rgb(0 0 0 / 32%);
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 12%), 0 24px 48px -12px rgb(0 0 0 / 22%);
+  --shadow-soft: 0 16px 40px rgb(0 0 0 / 20%);
+  --shadow-ambient: 0 20px 50px -16px rgb(0 0 0 / 24%);
   --color-sage-ink-token: #a8c5a4;
   --color-canvas: #1a211e;
   --color-surface: #232a26;
@@ -138,14 +145,14 @@
   --color-warning-token: #c79a5a;
   --color-danger: #e47d71;
   --motion-success: oklch(0.78 0.16 145);
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --sidebar: #18181b;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #3b82f6;
   --rt-surface-container-lowest: #191f1c;
   --rt-surface-container-low: #1f2622;
   --rt-surface-container: #232a26;
@@ -174,6 +181,9 @@
   --radius-card: 1rem;
   --radius-control: 0.75rem;
   --shadow-surface: 0 10px 40px -16px rgb(58 20 30 / 12%);
+  --shadow-card: 0 2px 8px rgb(58 20 30 / 7%), 0 24px 48px -12px rgb(58 20 30 / 10%);
+  --shadow-soft: 0 16px 40px rgb(58 20 30 / 12%);
+  --shadow-ambient: 0 20px 50px -16px rgb(58 20 30 / 14%);
   --color-sage-ink-token: #476647;
   --color-canvas: #fdf6f0;
   --color-surface: #ffffff;
@@ -210,18 +220,15 @@
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-pill: 999px;
-  --shadow-card: 0 2px 8px rgb(58 20 30 / 7%), 0 24px 48px -12px rgb(58 20 30 / 10%);
-  --shadow-soft: 0 16px 40px rgb(58 20 30 / 12%);
-  --shadow-ambient: 0 20px 50px -16px rgb(58 20 30 / 14%);
   --content-max: 80rem;
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --sidebar: #fafafa;
+  --sidebar-foreground: #3f3f46;
+  --sidebar-primary: #18181b;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #3b82f6;
   --rt-surface-container-lowest: #ffffff;
   --rt-surface-container-low: #faf2ec;
   --rt-surface-container: #f4ede6;
@@ -288,8 +295,12 @@ body { margin: 0; color: var(--color-ink); background: var(--color-canvas); font
 @layer base {
   a { color: inherit; text-decoration: none; }
   button, input, select, textarea { font: inherit; }
-  button, a, input, select, textarea { outline-offset: 4px; }
-  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+  button, a, input, select, textarea { outline-offset: 2px; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--color-ring); outline-offset: 2px; }
+  /* High-contrast fallback for Windows HCM */
+  @media (forced-colors: active) {
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid CanvasText; }
+  }
 }
 main { flex: 1; }
 /* WCAG 2.5.8 (Target Size Minimum): standalone text links need a 24px target.
@@ -334,11 +345,20 @@ main { flex: 1; }
   background: linear-gradient(
     90deg,
     var(--color-muted) 0%,
-    color-mix(in oklch, var(--color-muted-foreground) 10%, transparent) 50%,
+    color-mix(in oklch, var(--color-muted-foreground) 12%, var(--color-muted)) 50%,
     var(--color-muted) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s linear infinite;
+}
+:root.dark .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-muted) 0%,
+    color-mix(in oklch, var(--color-muted-foreground) 18%, var(--color-muted)) 50%,
+    var(--color-muted) 100%
+  );
+  background-size: 200% 100%;
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -368,7 +388,7 @@ main { flex: 1; }
   }
 }
 
-/* Base toast — warm paper, blurred, soft shadow */
+/* Base toast — warm paper, blurred, soft shadow — theme-aware */
 [data-sonner-toast] {
   --toast-accent: var(--color-brand);
   --toast-icon-bg: var(--color-brand-soft);
@@ -377,10 +397,7 @@ main { flex: 1; }
   backdrop-filter: blur(16px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
   border: 1px solid color-mix(in oklch, var(--rt-outline-variant) 18%, transparent) !important;
-  box-shadow:
-    0 16px 40px -12px rgb(58 20 30 / 14%),
-    0 4px 16px -4px rgb(58 20 30 / 10%),
-    0 0 0 1px rgb(58 20 30 / 04%) !important;
+  box-shadow: var(--shadow-soft) !important;
   border-radius: 16px !important;
   padding: 14px 16px !important;
   padding-right: 40px !important;
@@ -422,10 +439,7 @@ main { flex: 1; }
 :root.dark [data-sonner-toast] {
   background: color-mix(in oklch, var(--color-surface) 88%, transparent) !important;
   border-color: color-mix(in oklch, var(--rt-outline-variant) 22%, transparent) !important;
-  box-shadow:
-    0 20px 48px -16px rgb(0 0 0 / 36%),
-    0 8px 20px -8px rgb(0 0 0 / 28%),
-    0 0 0 1px rgb(255 255 255 / 06%) !important;
+  box-shadow: var(--shadow-ambient) !important;
 }
 
 :root.dark [data-sonner-toast]::after {
@@ -558,9 +572,12 @@ main { flex: 1; }
 /* Success / primary action */
 [data-sonner-toast] [data-button]:not([data-cancel]) {
   background: var(--color-brand) !important;
-  color: #fff !important;
+  color: var(--color-primary-foreground-token) !important;
   border-color: transparent !important;
   box-shadow: 0 2px 8px rgb(142 26 63 / 18%) !important;
+}
+:root.dark [data-sonner-toast] [data-button]:not([data-cancel]) {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 24%) !important;
 }
 
 [data-sonner-toast] [data-button]:not([data-cancel]):hover {

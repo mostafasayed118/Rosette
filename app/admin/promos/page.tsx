@@ -7,38 +7,52 @@ import { AddPromoForm } from '@/components/admin/AddPromoForm';
 import PromoFormClient from '@/components/admin/PromoFormClient';
 import type { PromoInput } from '@/features/admin/promo-actions';
 import { getCurrentAdmin } from '@/features/auth/server';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { minorToEgp } from '@/features/admin/money';
 
 type PromoRow = { code: string; type: 'percent' | 'fixed' | 'free_shipping'; percent_off: number | null; value_minor: number | null; minimum_order_minor: number; starts_at: string | null; expires_at: string | null; max_uses: number; per_user_limit: number; used_count: number; active: boolean };
 
 export default async function AdminPromosPage() {
-  const admin = await getCurrentAdmin();
+  const [admin, tData] = await Promise.all([getCurrentAdmin(), getAdminServerT()]);
   if (!admin) redirect('/login');
-  const { t } = await getServerT();
-  const { data } = await getAdminSupabase().from('promo_codes').select('*').order('created_at', { ascending: false });
+  const { t } = tData;
+  const { data } = await getAdminSupabase()
+    .from('promo_codes')
+    .select('code,type,percent_off,value_minor,minimum_order_minor,starts_at,expires_at,max_uses,per_user_limit,used_count,active')
+    .order('created_at', { ascending: false })
+    .limit(50);
   const rows = (data ?? []) as PromoRow[];
-  return <>
-    <PageHeader eyebrow={t('promoOperations')} title={t('promos')} />
-    <AddPromoForm />
-    <div className="mt-6 grid gap-4">
-      {rows.map((row) => {
-        const promo: PromoInput = { code: row.code, type: row.type, percentOff: row.percent_off, valueMinor: row.value_minor, minimumOrderMinor: row.minimum_order_minor, startsAt: row.starts_at, expiresAt: row.expires_at, maxUses: row.max_uses, perUserLimit: row.per_user_limit, active: row.active };
-        return (
-          <Card key={row.code}>
-            <CardHeader><CardTitle>{row.code}</CardTitle></CardHeader>
-            <CardContent className="grid gap-3">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <Badge variant={row.active ? 'default' : 'secondary'}>{row.active ? t('active') : t('inactive')}</Badge>
-                <span className="text-sm text-muted-foreground">{row.type === 'percent' ? `${row.percent_off}%` : `${minorToEgp(row.value_minor ?? 0)} EGP`} · {t('minimumOrderEgp')} {minorToEgp(row.minimum_order_minor)} · {row.used_count}/{row.max_uses === 0 ? '∞' : row.max_uses} {t('uses')}</span>
-              </div>
-              <PromoFormClient promo={promo} />
-            </CardContent>
-          </Card>
-        );
-      })}
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader eyebrow={t('promoOperations')} title={t('promos')} />
+      <AddPromoForm />
+      <div className="grid gap-4">
+        {rows.map((row) => {
+          const promo: PromoInput = { code: row.code, type: row.type, percentOff: row.percent_off, valueMinor: row.value_minor, minimumOrderMinor: row.minimum_order_minor, startsAt: row.starts_at, expiresAt: row.expires_at, maxUses: row.max_uses, perUserLimit: row.per_user_limit, active: row.active };
+          return (
+            <Card key={row.code}>
+              <CardHeader>
+                <CardTitle className="font-mono text-base">{row.code}</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <Badge variant={row.active ? 'default' : 'secondary'}>{row.active ? t('active') : t('inactive')}</Badge>
+                  <span className="text-sm text-muted-foreground tabular-nums">
+                    {row.type === 'percent' ? `${row.percent_off}%` : `${minorToEgp(row.value_minor ?? 0)} EGP`} · {t('minimumOrderEgp')} {minorToEgp(row.minimum_order_minor)} · {row.used_count}/{row.max_uses === 0 ? '∞' : row.max_uses} {t('uses')}
+                  </span>
+                </div>
+                <PromoFormClient promo={promo} />
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      <p>
+        <Link className="text-sm font-medium text-primary underline underline-offset-4" href="/admin">
+          {t('backToDashboard')}
+        </Link>
+      </p>
     </div>
-    <p className="mt-6"><Link className="text-sm text-primary underline underline-offset-4" href="/admin">{t('backToDashboard')}</Link></p>
-  </>;
+  );
 }

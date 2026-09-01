@@ -8,6 +8,8 @@ import { PersonalizationSkeleton } from '@/features/personalization/components/P
 import { I18nProvider } from '@/features/i18n/I18nProvider';
 import { ThemeProvider } from '@/features/theme/ThemeProvider';
 import { products } from '@/features/catalog/data';
+import { storeHref } from '@/features/i18n/store-path';
+import type { Locale } from '@/features/i18n/types';
 import { renderWithProviders } from '../test-utils';
 
 const nav = vi.hoisted(() => ({
@@ -20,18 +22,24 @@ vi.mock('next/navigation', () => ({
   usePathname: () => nav.pathname,
 }));
 
-function renderBuyAgain(items = products.slice(0, 2)) {
+// Mirrors what the server page passes down: an explicit locale plus a path
+// builder already bound to the `/{locale}/{city}` prefix.
+function cardProps(locale: Locale = 'en') {
+  return { locale, href: (path: string) => storeHref(`/${locale}/greater-cairo`, path) };
+}
+
+function renderBuyAgain(items = products.slice(0, 2), locale: Locale = 'en') {
   return renderWithProviders(
     <WishlistProvider>
-      <BuyAgainStrip products={items} />
+      <BuyAgainStrip products={items} {...cardProps(locale)} />
     </WishlistProvider>,
   );
 }
 
-function renderRecommended(items = products.slice(0, 2)) {
+function renderRecommended(items = products.slice(0, 2), locale: Locale = 'en') {
   return renderWithProviders(
     <WishlistProvider>
-      <RecommendedCarousel products={items} />
+      <RecommendedCarousel products={items} {...cardProps(locale)} />
     </WishlistProvider>,
   );
 }
@@ -74,7 +82,7 @@ describe('PersonalizationCarousels', () => {
   it('RecommendedCarousel surfaces a category hint when provided', () => {
     renderWithProviders(
       <WishlistProvider>
-        <RecommendedCarousel products={products.slice(0, 2)} category="hand-bouquet" />
+        <RecommendedCarousel products={products.slice(0, 2)} {...cardProps()} category="hand-bouquet" />
       </WishlistProvider>,
     );
     expect(screen.getByText(/hand-bouquet/i)).toBeInTheDocument();
@@ -85,7 +93,7 @@ describe('PersonalizationCarousels', () => {
     nav.params = { locale: 'ar', city: 'greater-cairo' };
     renderWithAr(
       <WishlistProvider>
-        <BuyAgainStrip products={products.slice(0, 1)} />
+        <BuyAgainStrip products={products.slice(0, 1)} {...cardProps('ar')} />
       </WishlistProvider>,
     );
     // The stored wishlist resolves one tick after mount (deferred task).

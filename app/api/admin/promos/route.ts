@@ -11,21 +11,27 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
   const parsed = promoPayloadSchema.safeParse((body as { promo?: unknown }).promo);
-  if (!parsed.success) return NextResponse.json({ error: 'Invalid promo data' }, { status: 400 });
+  // Surface the first zod issue so the form can show a specific message
+  // instead of a generic "invalid promo" for every 400.
+  if (!parsed.success) {
+    const reason = parsed.error.issues[0]?.path[0];
+    return NextResponse.json({ error: 'Invalid promo data', reason: typeof reason === 'string' ? reason : 'unknown' }, { status: 400 });
+  }
   const promo = parsed.data;
-  if (body.action === 'update-promo') {
+  const action = (body as { action?: unknown }).action;
+  if (action === 'update-promo') {
     const result = await savePromoCode(getAdminSupabase(), admin, promo);
     return respond(result, {
       forbidden: { status: 403, error: 'Forbidden' },
-      validation: { status: 400, error: 'Invalid promo data' },
+      validation: { status: 400, error: 'Invalid promo data', reason: result },
       failure: { status: 500, error: 'Could not save promo' },
     });
   }
-  if (body.action === 'create-promo') {
+  if (action === 'create-promo') {
     const result = await createPromoCode(getAdminSupabase(), admin, promo);
     return respond(result, {
       forbidden: { status: 403, error: 'Forbidden' },
-      validation: { status: 400, error: 'Invalid promo data' },
+      validation: { status: 400, error: 'Invalid promo data', reason: result },
       code_taken: { status: 409, error: 'Code already exists' },
       failure: { status: 500, error: 'Could not create promo' },
     }, { ok: true }, 201);

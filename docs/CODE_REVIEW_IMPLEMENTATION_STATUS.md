@@ -64,3 +64,53 @@ This concerns only the Supabase CLI's new **pg-delta catalog-cache optimization*
 3. Verify RLS from 038/040 on a non-admin role.
 4. Confirm `products.category_id` backfill populated and the FK holds.
 5. Run a preview Worker deploy and exercise catalog + admin flows end-to-end.
+
+---
+
+## Addendum — 2026-09-01 (completion pass)
+
+The two items left as "backlog" (R-16, R-30) had in fact been **started as uncommitted
+WIP on the `audit-remediation` branch and left in a broken state** — the status above
+("tsc clean, 1329 passing") described the pre-WIP baseline, not the working tree. The
+tree did not typecheck. This pass finished them and re-verified.
+
+### R-30 — catalog server components (COMPLETE)
+- `features/catalog/ProductCard.tsx` and `features/catalog/CatalogGrid.tsx` are now
+  server components (no `'use client'`); they receive `locale` + `href` as props instead
+  of calling `useI18n`/`useStorePath`.
+- **Bug fixed:** the shop pages passed a `href` *function* from the server
+  `PersonalizationSection` into the **client** `RecommendedCarousel`/`BuyAgainStrip`
+  — illegal across the RSC boundary. The client carousels now derive `href`/`locale`
+  from their own `useStorePath()`/`useI18n()` hooks (props remain optional, so the
+  existing tests still pass). A guard test in `tests/components/CatalogGrid.test.tsx`
+  fails loudly if a client-only hook re-enters those files.
+- `features/i18n/store-path.ts` holds the shared path builder; `use-store-path.ts`
+  reuses it.
+
+### R-16 — admin repository boundary (ESTABLISHED + TESTED; full migration deferred)
+- `features/admin/repositories/` (16 files) is the data-access boundary. `client.ts`
+  is the single `getAdminSupabase()` entry point. The highest-risk surfaces — order
+  list (`app/admin/orders/page.tsx`), order detail (`app/admin/orders/[id]/page.tsx`),
+  and dashboard (`app/admin/page.tsx`) — now read exclusively through it; `orderSelect`
+  is centralized in `order-select.ts`.
+- **Two product bugs fixed while wiring it up:**
+  1. `app/admin/orders/[id]/page.tsx` read `delivery.last_error` while the repository
+     maps to `lastError` → tsc error + wrong field. Corrected to `delivery.lastError`.
+  2. `cancel-requests.ts` `mapRow` coerced *every* non-`rejected` status (including
+     `'pending'`) to `'approved'`, which would have hidden the cancel-review UI on the
+     order detail page. Status now preserved as `'pending' | 'approved' | 'rejected'`.
+  - Two `GenericStringError[]` → `RawRow[]` casts hardened via `as unknown as`.
+- `tests/domain/admin-repositories.test.ts` (new) verifies row→domain mapping for all
+  four repos, including the `last_error → lastError` fix and the cancel-status fix.
+- **Deferred (unchanged from original assessment):** migrating the remaining ~80 admin
+  pages / API routes off direct `getAdminSupabase()` is the large-blast-radius pass the
+  audit explicitly scoped out. The boundary exists and is the recommended pattern; the
+  comment in `client.ts` was corrected to stop claiming a non-existent enforcement test.
+
+### Verification (this pass)
+- `npx tsc --noEmit` → **clean (0 errors)**.
+- `vitest run` → **249 files, 1339 tests passing** (10 new: admin-repositories + the
+  R-30 guard test).
+- ESLint → **clean** on every file touched this session.
+- State is **uncommitted** on `audit-remediation` atop the `68fb551` checkpoint; the
+  pre-WIP baseline commit is intact.

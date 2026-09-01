@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 import { AdminPlanForm } from '@/features/subscriptions/AdminPlanForm';
 
 type PageParams = { params: Promise<{ id: string }> };
@@ -12,7 +12,7 @@ export default async function AdminEditSubscriptionPlanPage({ params }: PagePara
   const admin = await getCurrentAdmin();
   if (!admin) redirect('/login');
   const { id } = await params;
-  const { t } = await getServerT();
+  const { t } = await getAdminServerT();
   const { data: plan } = await getAdminSupabase().from('subscription_plans').select('*').eq('id', id).maybeSingle();
   if (!plan) notFound();
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,35 +13,68 @@ export function AuditLogFilters({ actions, targetTypes }: { actions: string[]; t
   const { t } = useI18n();
   const [action, setAction] = useState(searchParams.get('action') ?? '');
   const [targetType, setTargetType] = useState(searchParams.get('targetType') ?? '');
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setAction(searchParams.get('action') ?? '');
+    setTargetType(searchParams.get('targetType') ?? '');
+  }, [searchParams]);
 
   function submit() {
     const params = new URLSearchParams();
     if (action) params.set('action', action);
     if (targetType) params.set('targetType', targetType);
-    router.push(`${pathname}${params.toString() ? `?${params}` : ''}`);
+    startTransition(() => router.push(`${pathname}${params.toString() ? `?${params}` : ''}`));
   }
 
-  return <div className="my-4 grid grid-cols-[repeat(2,1fr)_auto] items-end gap-3 max-md:grid-cols-1">
-    <div className="grid gap-1.5">
-      <span className="text-sm font-bold text-foreground">{t('auditAction')}</span>
-      <Select value={action || 'all'} onValueChange={(v) => setAction(v === 'all' ? '' : v)}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">{t('all')}</SelectItem>
-          {actions.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
-        </SelectContent>
-      </Select>
+  function clear() {
+    setAction('');
+    setTargetType('');
+    startTransition(() => router.push(pathname));
+  }
+
+  return (
+    <div className="grid grid-cols-1 items-end gap-3 lg:grid-cols-[1fr_1fr_auto] lg:gap-4">
+      <div className="grid gap-1.5">
+        <span className="text-sm font-medium text-foreground">{t('auditAction')}</span>
+        <Select value={action || 'all'} onValueChange={(v) => setAction(v === 'all' ? '' : v)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('all')}</SelectItem>
+            {actions.map((value) => (
+              <SelectItem key={value} value={value}>
+                {value}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid gap-1.5">
+        <span className="text-sm font-medium text-foreground">{t('auditTarget')}</span>
+        <Select value={targetType || 'all'} onValueChange={(v) => setTargetType(v === 'all' ? '' : v)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('all')}</SelectItem>
+            {targetTypes.map((value) => (
+              <SelectItem key={value} value={value}>
+                {value}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex gap-2">
+        <Button type="button" onClick={submit} disabled={isPending} className="h-10 flex-1 lg:flex-none">
+          {isPending ? t('loading') : t('filter')}
+        </Button>
+        <Button type="button" variant="outline" onClick={clear} disabled={isPending} className="h-10">
+          {t('clear')}
+        </Button>
+      </div>
     </div>
-    <div className="grid gap-1.5">
-      <span className="text-sm font-bold text-foreground">{t('auditTarget')}</span>
-      <Select value={targetType || 'all'} onValueChange={(v) => setTargetType(v === 'all' ? '' : v)}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">{t('all')}</SelectItem>
-          {targetTypes.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
-        </SelectContent>
-      </Select>
-    </div>
-    <Button type="button" onClick={submit}>{t('filter')}</Button>
-  </div>;
+  );
 }

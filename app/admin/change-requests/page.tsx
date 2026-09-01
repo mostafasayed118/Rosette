@@ -10,7 +10,7 @@ import { ChangeRequestReview } from '@/components/admin/ChangeRequestReview';
 import { RequestTabs } from '@/components/admin/RequestTabs';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 import { formatDateTime } from '@/lib/date';
 import { formatMoney } from '@/features/money';
 import { fulfillmentBadgeVariant, fulfillmentLabel, paymentBadgeVariant, paymentLabel } from '@/features/admin/status-labels';
@@ -54,10 +54,9 @@ function buildSummary(diff: ChangeRequestDiff, order: Record<string, any>, t: (k
 }
 
 export default async function AdminChangeRequestsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const admin = await getCurrentAdmin();
+  const [admin, tData, params] = await Promise.all([getCurrentAdmin(), getAdminServerT(), searchParams]);
   if (!admin) redirect('/login');
-  const { t, locale } = await getServerT();
-  const params = await searchParams;
+  const { t, locale } = tData;
   const showResolved = params.status === 'resolved';
 
   const supabase = getAdminSupabase();
@@ -103,33 +102,96 @@ export default async function AdminChangeRequestsPage({ searchParams }: { search
   const resolved = (resolvedRows ?? []).map(mapRow);
   const rows = showResolved ? resolved : active;
 
-  return <>
-    <PageHeader eyebrow={t('customerOrders')} title={t('changeRequests')} />
-    <AutoRefresh />
-    <RequestTabs basePath="/admin/change-requests" tabs={[
-      { value: 'pending', label: t('pendingRequests', { count: active.length }) },
-      { value: 'resolved', label: t('resolvedRequests', { count: resolved.length }) },
-    ]} current={showResolved ? 'resolved' : 'pending'} />
+  const hasPending = active.some((r) => r.status === 'pending');
 
-    {rows.length === 0 ? <StatusMessage title={showResolved ? t('noChangeRequests') : t('noPendingChangeRequests')} /> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('orders')}</TableHead><TableHead>{t('cancellationRequestedBy')}</TableHead><TableHead>{t('requestedChanges')}</TableHead><TableHead>{t('changeDelta')}</TableHead>{showResolved ? <><TableHead>{t('decision')}</TableHead><TableHead>{t('reviewedBy')}</TableHead></> : <><TableHead>{t('payment')}</TableHead><TableHead>{t('fulfillment')}</TableHead><TableHead className="text-end">{t('review')}</TableHead></>}</TableRow></TableHeader><TableBody>{rows.map((request) => (
-      <TableRow key={request.id}>
-        <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/orders/${request.order?.id ?? ''}`}>{request.order?.display_number ?? '—'}</Link><span className="block text-sm text-muted-foreground">{formatDateTime(request.createdAt, locale)}</span></TableCell>
-        <TableCell>{request.order?.customer_email ?? '—'}</TableCell>
-        <TableCell><ul className="grid list-none gap-0 p-0 text-sm">{request.summary.map((line) => <li key={line}>{line}</li>)}</ul>{request.awaitingPayment ? <Badge variant="default">{t('changeAwaitingPayment')}</Badge> : null}</TableCell>
-        <TableCell>{request.deltaLabel}</TableCell>
-        {showResolved ? (
-          <>
-            <TableCell><Badge variant={request.status === 'applied' ? 'success' : 'default'}>{request.status === 'applied' ? t('changeApplied') : t('changeRejected')}</Badge><span className="block text-sm text-muted-foreground">{request.reviewedAt ? formatDateTime(request.reviewedAt, locale) : '—'}</span></TableCell>
-            <TableCell>{request.reviewedByName ?? '—'}</TableCell>
-          </>
-        ) : (
-          <>
-            <TableCell><Badge variant={paymentBadgeVariant(request.order?.payment_status ?? '')}>{paymentLabel(request.order?.payment_status ?? 'pending', t)}</Badge></TableCell>
-            <TableCell><Badge variant={fulfillmentBadgeVariant(request.order?.fulfillment_status ?? '')}>{fulfillmentLabel(request.order?.fulfillment_status ?? 'confirmed', t)}</Badge></TableCell>
-            <TableCell className="text-end"><ChangeRequestReview requestId={request.id} /></TableCell>
-          </>
-        )}
-      </TableRow>
-    ))}</TableBody></Table></div></Card>}
-  </>;
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader eyebrow={t('customerOrders')} title={t('changeRequests')} />
+      <AutoRefresh enabled={hasPending} intervalMs={60000} />
+      <RequestTabs
+        basePath="/admin/change-requests"
+        tabs={[
+          { value: 'pending', label: t('pendingRequests', { count: active.length }) },
+          { value: 'resolved', label: t('resolvedRequests', { count: resolved.length }) },
+        ]}
+        current={showResolved ? 'resolved' : 'pending'}
+      />
+
+      {rows.length === 0 ? (
+        <StatusMessage title={showResolved ? t('noChangeRequests') : t('noPendingChangeRequests')} />
+      ) : (
+        <Card className="overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('orders')}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('cancellationRequestedBy')}</TableHead>
+                  <TableHead className="min-w-[16rem]">{t('requestedChanges')}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{t('changeDelta')}</TableHead>
+                  {showResolved ? (
+                    <>
+                      <TableHead>{t('decision')}</TableHead>
+                      <TableHead>{t('reviewedBy')}</TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead className="hidden lg:table-cell">{t('payment')}</TableHead>
+                      <TableHead className="hidden lg:table-cell">{t('fulfillment')}</TableHead>
+                      <TableHead className="text-end">{t('review')}</TableHead>
+                    </>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell>
+                      <Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/orders/${request.order?.id ?? ''}`} prefetch>
+                        {request.order?.display_number ?? '—'}
+                      </Link>
+                      <span className="block text-sm text-muted-foreground tabular-nums">{formatDateTime(request.createdAt, locale)}</span>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell break-all text-sm">{request.order?.customer_email ?? '—'}</TableCell>
+                    <TableCell>
+                      <ul className="grid list-none gap-0 p-0 text-sm">
+                        {request.summary.map((line) => (
+                          <li key={line} className="whitespace-normal break-words">
+                            {line}
+                          </li>
+                        ))}
+                      </ul>
+                      {request.awaitingPayment ? <Badge variant="default" className="mt-1">{t('changeAwaitingPayment')}</Badge> : null}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell whitespace-normal break-words text-sm tabular-nums">{request.deltaLabel}</TableCell>
+                    {showResolved ? (
+                      <>
+                        <TableCell>
+                          <Badge variant={request.status === 'applied' ? 'success' : 'default'}>{request.status === 'applied' ? t('changeApplied') : t('changeRejected')}</Badge>
+                          <span className="block text-sm text-muted-foreground tabular-nums">{request.reviewedAt ? formatDateTime(request.reviewedAt, locale) : '—'}</span>
+                        </TableCell>
+                        <TableCell>{request.reviewedByName ?? '—'}</TableCell>
+                      </>
+                    ) : (
+                      <>
+                        <TableCell className="hidden lg:table-cell">
+                          <Badge variant={paymentBadgeVariant(request.order?.payment_status ?? '')}>{paymentLabel(request.order?.payment_status ?? 'pending', t)}</Badge>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <Badge variant={fulfillmentBadgeVariant(request.order?.fulfillment_status ?? '')}>{fulfillmentLabel(request.order?.fulfillment_status ?? 'confirmed', t)}</Badge>
+                        </TableCell>
+                        <TableCell className="text-end">
+                          <ChangeRequestReview requestId={request.id} />
+                        </TableCell>
+                      </>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
 }

@@ -11,7 +11,7 @@ import { RequestTabs } from '@/components/admin/RequestTabs';
 import { StarRating } from '@/components/ui/StarRating';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 import { formatDateTime } from '@/lib/date';
 
 type ReviewRow = {
@@ -26,10 +26,9 @@ type ReviewRow = {
 };
 
 export default async function AdminReviewsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const admin = await getCurrentAdmin();
+  const [admin, tData, params] = await Promise.all([getCurrentAdmin(), getAdminServerT(), searchParams]);
   if (!admin) redirect('/login');
-  const { t, locale } = await getServerT();
-  const params = await searchParams;
+  const { t, locale } = tData;
   const showApproved = params.status === 'approved';
 
   const supabase = getAdminSupabase();
@@ -57,21 +56,65 @@ export default async function AdminReviewsPage({ searchParams }: { searchParams:
   const approved = ((approvedRows ?? []) as Array<Record<string, any>>).map(mapRow);
   const rows = showApproved ? approved : pending;
 
-  return <>
-    <PageHeader eyebrow={t('reviews')} title={t('reviews')} />
-    <AutoRefresh />
-    <RequestTabs basePath="/admin/reviews" tabs={[
-      { value: 'pending', label: t('pendingRequests', { count: pending.length }) },
-      { value: 'approved', label: t('resolvedRequests', { count: approved.length }) },
-    ]} current={showApproved ? 'approved' : 'pending'} paramName="status" />
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader eyebrow={t('reviews')} title={t('reviews')} />
+      <AutoRefresh enabled={pending.length > 0} intervalMs={60000} />
+      <RequestTabs
+        basePath="/admin/reviews"
+        tabs={[
+          { value: 'pending', label: t('pendingRequests', { count: pending.length }) },
+          { value: 'approved', label: t('resolvedRequests', { count: approved.length }) },
+        ]}
+        current={showApproved ? 'approved' : 'pending'}
+        paramName="status"
+      />
 
-    {rows.length === 0 ? <StatusMessage title={showApproved ? t('noReviews') : t('noPendingReviews')} /> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('products')}</TableHead><TableHead>{t('rating')}</TableHead><TableHead>{t('reviews')}</TableHead>{showApproved ? <TableHead>{t('reviewedBy')}</TableHead> : <TableHead className="text-end">{t('review')}</TableHead>}</TableRow></TableHeader><TableBody>{rows.map((review) => (
-      <TableRow key={review.id}>
-        <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/products/${review.product?.id ?? ''}`}>{review.product?.name_en ?? '—'}</Link><span className="block text-sm text-muted-foreground">{formatDateTime(review.createdAt, locale)}</span></TableCell>
-        <TableCell><StarRating value={review.rating} /></TableCell>
-        <TableCell className="max-w-md"><p className="line-clamp-3 text-sm">{review.body}</p>{review.photos.length > 0 ? <span className="mt-1 flex flex-wrap gap-1">{review.photos.slice(0, 3).map((url) => <Image key={url} src={url} alt="" width={40} height={40} className="h-10 w-10 rounded object-cover" />)}</span> : null}{review.reviewedAt ? <span className="block text-xs text-muted-foreground">{formatDateTime(review.reviewedAt, locale)}</span> : null}</TableCell>
-        {showApproved ? <TableCell>{review.reviewedByName ?? '—'}</TableCell> : <TableCell className="text-end"><ReviewQueueActions reviewId={review.id} /></TableCell>}
-      </TableRow>
-    ))}</TableBody></Table></div></Card>}
-  </>;
+      {rows.length === 0 ? (
+        <StatusMessage title={showApproved ? t('noReviews') : t('noPendingReviews')} />
+      ) : (
+        <Card className="overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[10rem]">{t('products')}</TableHead>
+                  <TableHead>{t('rating')}</TableHead>
+                  <TableHead className="min-w-[18rem]">{t('reviews')}</TableHead>
+                  {showApproved ? <TableHead>{t('reviewedBy')}</TableHead> : <TableHead className="text-end">{t('review')}</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((review) => (
+                  <TableRow key={review.id}>
+                    <TableCell>
+                      <Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/products/${review.product?.id ?? ''}`} prefetch>
+                        {review.product?.name_en ?? '—'}
+                      </Link>
+                      <span className="block text-sm text-muted-foreground tabular-nums">{formatDateTime(review.createdAt, locale)}</span>
+                    </TableCell>
+                    <TableCell>
+                      <StarRating value={review.rating} />
+                    </TableCell>
+                    <TableCell className="max-w-md">
+                      <p className="line-clamp-3 whitespace-normal break-words text-sm">{review.body}</p>
+                      {review.photos.length > 0 ? (
+                        <span className="mt-1 flex flex-wrap gap-1">
+                          {review.photos.slice(0, 3).map((url) => (
+                            <Image key={url} src={url} alt="" width={40} height={40} className="h-10 w-10 rounded object-cover" sizes="40px" loading="lazy" />
+                          ))}
+                        </span>
+                      ) : null}
+                      {review.reviewedAt ? <span className="block text-xs text-muted-foreground tabular-nums">{formatDateTime(review.reviewedAt, locale)}</span> : null}
+                    </TableCell>
+                    {showApproved ? <TableCell>{review.reviewedByName ?? '—'}</TableCell> : <TableCell className="text-end"><ReviewQueueActions reviewId={review.id} /></TableCell>}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
 }

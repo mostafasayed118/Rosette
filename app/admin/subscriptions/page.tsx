@@ -3,15 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 import { listAdminSubscriptions, getAdminTimeline } from '@/features/subscriptions/admin-actions';
 import { AdminSubscribersTable, type AdminSubscriberRow } from '@/features/subscriptions/AdminSubscribersTable';
 import { AdminTimeline, type AdminTimelineRow } from '@/features/subscriptions/AdminTimeline';
 
 export default async function AdminSubscriptionsPage() {
-  const admin = await getCurrentAdmin();
+  const [admin, tData] = await Promise.all([getCurrentAdmin(), getAdminServerT()]);
   if (!admin) redirect('/login');
-  const { t } = await getServerT();
+  const { t } = tData;
   const client = getAdminSupabase();
   const [rows, timeline] = await Promise.all([
     listAdminSubscriptions(client, admin, {}),

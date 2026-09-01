@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createBlogPost, updateBlogPost } from '@/features/admin/blog-admin';
 import type { BlogPostInput } from '@/features/blog/types';
+import { validateCoverImageUrl } from '@/features/blog/cover-url';
 import { getCurrentContentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
@@ -17,6 +18,11 @@ export async function POST(request: Request) {
   if (!input || typeof input !== 'object') return badRequest();
   const post = input as BlogPostInput;
   if (typeof post.slug !== 'string' || typeof post.titleEn !== 'string' || typeof post.contentEn !== 'string' || typeof post.published !== 'boolean') return badRequest();
+  if (post.coverUrl != null && typeof post.coverUrl !== 'string') return badRequest();
+  if (validateCoverImageUrl(post.coverUrl) === 'invalid' || validateCoverImageUrl(post.coverUrl) === 'scheme' || validateCoverImageUrl(post.coverUrl) === 'host') {
+    return NextResponse.json({ error: 'Invalid cover image URL' }, { status: 400 });
+  }
+  if (post.coverUrl) post.coverUrl = post.coverUrl.trim();
   try {
     if (body.action === 'update-post') {
       const id = body.id;

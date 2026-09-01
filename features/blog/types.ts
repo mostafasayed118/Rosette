@@ -49,6 +49,7 @@ export type BlogPost = {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  coverUrl?: string;
 };
 
 export type BlogPostSummary = {
@@ -85,6 +86,7 @@ export type BlogPostInput = {
   contentFr?: string;
   category?: string;
   published: boolean;
+  coverUrl?: string | null;
 };
 
 export type BlogListQuery = { type?: BlogPostType; cityCode?: string; authorId?: string };

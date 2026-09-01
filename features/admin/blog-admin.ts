@@ -1,4 +1,5 @@
 import type { Author, AuthorInput, BlogPostInput, BlogPostSummary } from '@/features/blog/types';
+import { logger } from '@/lib/logger';
 
 type AdminClient = { from: (table: string) => any };
 
@@ -75,6 +76,7 @@ function toRow(input: BlogPostInput, publishedAt: string | null) {
     content_ar: input.contentAr || null,
     content_fr: input.contentFr || null,
     category: input.category || null,
+    cover_url: input.coverUrl || null,
     published: input.published,
     published_at: publishedAt,
     updated_at: new Date().toISOString(),
@@ -83,23 +85,50 @@ function toRow(input: BlogPostInput, publishedAt: string | null) {
 
 export async function listAllBlogPosts(client: AdminClient): Promise<BlogPostSummary[]> {
   const { data, error } = await client.from('blog_posts').select(adminSelect).order('updated_at', { ascending: false });
-  if (error) throw new Error(`Blog admin list failed: ${error.message}`);
-  return ((data ?? []) as Record<string, unknown>[]).map(toSummary);
+  if (!error) return ((data ?? []) as Record<string, unknown>[]).map(toSummary);
+  // Graceful fallback for DBs that haven't applied 050_blog_cover_url.sql yet
+  // (e.g. a running local Supabase before `supabase db reset`).  Postgres error
+  // is: column blog_posts.cover_url does not exist.
+  if (error.message?.includes('cover_url')) {
+    const fallbackSelect = adminSelect.replace(',cover_url', '');
+    const retry = await client.from('blog_posts').select(fallbackSelect).order('updated_at', { ascending: false });
+    if (retry.error) throw new Error(`Blog admin list failed: ${retry.error.message}`);
+    return ((retry.data ?? []) as Record<string, unknown>[]).map(toSummary);
+  }
+  throw new Error(`Blog admin list failed: ${error.message}`);
 }
 
 export async function createBlogPost(client: AdminClient, input: BlogPostInput): Promise<{ id: string }> {
   const publishedAt = input.published ? new Date().toISOString() : null;
-  const { data, error } = await client.from('blog_posts').insert(toRow(input, publishedAt)).select('id').single();
-  if (error) throw new Error(`Blog create failed: ${error.message}`);
-  return { id: String(data.id) };
+  const row = toRow(input, publishedAt);
+  const { data, error } = await client.from('blog_posts').insert(row).select('id').single();
+  if (!error) return { id: String(data.id) };
+  if (error.message?.includes('cover_url')) {
+    // 050_blog_cover_url.sql not applied yet: persist everything else and
+    // surface the dropped cover instead of failing the whole save.
+    const { cover_url: _omit, ...fallback } = row as Record<string, unknown> & { cover_url?: unknown };
+    if (input.coverUrl) logger.warn('admin.blog.cover_dropped', { scope: 'admin blog save', reason: 'cover_url column missing (apply 050_blog_cover_url.sql)' });
+    const retry = await client.from('blog_posts').insert(fallback).select('id').single();
+    if (retry.error) throw new Error(`Blog create failed: ${retry.error.message}`);
+    return { id: String(retry.data.id) };
+  }
+  throw new Error(`Blog create failed: ${error.message}`);
 }
 
 export async function updateBlogPost(client: AdminClient, id: string, input: BlogPostInput): Promise<boolean> {
   const { data: existing } = await client.from('blog_posts').select('published_at').eq('id', id).maybeSingle();
   const publishedAt = input.published && !existing?.published_at ? new Date().toISOString() : (existing?.published_at ?? null);
-  const { error } = await client.from('blog_posts').update(toRow(input, publishedAt)).eq('id', id);
-  if (error) throw new Error(`Blog update failed: ${error.message}`);
-  return true;
+  const row = toRow(input, publishedAt);
+  const { error } = await client.from('blog_posts').update(row).eq('id', id);
+  if (!error) return true;
+  if (error.message?.includes('cover_url')) {
+    const { cover_url: _omit, ...fallback } = row as Record<string, unknown> & { cover_url?: unknown };
+    if (input.coverUrl) logger.warn('admin.blog.cover_dropped', { scope: 'admin blog save', reason: 'cover_url column missing (apply 050_blog_cover_url.sql)' });
+    const retry = await client.from('blog_posts').update(fallback).eq('id', id);
+    if (retry.error) throw new Error(`Blog update failed: ${retry.error.message}`);
+    return true;
+  }
+  throw new Error(`Blog update failed: ${error.message}`);
 }
 
 export async function deleteBlogPost(client: AdminClient, id: string): Promise<boolean> {

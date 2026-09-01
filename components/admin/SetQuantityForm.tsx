@@ -27,8 +27,12 @@ export function SetQuantityForm({ variantId, current }: { variantId: string; cur
     router.refresh();
   }
 
-  return <form className="flex items-end justify-end gap-2" onSubmit={submit}>
-    <Input className="h-10 w-20" type="number" min={0} value={value} onChange={(e) => setValue(e.target.value)} aria-label={t('setQuantity')} />
-    <Button size="sm" type="submit" disabled={saving}>{saving ? t('saving') : t('set')}</Button>
-  </form>;
+  return (
+    <form className="flex flex-wrap items-end justify-end gap-2" onSubmit={submit}>
+      <Input className="h-10 w-20" type="number" min={0} value={value} onChange={(e) => setValue(e.target.value)} aria-label={t('setQuantity')} />
+      <Button size="sm" type="submit" disabled={saving} className="h-10">
+        {saving ? t('saving') : t('set')}
+      </Button>
+    </form>
+  );
 }

@@ -12,6 +12,7 @@ import { getCatalogRepository } from '@/features/catalog/provider';
 import { listCatalogCategories } from '@/features/catalog/categories';
 import { buildLocalizedPageMetadata } from '@/features/seo/page-metadata';
 import { getServerT } from '@/features/i18n/server';
+import { storeBasePath, storeHref } from '@/features/i18n/store-path';
 import { getOptionalServerEnv } from '@/lib/server-env';
 import { LOCALES } from '@/lib/locale-routing';
 import { categoryMessageKeys } from '@/features/catalog/catalog-labels';
@@ -50,8 +51,10 @@ export default async function ShopPage({ params, searchParams }: ShopPageParams)
   ]);
   const { t } = await getServerT(resolvedLocale);
   const base = (getOptionalServerEnv('SITE_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
+  const basePath = storeBasePath(locale, city);
+  const href = (path: string) => storeHref(basePath, path);
 
-  return <div className="flex min-h-screen flex-col"><BreadcrumbJsonLd base={base} items={[{ name: t('shop'), path: `/${locale}/${city}` }, { name: t('collectionTitle') }]} /><SiteHeader /><main id="main-content" className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4"><LocalizedPageHeading eyebrow="collectionEyebrow" title="collectionTitle" lede="collectionLede" action="changeDestination" actionHref={`/${locale}`} values={{ count: result.total }} /><Suspense fallback={<PersonalizationSkeleton />}><PersonalizationSection locale={resolvedLocale} /></Suspense><CatalogToolbar availableCategories={catalogCategories.map((category) => category.slug)} /><CatalogGrid products={result.products} /><CatalogPagination page={result.page} perPage={result.perPage} totalPages={result.totalPages} total={result.total} /></main><SiteFooter locale={locale} city={city} /></div>;
+  return <div className="flex min-h-screen flex-col"><BreadcrumbJsonLd base={base} items={[{ name: t('shop'), path: `/${locale}/${city}` }, { name: t('collectionTitle') }]} /><SiteHeader /><main id="main-content" className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4"><LocalizedPageHeading eyebrow="collectionEyebrow" title="collectionTitle" lede="collectionLede" action="changeDestination" actionHref={`/${locale}`} values={{ count: result.total }} /><Suspense fallback={<PersonalizationSkeleton />}><PersonalizationSection locale={resolvedLocale} basePath={basePath} /></Suspense><CatalogToolbar availableCategories={catalogCategories.map((category) => category.slug)} /><CatalogGrid products={result.products} locale={resolvedLocale} href={href} /><CatalogPagination page={result.page} perPage={result.perPage} totalPages={result.totalPages} total={result.total} /></main><SiteFooter locale={locale} city={city} /></div>;
 }
 
 /**
@@ -60,7 +63,7 @@ export default async function ShopPage({ params, searchParams }: ShopPageParams)
  * of the catalog page stays static/ISR. If the user is anonymous or
  * personalization is disabled, it renders nothing.
  */
-async function PersonalizationSection({ locale }: { locale: Locale }) {
+async function PersonalizationSection({ locale, basePath }: { locale: Locale; basePath: string }) {
   const { t } = await getServerT(locale);
   let personalization: PersonalizationPicks | null = null;
   if (process.env.ROSETTE_PERSONALIZATION_ENABLED !== 'false') {
@@ -80,5 +83,6 @@ async function PersonalizationSection({ locale }: { locale: Locale }) {
   const hintCategoryKey = personalization.hintCategory
     ? t(categoryMessageKeys[personalization.hintCategory] ?? personalization.hintCategory)
     : null;
-  return (<><BuyAgainStrip products={personalization.buyAgain} /><RecommendedCarousel products={personalization.recommended} category={hintCategoryKey ?? undefined} /></>);
+  const href = (path: string) => storeHref(basePath, path);
+  return (<><BuyAgainStrip products={personalization.buyAgain} locale={locale} href={href} /><RecommendedCarousel products={personalization.recommended} locale={locale} href={href} category={hintCategoryKey ?? undefined} /></>);
 }

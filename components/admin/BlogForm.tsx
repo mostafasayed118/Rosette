@@ -26,6 +26,7 @@ export function BlogForm({ post, id, authors = [] }: { post: BlogPostInput; id?:
   const [contentAr, setContentAr] = useState(post.contentAr ?? '');
   const [contentFr, setContentFr] = useState(post.contentFr ?? '');
   const [category, setCategory] = useState(post.category ?? '');
+  const [coverUrl, setCoverUrl] = useState(post.coverUrl ?? '');
   const [published, setPublished] = useState(post.published);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -42,6 +43,7 @@ export function BlogForm({ post, id, authors = [] }: { post: BlogPostInput; id?:
       excerptEn: excerptEn || undefined, excerptAr: excerptAr || undefined, excerptFr: excerptFr || undefined,
       contentEn, contentAr: contentAr || undefined, contentFr: contentFr || undefined,
       category: category || undefined,
+      coverUrl: coverUrl || null,
       published,
     };
     const response = await fetch('/api/admin/blog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(id ? { action: 'update-post', id, post: body } : { action: 'create-post', post: body }) });
@@ -65,6 +67,7 @@ export function BlogForm({ post, id, authors = [] }: { post: BlogPostInput; id?:
     <div className="grid gap-2"><label className="text-sm font-medium">{t('contentAr')}</label><Textarea value={contentAr} onChange={(e) => setContentAr(e.target.value)} rows={8} dir="rtl" /></div>
     <div className="grid gap-2"><label className="text-sm font-medium">{t('contentFr')}</label><Textarea value={contentFr} onChange={(e) => setContentFr(e.target.value)} rows={8} /></div>
     <div className="grid gap-2"><label className="text-sm font-medium">{t('blogCategory')}</label><Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="guides / care / occasions / delivery" /></div>
+    <div className="grid gap-2"><label className="text-sm font-medium">{t('coverImageUrl')}</label><Input value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} placeholder="https://..." /></div>
     <label className="flex items-center gap-2"><input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="accent-primary" /><span className="text-sm">{t('publishedLabel')}</span></label>
     <div className="flex items-center gap-3"><Button type="submit" disabled={saving}>{saving ? t('saving') : t('save')}</Button>{error ? <small className="text-sm text-destructive">{error}</small> : null}</div>
   </form>;
