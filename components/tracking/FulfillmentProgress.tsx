@@ -1,6 +1,7 @@
 import { StatusMessage } from '@/components/ui/status-message';
 import { getServerT } from '@/features/i18n/server';
 import type { FulfillmentStatus } from '@/features/commerce/order-state';
+import { formatStepTime } from '@/features/tracking/progress-format';
 
 type TimelineEntry = { status: FulfillmentStatus; at: string };
 
@@ -20,19 +21,6 @@ function stitchIndex(status: FulfillmentStatus): number {
   return -1;
 }
 
-function formatStepTime(at: string | undefined, locale: string): string {
-  if (!at) return '--:--';
-  try {
-    const d = new Date(at);
-    return d.toLocaleTimeString(locale === 'ar' ? 'ar-EG' : locale === 'fr' ? 'fr-FR' : 'en-EG', {
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  } catch {
-    return '--:--';
-  }
-}
-
 export async function FulfillmentProgress({
   status,
   locale,
@@ -50,7 +38,7 @@ export async function FulfillmentProgress({
 
   return (
     <div className="relative">
-      <div className="absolute left-[15px] top-4 bottom-4 w-px bg-outline-variant" aria-hidden="true" />
+      <div className="absolute start-[15px] top-4 bottom-4 w-px bg-outline-variant" aria-hidden="true" />
       <div className="flex flex-col gap-8">
         {STITCH_STEPS.map((step, index) => {
           const isAllDone = current === STITCH_STEPS.length;
@@ -58,10 +46,11 @@ export async function FulfillmentProgress({
           const isCurrent = index === current;
           const future = !done && !isCurrent;
           const entry = timeline?.find((e) => step.statuses.includes(e.status));
-          const time = formatStepTime(entry?.at, resolvedLocale);
-          // Stitch future stages have reduced opacity and outline styling
+          const time = formatStepTime(entry?.at, resolvedLocale, t('trackingPending'));
+          // Future states stay visually quiet, but remain readable enough to
+          // distinguish a pending step from a broken or missing value.
           return (
-            <div key={step.labelKey} className={`flex items-start gap-4 relative z-10 ${future ? 'opacity-60' : ''}`}>
+            <div key={step.labelKey} className={`flex items-start gap-4 relative z-10 ${future ? 'opacity-80' : ''}`}>
               <div
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-surface mt-1 ${done || isCurrent ? 'border-primary' : 'border-outline-variant'} ${isCurrent ? 'relative' : ''}`}
               >
@@ -70,9 +59,8 @@ export async function FulfillmentProgress({
               </div>
               <div className="flex flex-col">
                 <span className="font-headline-sm text-headline-sm text-on-surface">{t(step.labelKey)}</span>
-                <span className="font-meta-mono text-meta-mono text-tertiary mt-1">{time}</span>
-                {/* Stitch shows description for completed/current stages; we keep subtle helper without breaking i18n */}
-                {isCurrent ? <span className="font-meta-mono text-meta-mono text-secondary mt-2">{t('currentStep')}</span> : null}
+                <span className="font-meta-mono text-meta-mono text-on-surface-variant mt-1">{time}</span>
+                {isCurrent ? <span className="font-body-md text-body-md text-sage-ink mt-2">{t('trackingCurrentStep')}</span> : null}
               </div>
             </div>
           );

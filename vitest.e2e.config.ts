@@ -8,7 +8,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['tests/e2e/*.test.ts', 'tests/e2e/**/*.test.ts'],
+    include: ['tests/e2e/*.test.ts', 'tests/e2e/**/*.test.ts', 'tests/e2e/*.spec.ts', 'tests/e2e/**/*.spec.ts'],
     environment: 'node',
     globals: true,
     testTimeout: 300_000,

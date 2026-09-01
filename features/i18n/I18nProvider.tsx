@@ -39,14 +39,26 @@ export function I18nProvider({ children, initialLocale = 'en' }: { children: Rea
     deferToTask(() => {
       const fromPath = localeFromPath(pathname);
       if (fromPath && fromPath !== locale) {
-        window.localStorage.setItem(STORAGE_KEY, fromPath);
-        document.cookie = `rosette.locale=${fromPath}; path=/; max-age=31536000; samesite=lax`;
-        setLocaleState(fromPath);
+        // Admin is EN/AR only — FR storefront selection falls back to EN in admin
+        const next = pathname.startsWith('/admin') && fromPath === 'fr' ? 'en' : fromPath;
+        if (next !== locale) {
+          window.localStorage.setItem(STORAGE_KEY, next);
+          document.cookie = `rosette.locale=${next}; path=/; max-age=31536000; samesite=lax`;
+          setLocaleState(next as Locale);
+        }
         return;
       }
       if (!fromPath) {
         const saved = window.localStorage.getItem(STORAGE_KEY);
-        if ((saved === 'ar' || saved === 'en' || saved === 'fr') && saved !== locale) setLocaleState(saved);
+        if (pathname.startsWith('/admin') && saved === 'fr') {
+          if (locale !== 'en') {
+            window.localStorage.setItem(STORAGE_KEY, 'en');
+            document.cookie = `rosette.locale=en; path=/; max-age=31536000; samesite=lax`;
+            setLocaleState('en');
+          }
+          return;
+        }
+        if ((saved === 'ar' || saved === 'en' || saved === 'fr') && saved !== locale) setLocaleState(saved as Locale);
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- locale is read via the latest state inside the deferred callback; depending on it would cause a re-render loop.

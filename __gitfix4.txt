@@ -1,0 +1,18 @@
+
+stash type: commit
+stash contains files (count in tree): 611
+applying stash --index:
+git : fatal: '8382bbc97952253380777827cdb406ccbf17e3ac' is not a stash-like 
+commit
+At line:452 char:1
++ git stash apply --index $stash 2>&1 | Out-File -FilePath $out -Append ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (fatal: '8382bbc...ash-like commit 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+apply rc: 128
+staged after apply: 0
+unstaged after apply: 0
+untracked after apply: 2
+full status count: 0

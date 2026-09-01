@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { deleteBlogPost } from '@/features/admin/blog-admin';
-import { getCurrentAdmin } from '@/features/auth/server';
+import { getCurrentContentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const admin = await getCurrentAdmin();
+  const admin = await getCurrentContentAdmin();
   if (!admin) return NextResponse.json({ error: 'Admin authorization required' }, { status: 403 });
   const { id } = await context.params;
   try {

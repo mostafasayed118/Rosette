@@ -3,6 +3,8 @@
  * Free: 1M validations/month on Cloudflare free plan.
  * Docs: https://developers.cloudflare.com/turnstile/
  */
+import { getDeploymentRuntime } from './runtime-config';
+
 export async function verifyTurnstileToken(token: string, secretKey: string, remoteIp?: string): Promise<{ success: boolean; errorCodes?: string[] }> {
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
@@ -22,7 +24,12 @@ export type TurnstileCheck = 'pass' | 'missing' | 'invalid';
  * NEXT_PUBLIC_TURNSTILE_SITE_KEY — set both or neither.
  */
 export async function checkTurnstileToken(token: unknown, secret: string | undefined, remoteIp?: string): Promise<TurnstileCheck> {
-  if (!secret) return 'pass';
+  if (!secret) {
+    // Secret unconfigured. Locally (node) we stay permissive so dev keeps
+    // working; in production we must require human verification, so signal
+    // 'missing' and let callers reject unverified traffic instead of admitting it.
+    return getDeploymentRuntime() === 'cloudflare' ? 'missing' : 'pass';
+  }
   if (typeof token !== 'string' || !token) return 'missing';
   const result = await verifyTurnstileToken(token, secret, remoteIp);
   return result.success ? 'pass' : 'invalid';

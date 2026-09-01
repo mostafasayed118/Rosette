@@ -1,26 +1,38 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
  * Re-runs the surrounding server component on an interval so fresh data
- * (e.g. new cancellation requests) appears without a manual reload.
- * Renders nothing. Skips refreshes while the tab is hidden and never
- * overlaps an in-flight refresh.
+ * appears without a manual reload. Renders nothing.
+ * - Skips while tab hidden (visibilityState)
+ * - Pauses entirely when `enabled` is false (e.g., no pending items)
+ * - Never overlaps an in-flight refresh
  */
-export function AutoRefresh({ intervalMs = 30000 }: { intervalMs?: number }) {
+export function AutoRefresh({ intervalMs = 30000, enabled = true }: { intervalMs?: number; enabled?: boolean }) {
   const router = useRouter();
+  const lastRefresh = useRef(0);
+
   useEffect(() => {
-    let lastRefresh = 0;
-    const timer = setInterval(() => {
+    if (!enabled) return;
+    const tick = () => {
       if (document.visibilityState !== 'visible') return;
       const now = Date.now();
-      if (now - lastRefresh < intervalMs) return;
-      lastRefresh = now;
+      if (now - lastRefresh.current < intervalMs) return;
+      lastRefresh.current = now;
       router.refresh();
-    }, intervalMs);
-    return () => clearInterval(timer);
-  }, [router, intervalMs]);
+    };
+    const timer = setInterval(tick, intervalMs);
+    // Also listen for visibility change to refresh promptly when tab becomes visible
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastRefresh.current > intervalMs) tick();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [router, intervalMs, enabled]);
   return null;
 }

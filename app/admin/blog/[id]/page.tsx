@@ -1,22 +1,22 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/admin/PageHeader';
-import { BlogForm } from '@/components/admin/BlogForm';
+import BlogFormClient from '@/components/admin/BlogFormClient';
 import { listAuthors } from '@/features/admin/blog-admin';
 import type { BlogPostInput } from '@/features/blog/types';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 
 export default async function AdminBlogEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const admin = await getCurrentAdmin();
   if (!admin) redirect('/login');
-  const { t } = await getServerT();
+  const { t } = await getAdminServerT();
   const { id } = await params;
   const authors = (await listAuthors(getAdminSupabase())).map((author) => ({ id: author.id, nameEn: author.nameEn }));
   if (id === 'new') {
     const blank: BlogPostInput = { slug: '', type: 'post', cityCode: null, titleEn: '', contentEn: '', published: false };
-    return <><PageHeader eyebrow={t('blogOperations')} title={t('newBlogPost')} /><div className="mt-6"><BlogForm post={blank} authors={authors} /></div></>;
+    return <><PageHeader eyebrow={t('blogOperations')} title={t('newBlogPost')} /><div className="mt-6"><BlogFormClient post={blank} authors={authors} /></div></>;
   }
   const { data } = await getAdminSupabase().from('blog_posts').select('*').eq('id', id).maybeSingle();
   if (!data) { redirect('/admin/blog'); return null; }
@@ -36,7 +36,8 @@ export default async function AdminBlogEditorPage({ params }: { params: Promise<
     contentAr: row.content_ar ? String(row.content_ar) : undefined,
     contentFr: row.content_fr ? String(row.content_fr) : undefined,
     category: row.category ? String(row.category) : undefined,
+    coverUrl: row.cover_url ? String(row.cover_url) : null,
     published: Boolean(row.published),
   };
-  return <><PageHeader eyebrow={t('blogOperations')} title={t('editBlogPost')} /><p className="mt-1"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/blog">{t('backToBlog')}</Link></p><div className="mt-6"><BlogForm post={post} id={id} authors={authors} /></div></>;
+  return <><PageHeader eyebrow={t('blogOperations')} title={t('editBlogPost')} /><p className="mt-1"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/blog">{t('backToBlog')}</Link></p><div className="mt-6"><BlogFormClient post={post} id={id} authors={authors} /></div></>;
 }

@@ -16,3 +16,14 @@ export async function requireAdmin() {
   if (!identity) throw new Error('Admin authorization required');
   return identity;
 }
+
+/**
+ * Authorization for content-authoring endpoints (blog posts, delivery copy,
+ * authors). `getCurrentAdmin` also admits `operator`, but authored HTML is
+ * rendered with `dangerouslySetInnerHTML`, so an operator could inject script
+ * that executes in an admin's session. Authoring is `admin`-only.
+ */
+export async function getCurrentContentAdmin(): Promise<AdminIdentity | null> {
+  const identity = await getCurrentAdmin();
+  return identity?.role === 'admin' ? identity : null;
+}

@@ -1,5 +1,5 @@
-import { Resend } from 'resend';
 import { getOptionalServerEnv } from '@/lib/server-env';
+import { logger } from '@/lib/logger';
 import { renderOrderEmail } from './email-templates';
 import type { OrderNotificationInput } from './email-types';
 
@@ -9,38 +9,80 @@ import type { OrderNotificationInput } from './email-types';
  * Better deliverability, supports React Email templates + HTML/text fallback.
  * Docs: https://resend.com/docs
  *
- * Lazy-init: only construct the Resend client when a send is actually requested
- * with a configured key. This keeps module import side-effect-free for tests
- * and safe on Workers, where env is read at request time, not module load.
+ * Cloudflare Workers cannot open raw TCP/TLS sockets, so SMTP is unsupported on
+ * the deploy target. Every transactional email goes through the Resend HTTP API
+ * via `fetch` — the ONLY supported transport.
  */
 
-let cachedClient: Resend | null = null;
-function getClient(): Resend {
+/**
+ * Structural mail-transport contract. Tests inject a fake implementing
+ * `sendMail`; production code never uses this and routes through Resend.
+ */
+export type MailTransport = {
+  sendMail: (message: { from: string; to: string; subject: string; text: string; html: string; headers?: Record<string, string> }) => Promise<unknown>;
+};
+
+/**
+ * Generic Resend sender — the single transport for ALL transactional email.
+ * Uses the Resend HTTP API directly (no SMTP). Returns
+ * `{ accepted: false }` (never throws) when the key/from is missing or the
+ * request fails, so callers can treat email as best-effort.
+ */
+export async function sendEmailResend(input: {
+  to: string;
+  subject: string;
+  html: string;
+  from?: string;
+  locale?: string;
+  text?: string;
+  headers?: Record<string, string>;
+}): Promise<{ accepted: boolean }> {
   const key = getOptionalServerEnv('RESEND_API_KEY');
-  if (!key) throw new Error('RESEND_API_KEY not configured');
-  if (!cachedClient) cachedClient = new Resend(key);
-  return cachedClient;
+  if (!key) {
+    logger.warn('notification.resend_no_key', { to: input.to, locale: input.locale });
+    return { accepted: false };
+  }
+  const from = input.from ?? getOptionalServerEnv('RESEND_FROM');
+  if (!from) {
+    logger.warn('notification.resend_no_from', { to: input.to, locale: input.locale });
+    return { accepted: false };
+  }
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from,
+        to: [input.to],
+        subject: input.subject,
+        html: input.html,
+        ...(input.text ? { text: input.text } : {}),
+        ...(input.headers ? { headers: input.headers } : {}),
+      }),
+    });
+    if (!res.ok) {
+      logger.warn('notification.resend_http_error', { status: res.status, to: input.to, locale: input.locale });
+      return { accepted: false };
+    }
+    return { accepted: true };
+  } catch (error) {
+    logger.warn('notification.resend_error', { error, to: input.to, locale: input.locale });
+    return { accepted: false };
+  }
 }
 
 export async function sendOrderEmailResend(input: OrderNotificationInput) {
-  if (!getOptionalServerEnv('RESEND_API_KEY')) throw new Error('RESEND_API_KEY not configured');
-  // Resend rejects unverified senders, so there is no safe default here.
-  const from = getOptionalServerEnv('RESEND_FROM');
-  if (!from) throw new Error('RESEND_FROM not configured');
   if (!input.recipientEmail) throw new Error('recipientEmail missing');
-
   const email = renderOrderEmail(input);
-  const resend = getClient();
-
-  const { data, error } = await resend.emails.send({
-    from,
-    to: [input.recipientEmail],
+  const result = await sendEmailResend({
+    to: input.recipientEmail,
     subject: email.subject,
     html: email.html,
     text: email.text,
+    locale: input.locale,
     headers: { 'X-Rosette-Order': input.orderNumber },
   });
-
-  if (error) throw error;
-  return { id: data?.id, accepted: true };
+  if (!result.accepted) throw new Error('Resend order email was not accepted');
+  return { id: undefined, accepted: true };
 }

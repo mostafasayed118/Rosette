@@ -1,6 +1,6 @@
 export type PromoRow = {
   code: string;
-  type: 'percent' | 'fixed';
+  type: 'percent' | 'fixed' | 'free_shipping';
   percent_off: number | null;
   value_minor: number | null;
   minimum_order_minor: number;
@@ -9,6 +9,7 @@ export type PromoRow = {
   max_uses: number;
   used_count: number;
   active: boolean;
+  per_user_limit?: number;
 };
 
 export type PromoError = 'inactive' | 'not_started' | 'expired' | 'max_uses' | 'below_minimum';
@@ -23,12 +24,18 @@ export function validatePromo(promo: PromoRow, subtotalMinor: number, now: Date)
 }
 
 export function computeDiscount(promo: PromoRow, subtotalMinor: number): { discountMinor: number; totalMinor: number } {
-  const raw = promo.type === 'percent' ? Math.round((subtotalMinor * (promo.percent_off ?? 0)) / 100) : (promo.value_minor ?? 0);
+  const raw = promo.type === 'percent' ? Math.round((subtotalMinor * (promo.percent_off ?? 0)) / 100) : promo.type === 'fixed' ? (promo.value_minor ?? 0) : 0;
   const discountMinor = Math.min(raw, subtotalMinor);
   return { discountMinor, totalMinor: subtotalMinor - discountMinor };
 }
 
 export function applyPromoToOrderTotals(totals: { subtotalMinor: number; deliveryFeeMinor: number }, promo: PromoRow) {
   const { discountMinor } = computeDiscount(promo, totals.subtotalMinor);
-  return { ...totals, discountMinor, totalMinor: totals.subtotalMinor + totals.deliveryFeeMinor - discountMinor };
+  const deliveryFeeMinor = promo.type === 'free_shipping' ? 0 : totals.deliveryFeeMinor;
+  return {
+    ...totals,
+    deliveryFeeMinor,
+    discountMinor: discountMinor + (totals.deliveryFeeMinor - deliveryFeeMinor),
+    totalMinor: totals.subtotalMinor + deliveryFeeMinor - discountMinor,
+  };
 }

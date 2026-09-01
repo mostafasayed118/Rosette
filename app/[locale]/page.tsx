@@ -8,7 +8,7 @@ export default async function CityPickerPage({ params }: { params: Promise<{ loc
   const resolved: Locale = (LOCALES as string[]).includes(locale) ? (locale as Locale) : 'en';
   return (
     <div className="flex min-h-screen flex-col bg-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
-      <main className="flex-1 flex flex-col">
+      <main id="main-content" className="flex-1 flex flex-col">
         <DestinationGate locale={resolved} />
       </main>
       <SiteFooter />

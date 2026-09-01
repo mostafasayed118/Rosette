@@ -10,7 +10,7 @@ import { useI18n } from '@/features/i18n/I18nProvider';
 import { toMinor } from '@/features/admin/money';
 import type { PromoInput } from '@/features/admin/promo-actions';
 
-const empty = { code: '', type: 'percent' as 'percent' | 'fixed', percent: '10', value: '', minimum: '', startsAt: '', expiresAt: '', maxUses: '0', active: true };
+const empty = { code: '', type: 'percent' as 'percent' | 'fixed' | 'free_shipping', percent: '10', value: '', minimum: '', startsAt: '', expiresAt: '', maxUses: '0', perUserLimit: '0', active: true };
 
 export function AddPromoForm() {
   const router = useRouter();
@@ -34,10 +34,17 @@ export function AddPromoForm() {
       startsAt: form.startsAt ? `${form.startsAt}T00:00:00Z` : null,
       expiresAt: form.expiresAt ? `${form.expiresAt}T00:00:00Z` : null,
       maxUses: Number.parseInt(form.maxUses, 10),
+      perUserLimit: Number.parseInt(form.perUserLimit, 10),
       active: form.active,
     };
     const response = await fetch('/api/admin/promos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'create-promo', promo: body }) });
-    if (!response.ok) { setError(response.status === 409 ? t('codeExists') : t('couldNotCreatePromo')); setSaving(false); return; }
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { reason?: string } | null;
+      const reason = response.status === 409 ? 'code_taken' : payload?.reason;
+      setError(reason ? t(`promoError_${reason}`) : t('couldNotCreatePromo'));
+      setSaving(false);
+      return;
+    }
     router.refresh();
     setForm(empty);
   }
@@ -46,10 +53,12 @@ export function AddPromoForm() {
     {error ? <StatusMessage title={error} tone="error" /> : null}
     <section className="grid gap-4 border-b py-6"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('addPromo')}</p><div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
       <Field id="promo-code" label={t('promoCode')} value={form.code} onChange={(e) => patch({ code: e.target.value })} placeholder="ROSE10" required />
-      <div className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('promoType')}</span><Select value={form.type} onValueChange={(v) => patch({ type: v as 'percent' | 'fixed' })}><SelectTrigger id="promo-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="percent">{t('percentOff')}</SelectItem><SelectItem value="fixed">{t('amountEgp')}</SelectItem></SelectContent></Select></div>
+      <div className="grid gap-1.5"><span className="text-sm font-bold text-foreground">{t('promoType')}</span><Select value={form.type} onValueChange={(v) => patch({ type: v as 'percent' | 'fixed' | 'free_shipping' })}><SelectTrigger id="promo-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="percent">{t('percentOff')}</SelectItem><SelectItem value="fixed">{t('amountEgp')}</SelectItem><SelectItem value="free_shipping">{t('freeShipping')}</SelectItem></SelectContent></Select></div>
       {form.type === 'percent'
         ? <Field id="percent-off" label={t('percentOff')} type="number" min={0} max={100} value={form.percent} onChange={(e) => patch({ percent: e.target.value })} required />
-        : <Field id="amount-egp" label={t('amountEgp')} type="number" min={0} step="0.01" value={form.value} onChange={(e) => patch({ value: e.target.value })} required />}
+        : form.type === 'fixed'
+          ? <Field id="amount-egp" label={t('amountEgp')} type="number" min={0} step="0.01" value={form.value} onChange={(e) => patch({ value: e.target.value })} required />
+          : null}
       <Field id="minimum-order" label={t('minimumOrderEgp')} type="number" min={0} step="0.01" value={form.minimum} onChange={(e) => patch({ minimum: e.target.value })} />
       <Field id="starts-at" label={t('starts')} type="date" value={form.startsAt} onChange={(e) => patch({ startsAt: e.target.value })} />
       <Field id="expires-at" label={t('expires')} type="date" value={form.expiresAt} onChange={(e) => patch({ expiresAt: e.target.value })} />

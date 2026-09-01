@@ -7,58 +7,149 @@ import { Progress } from '@/components/ui/progress';
 import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/admin/PageHeader';
-import { computeDashboardStats, computeSubscriptionTiles, LOW_STOCK_THRESHOLD, type InventoryRow, type OrderRow } from '@/features/admin/dashboard-stats';
+import { LOW_STOCK_THRESHOLD } from '@/features/admin/dashboard-stats';
+import { getDashboardStats } from '@/features/admin/repositories';
 import { getCurrentAdmin } from '@/features/auth/server';
-import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 import { formatMoney } from '@/features/money';
 import { fulfillmentBadgeVariant, fulfillmentLabel } from '@/features/admin/status-labels';
 
-type InventoryRowWithVariant = { variant_id: string; quantity: number; reserved_quantity: number; product_variants?: { name_en: string } | null };
+function LowStockBadge({ available }: { available: number }) {
+  const variant = available === 0 ? 'destructive' as const : available <= 1 ? 'warning' as const : available <= LOW_STOCK_THRESHOLD ? 'secondary' as const : 'secondary' as const;
+  const dot = available === 0 ? 'bg-destructive' : available <= 1 ? 'bg-warning' : 'bg-muted-foreground';
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
+      <Badge variant={variant}>{available} {available === 1 ? 'unit' : 'units'}</Badge>
+    </span>
+  );
+}
 
 export default async function AdminPage() {
-  const admin = await getCurrentAdmin();
+  const [admin, tData, stats] = await Promise.all([getCurrentAdmin(), getAdminServerT(), getDashboardStats()]);
   if (!admin) redirect('/login');
-  const { t, locale } = await getServerT();
-  const [ordersResult, inventoryResult, subscriptionsResult, deliveriesResult] = await Promise.all([
-    getAdminSupabase().from('orders').select('payment_status,fulfillment_status,total_minor,created_at'),
-    getAdminSupabase().from('inventory').select('variant_id,quantity,reserved_quantity,product_variants(name_en)'),
-    getAdminSupabase().from('subscriptions').select('status'),
-    getAdminSupabase().from('subscription_deliveries').select('status,scheduled_date'),
-  ]);
-  const stats = computeDashboardStats(
-    (ordersResult.data ?? []) as OrderRow[],
-    // PostgREST embeds the PK-backed to-one `product_variants` as an object, not an array.
-    ((inventoryResult.data ?? []) as unknown as InventoryRowWithVariant[]).map((row): InventoryRow => ({
-      variant_id: row.variant_id,
-      variant_name_en: row.product_variants?.name_en ?? t('unknownVariant'),
-      quantity: row.quantity,
-      reserved_quantity: row.reserved_quantity,
-    })),
-  );
+  const { t, locale } = tData;
   const pipelineEntries = Object.entries(stats.pipeline) as Array<[string, number]>;
   const maxPipeline = Math.max(1, ...pipelineEntries.map(([, count]) => count));
-  const subTiles = computeSubscriptionTiles(
-    (subscriptionsResult.data ?? []) as Array<{ status: string }>,
-    (deliveriesResult.data ?? []) as Array<{ status: string; scheduled_date: string }>,
+  const subTiles = { activeSubscriptions: stats.activeSubscriptions, deliveriesThisWeek: stats.deliveriesThisWeek };
+  const awaitingHigh = stats.awaitingFulfillment > 10;
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        eyebrow={t('adminEyebrow')}
+        title={t('adminDashboard')}
+        description={t('signedInAs', { role: admin.role })}
+        actions={<Link className="text-sm font-medium text-primary underline underline-offset-4" href="/admin/orders">{t('openOrders')}</Link>}
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className={awaitingHigh ? 'border-l-4 border-l-warning' : 'border-l-4 border-l-primary'}>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('awaitingFulfillment')}</CardTitle>
+            <span className={`grid h-10 w-10 place-items-center rounded-full ${awaitingHigh ? 'bg-warning/15 text-warning' : 'bg-primary/10 text-primary'}`}>
+              <ClipboardList className="h-5 w-5" />
+            </span>
+          </CardHeader>
+          <CardContent>
+            <p className="font-display text-3xl tabular-nums">{stats.awaitingFulfillment}</p>
+            <Link className="mt-1 inline-block text-sm text-primary underline underline-offset-4" href="/admin/orders">{t('openOrders')}</Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueToday')}</CardTitle>
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-success/10 text-success">
+              <Wallet className="h-5 w-5" />
+            </span>
+          </CardHeader>
+          <CardContent><p className="font-display text-3xl tabular-nums">{formatMoney(stats.revenueTodayMinor, locale)}</p></CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueAllTime')}</CardTitle>
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary">
+              <TrendingUp className="h-5 w-5" />
+            </span>
+          </CardHeader>
+          <CardContent><p className="font-display text-3xl tabular-nums">{formatMoney(stats.revenueAllTimeMinor, locale)}</p></CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('subscriptionsTitle')}</CardTitle>
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-secondary-foreground">
+              <PackageCheck className="h-5 w-5" />
+            </span>
+          </CardHeader>
+          <CardContent>
+            <p className="font-display text-3xl tabular-nums">{subTiles.activeSubscriptions}</p>
+            <Link className="mt-1 inline-block text-sm text-primary underline underline-offset-4" href="/admin/subscriptions">{t('subscriptionManage')}</Link>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-dashed">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-medium text-muted-foreground">{t('subscriptionNextDelivery')}</CardTitle>
+          <Badge variant="outline">{subTiles.deliveriesThisWeek} this week</Badge>
+        </CardHeader>
+        <CardContent><p className="font-display text-3xl tabular-nums">{subTiles.deliveriesThisWeek}</p></CardContent>
+      </Card>
+
+      <div>
+        <h2 className="mb-4 font-display text-xl font-semibold tracking-tight">{t('fulfillmentPipeline')}</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {pipelineEntries.map(([status, count]) => (
+            <Card key={status} className="bg-card">
+              <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
+                <CardTitle className="text-sm font-medium">{fulfillmentLabel(status, t)}</CardTitle>
+                <Badge variant={fulfillmentBadgeVariant(status)} className="tabular-nums">{count}</Badge>
+              </CardHeader>
+              <CardContent>
+                <Progress value={(count / maxPipeline) * 100} className="h-2" aria-label={`${fulfillmentLabel(status, t)} ${count}`} />
+                <p className="mt-2 text-xs text-muted-foreground tabular-nums">{count} / {maxPipeline} max</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="mb-4 font-display text-xl font-semibold tracking-tight">{t('lowStockTitle', { count: LOW_STOCK_THRESHOLD })}</h2>
+        {stats.lowStock.length === 0 ? (
+          <StatusMessage title={t('nothingLow')} />
+        ) : (
+          <Card className="overflow-hidden p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[14rem]">{t('products')}</TableHead>
+                    <TableHead className="w-[10rem]">{t('available')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {stats.lowStock.map((row) => (
+                    <TableRow key={row.variantId}>
+                      <TableCell className="whitespace-normal break-words">
+                        <strong className="font-medium">{row.name}</strong>
+                      </TableCell>
+                      <TableCell>
+                        <LowStockBadge available={row.available} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        )}
+        <div className="mt-4">
+          <Link className="text-sm font-medium text-primary underline underline-offset-4" href="/admin/inventory">{t('openInventory')}</Link>
+        </div>
+      </div>
+    </div>
   );
-  return <>
-    <PageHeader eyebrow={t('adminEyebrow')} title={t('adminDashboard')} description={t('signedInAs', { role: admin.role })} />
-    <div className="mb-8 mt-6 grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('awaitingFulfillment')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><ClipboardList className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{stats.awaitingFulfillment}</p><Link className="text-sm text-primary underline underline-offset-4" href="/admin/orders">{t('openOrders')}</Link></CardContent></Card>
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueToday')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><Wallet className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{formatMoney(stats.revenueTodayMinor, locale)}</p></CardContent></Card>
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('revenueAllTime')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><TrendingUp className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{formatMoney(stats.revenueAllTimeMinor, locale)}</p></CardContent></Card>
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('subscriptionsTitle')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><PackageCheck className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{subTiles.activeSubscriptions}</p><Link className="text-sm text-primary underline underline-offset-4" href="/admin/subscriptions">{t('subscriptionManage')}</Link></CardContent></Card>
-      <Card><CardHeader className="flex flex-row items-center justify-between gap-4"><CardTitle className="text-sm font-medium text-muted-foreground">{t('subscriptionNextDelivery')}</CardTitle><span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-primary"><ClipboardList className="h-5 w-5" /></span></CardHeader><CardContent><p className="font-display text-3xl">{subTiles.deliveriesThisWeek}</p></CardContent></Card>
-    </div>
-    <h2 className="font-display text-2xl">{t('fulfillmentPipeline')}</h2>
-    <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
-      {pipelineEntries.map(([status, count]) => (
-        <Card key={status}><CardHeader className="flex flex-row items-center justify-between gap-3"><CardTitle className="text-sm font-medium">{fulfillmentLabel(status, t)}</CardTitle><Badge variant={fulfillmentBadgeVariant(status)}>{count}</Badge></CardHeader><CardContent><Progress value={(count / maxPipeline) * 100} className="h-2" /></CardContent></Card>
-      ))}
-    </div>
-    <h2 className="mt-8 font-display text-2xl">{t('lowStockTitle', { count: LOW_STOCK_THRESHOLD })}</h2>
-    {stats.lowStock.length === 0 ? <StatusMessage title={t('nothingLow')} /> : <Card className="mt-4"><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('products')}</TableHead><TableHead>{t('available')}</TableHead></TableRow></TableHeader><TableBody>{stats.lowStock.map((row) => <TableRow key={row.variant_id}><TableCell><strong>{row.name}</strong></TableCell><TableCell><Badge variant="secondary">{row.available} {t('available')}</Badge></TableCell></TableRow>)}</TableBody></Table></div></Card>}
-    <p className="mt-6"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/inventory">{t('openInventory')}</Link></p>
-  </>;
 }

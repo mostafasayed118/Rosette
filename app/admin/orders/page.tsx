@@ -6,10 +6,9 @@ import { StatusMessage } from '@/components/ui/status-message';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { OrderListToolbar } from '@/components/admin/OrderListToolbar';
-import { buildOrderListQuery } from '@/features/admin/order-list-query';
+import { listAdminOrders } from '@/features/admin/repositories';
 import { getCurrentAdmin } from '@/features/auth/server';
-import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 import { formatMoney } from '@/features/money';
 import { fulfillmentBadgeVariant, fulfillmentLabel, paymentBadgeVariant, paymentLabel } from '@/features/admin/status-labels';
 
@@ -18,31 +17,56 @@ function first(value: string | string[] | undefined) {
 }
 
 export default async function AdminOrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const admin = await getCurrentAdmin();
+  const [admin, tData, params] = await Promise.all([getCurrentAdmin(), getAdminServerT(), searchParams]);
   if (!admin) redirect('/login');
-  const { t, locale } = await getServerT();
-  const params = await searchParams;
-  const constraints = buildOrderListQuery({ q: first(params.q), payment: first(params.payment), fulfillment: first(params.fulfillment) });
+  const { t, locale } = tData;
+  const rows = await listAdminOrders({ q: first(params.q), payment: first(params.payment), fulfillment: first(params.fulfillment) });
 
-  let query = getAdminSupabase().from('orders').select('id,display_number,customer_email,recipient_name,total_minor,payment_status,fulfillment_status,created_at').order('created_at', { ascending: false }).limit(100);
-  if (constraints.search) query = query.or(`display_number.ilike.%${constraints.search}%,customer_email.ilike.%${constraints.search}%,customer_phone.ilike.%${constraints.search}%`);
-  if (constraints.paymentStatus) query = query.eq('payment_status', constraints.paymentStatus);
-  if (constraints.fulfillmentStatus) query = query.eq('fulfillment_status', constraints.fulfillmentStatus);
-  const { data } = await query;
-
-  const rows = (data ?? []) as Array<{ id: string; display_number: string; customer_email: string; recipient_name: string; total_minor: number; payment_status: string; fulfillment_status: string }>;
-
-  return <>
-    <PageHeader eyebrow={t('adminEyebrow')} title={t('orders')} />
-    <OrderListToolbar />
-    {rows.length === 0 ? <StatusMessage title={t('noOrdersMatch')} /> : <Card><div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>{t('orders')}</TableHead><TableHead>{t('recipient')}</TableHead><TableHead>{t('payment')}</TableHead><TableHead>{t('fulfillment')}</TableHead><TableHead className="text-end">{t('total')}</TableHead></TableRow></TableHeader><TableBody>{rows.map((order) => (
-      <TableRow key={order.id}>
-        <TableCell><Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/orders/${order.id}`}>{order.display_number}</Link></TableCell>
-        <TableCell><span className="block">{order.recipient_name}</span><span className="block text-sm text-muted-foreground">{order.customer_email}</span></TableCell>
-        <TableCell><Badge variant={paymentBadgeVariant(order.payment_status)}>{paymentLabel(order.payment_status, t)}</Badge></TableCell>
-        <TableCell><Badge variant={fulfillmentBadgeVariant(order.fulfillment_status)}>{fulfillmentLabel(order.fulfillment_status, t)}</Badge></TableCell>
-        <TableCell className="text-end">{formatMoney(order.total_minor, locale)}</TableCell>
-      </TableRow>
-    ))}</TableBody></Table></div></Card>}
-  </>;
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader eyebrow={t('adminEyebrow')} title={t('orders')} />
+      <OrderListToolbar />
+      {rows.length === 0 ? (
+        <StatusMessage title={t('noOrdersMatch')} />
+      ) : (
+        <Card className="overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[10rem]">{t('orders')}</TableHead>
+                  <TableHead className="min-w-[14rem]">{t('recipient')}</TableHead>
+                  <TableHead>{t('payment')}</TableHead>
+                  <TableHead>{t('fulfillment')}</TableHead>
+                  <TableHead className="text-end">{t('total')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell>
+                      <Link className="font-medium text-primary underline-offset-4 hover:underline" href={`/admin/orders/${order.id}`} prefetch>
+                        {order.displayNumber}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="whitespace-normal break-words">
+                      <span className="block font-medium">{order.recipientName}</span>
+                      <span className="block text-sm text-muted-foreground break-all">{order.customerEmail}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={paymentBadgeVariant(order.paymentStatus)}>{paymentLabel(order.paymentStatus, t)}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={fulfillmentBadgeVariant(order.fulfillmentStatus)}>{fulfillmentLabel(order.fulfillmentStatus, t)}</Badge>
+                    </TableCell>
+                    <TableCell className="text-end tabular-nums">{formatMoney(order.totalMinor, locale)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
 }

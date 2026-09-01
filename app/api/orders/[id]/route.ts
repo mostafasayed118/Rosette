@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
 import { logger } from '@/lib/logger';
+import { enforceRateLimit, RATE_LIMITS } from '@/lib/rate-limit-guard';
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const limited = await enforceRateLimit(request, RATE_LIMITS.orderLookup);
+  if (limited) return limited;
   try {
     const { id } = await context.params;
     const token = new URL(request.url).searchParams.get('token');
-    if (!token) return NextResponse.json({ error: 'Order verification is required' }, { status: 401 });
+    if (!token) return NextResponse.json({ error: 'Order verification is required' }, { status: 401, headers: { 'Cache-Control': 'private, no-store' } });
     const { data: order, error } = await getAdminSupabase()
       .from('orders')
       .select('id,display_number,recipient_name,delivery_address,delivery_date,delivery_window,subtotal_minor,delivery_fee_minor,total_minor,payment_status,fulfillment_status,order_items(id,product_name_en,product_name_ar,product_name_fr,unit_price_minor,quantity,add_ons)')
@@ -15,9 +18,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       .maybeSingle();
     if (error) {
       logger.error('route.error', { scope: 'order lookup', error });
-      return NextResponse.json({ error: 'Order lookup failed' }, { status: 503 });
+      return NextResponse.json({ error: 'Order lookup failed' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
     }
-    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404, headers: { 'Cache-Control': 'private, no-store' } });
     return NextResponse.json({
       id: order.id,
       displayNumber: order.display_number,
@@ -45,9 +48,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         productSlug: item.product_name_en,
         deliveryDate: order.delivery_date,
       })),
-    });
+    }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error) {
     logger.error('route.error', { scope: 'order fetch', error });
-    return NextResponse.json({ error: 'Order lookup is temporarily unavailable.' }, { status: 503 });
+    return NextResponse.json({ error: 'Order lookup is temporarily unavailable.' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
   }
 }

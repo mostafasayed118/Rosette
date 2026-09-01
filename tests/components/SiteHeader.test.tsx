@@ -41,6 +41,18 @@ describe('SiteHeader', () => {
     expect(gifts.className).not.toContain('border-primary');
   });
 
+  // Regression: the desktop nav plus utility cluster needs ~930px. Showing it
+  // from `md` (768px) forced horizontal overflow on every tablet-width page.
+  it('keeps the drawer as the nav until the laptop breakpoint', () => {
+    renderHeader();
+    const nav = document.querySelector('header nav[aria-label]') as HTMLElement;
+    const mobileCluster = document.querySelector('header div.lg\\:hidden') as HTMLElement;
+    expect(nav.className).toContain('lg:flex');
+    expect(nav.className).not.toContain('md:flex');
+    expect(mobileCluster).toBeTruthy();
+    expect(nav.className).not.toContain('md:hidden');
+  });
+
   it('opens the mobile menu with the Stitch nav items', async () => {
     renderHeader();
     fireEvent.click(screen.getByRole('button', { name: 'Menu' }));

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { issueGiftCard, listGiftCardTransactions, listGiftCards, resendGiftCard, voidGiftCard } from '@/features/gift-cards/admin-actions';
+import { issueGiftCard, listGiftCardTransactions, listGiftCardTransactionsByCard, listGiftCards, resendGiftCard, voidGiftCard } from '@/features/gift-cards/admin-actions';
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -50,8 +50,38 @@ describe('gift-card admin actions', () => {
     const result = await listGiftCards(client, operator, {});
     expect(result).toEqual([expect.objectContaining({ id: 'card-1', codeLast4: 'ZZZZ', balanceMinor: 75000, source: 'admin' })]);
     expect(JSON.stringify(result)).not.toContain('ciphertext');
-    const historyClient = { from: () => ({ select: () => ({ eq: async () => ({ data: [{ type: 'issue', amount_minor: 100000, order_id: null, actor_id: 'admin-1', idempotency_key: 'gift-card-admin-issue:card-1', created_at: '2026-08-20T00:00:00Z' }], error: null }) }) }) };
+    const historyClient = { from: () => ({ select: () => {
+      const result = {
+        eq: () => result,
+        order: () => result,
+        limit: async () => ({ data: [{ type: 'issue', amount_minor: 100000, order_id: null, actor_id: 'admin-1', idempotency_key: 'gift-card-admin-issue:card-1', created_at: '2026-08-20T00:00:00Z' }], error: null }),
+      };
+      return result;
+    } }) };
     expect(await listGiftCardTransactions(historyClient, operator, 'card-1')).toEqual([expect.objectContaining({ type: 'issue', idempotencyKey: '…:card-1' })]);
+  });
+
+  it('loads all visible card histories with one bounded query', async () => {
+    const calls: string[] = [];
+    const client = {
+      from: (table: string) => {
+        expect(table).toBe('gift_card_transactions');
+        const result = {
+          select: () => result,
+          in: (column: string, ids: string[]) => { calls.push(`in:${column}:${ids.join(',')}`); return result; },
+          order: () => result,
+          limit: async (limit: number) => ({ data: [
+            { gift_card_id: 'card-1', type: 'issue', amount_minor: 1000, order_id: null, actor_id: 'admin-1', idempotency_key: 'issue:card-1', created_at: '2026-08-20T00:00:00Z' },
+            { gift_card_id: 'card-2', type: 'redeem', amount_minor: -250, order_id: 'order-1', actor_id: null, idempotency_key: 'redeem:card-2', created_at: '2026-08-21T00:00:00Z' },
+          ], error: null, limit }),
+        };
+        return result;
+      },
+    };
+    const result = await listGiftCardTransactionsByCard(client, operator, ['card-1', 'card-2']);
+    expect(calls).toEqual(['in:gift_card_id:card-1,card-2']);
+    expect(result.get('card-1')).toHaveLength(1);
+    expect(result.get('card-2')).toEqual([expect.objectContaining({ type: 'redeem', orderId: 'order-1' })]);
   });
 
   it('voids an active card with an audit row and does not return code data', async () => {

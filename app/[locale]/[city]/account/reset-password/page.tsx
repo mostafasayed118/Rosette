@@ -36,7 +36,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4">
+    <main id="main-content" className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4">
       <section className="mx-auto grid max-w-[34rem] gap-5 rounded-2xl border bg-card p-8 shadow-sm">
         <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('account')}</p>
         <h1 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[.95] tracking-[-.02em]">{t('resetPassword')}</h1>

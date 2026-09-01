@@ -1,18 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createMailTransport } from '@/features/notifications/gmail-mailer';
 import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 
 afterEach(() => vi.unstubAllEnvs());
 
-const message = { from: 'a@b.c', to: 'd@e.f', subject: 's', text: 't', html: '<p>t</p>' };
-
 describe('disabled email delivery', () => {
-  it('returns a no-op transport without throwing when disabled', async () => {
+  it('reports disabled when EMAIL_DELIVERY_MODE is disabled on Cloudflare', () => {
     vi.stubEnv('DEPLOYMENT_RUNTIME', 'cloudflare');
     vi.stubEnv('EMAIL_DELIVERY_MODE', 'disabled');
     expect(isEmailDeliveryDisabled()).toBe(true);
-    const transport = createMailTransport();
-    await expect(transport.sendMail(message)).resolves.toEqual({ delivered: false, reason: 'disabled' });
   });
 
   it('defaults Cloudflare to disabled email', () => {
@@ -27,3 +22,4 @@ describe('disabled email delivery', () => {
     expect(isEmailDeliveryDisabled()).toBe(false);
   });
 });
+

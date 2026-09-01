@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diffTouchesGroupOwnedField } from '@/features/orders/change-request';
+import { diffTouchesGroupOwnedField } from '@/features/order-mutations/change-request';
 
 describe('change request group-owned field guard', () => {
   it('flags a delivery_date change as group-owned', () => {

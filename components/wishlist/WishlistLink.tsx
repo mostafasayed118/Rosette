@@ -11,7 +11,7 @@ export function WishlistLink() {
   const { href } = useStorePath();
   const { ready, count } = useWishlist();
   return (
-    <Link className="flex items-center gap-2" href={href('/wishlist')} aria-label={`${t('wishlist')} (${count})`}>
+    <Link className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 px-1" href={href('/wishlist')} aria-label={`${t('wishlist')} (${count})`}>
       <Heart className="h-4 w-4" aria-hidden="true" />
       <span className="grid h-6 min-w-6 place-items-center rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{ready ? count : 0}</span>
     </Link>

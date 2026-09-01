@@ -49,4 +49,43 @@ describe('ThemeProvider', () => {
     expect(window.localStorage.getItem('rosette.theme.v1')).toBe('dark');
     expect(document.cookie).toContain('rosette.theme=dark');
   });
+
+  it('preserves the server-rendered dark class during hydration', async () => {
+    document.cookie = 'rosette.theme=dark; path=/';
+    document.documentElement.classList.add('dark');
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    expect(screen.getByRole('button')).toHaveTextContent('dark');
+    await act(async () => {});
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  it('follows system theme changes when no explicit preference exists', async () => {
+    let listener: ((event: MediaQueryListEvent) => void) | undefined;
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({
+      matches: false,
+      addEventListener: (_type: string, callback: (event: MediaQueryListEvent) => void) => { listener = callback; },
+      removeEventListener: vi.fn(),
+    }));
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    await act(async () => {});
+    expect(listener).toBeTypeOf('function');
+    act(() => listener?.({ matches: true } as MediaQueryListEvent));
+    expect(screen.getByRole('button')).toHaveTextContent('dark');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  it('does not follow system changes after an explicit preference is saved', async () => {
+    let listener: ((event: MediaQueryListEvent) => void) | undefined;
+    window.localStorage.setItem('rosette.theme.v1', 'light');
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({
+      matches: true,
+      addEventListener: (_type: string, callback: (event: MediaQueryListEvent) => void) => { listener = callback; },
+      removeEventListener: vi.fn(),
+    }));
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+    await act(async () => {});
+    expect(listener).toBeUndefined();
+    expect(screen.getByRole('button')).toHaveTextContent('light');
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+  });
 });

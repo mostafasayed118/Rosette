@@ -1,6 +1,6 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
-import { createMailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
-import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
+import { sendEmailResend, type MailTransport } from '@/features/notifications/resend-mailer';
+import { getOptionalServerEnv } from '@/lib/server-env';
 import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 import type { EmailLocale } from '@/features/notifications/email-types';
 
@@ -38,14 +38,15 @@ export function renderGiftCardEmail(input: GiftCardEmailInput) {
 
 export async function sendGiftCardEmail(input: { recipient: string; rendered: ReturnType<typeof renderGiftCardEmail> }, injectedTransport?: MailTransport) {
   if (!injectedTransport && isEmailDeliveryDisabled()) return false;
-  try {
-    const transport = injectedTransport ?? createMailTransport();
-    const from = injectedTransport ? (getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@example.invalid>') : getRequiredServerEnv('GMAIL_FROM');
-    await transport.sendMail({ from, to: input.recipient, subject: input.rendered.subject, text: input.rendered.text, html: input.rendered.html });
+  const { subject, text, html } = input.rendered;
+  if (injectedTransport) {
+    const from = getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@example.invalid>';
+    const message: Parameters<MailTransport['sendMail']>[0] = { from, to: input.recipient, subject, text, html };
+    await injectedTransport.sendMail(message);
     return true;
-  } catch {
-    return false;
   }
+  const result = await sendEmailResend({ to: input.recipient, subject, html, text });
+  return result.accepted;
 }
 
 type DeliveryInput = Omit<GiftCardEmailInput, 'recipientCopy'> & { buyerEmail: string; recipientEmail: string };

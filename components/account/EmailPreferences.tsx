@@ -118,13 +118,13 @@ export function EmailPreferences({ initialEnabled, loadFailed = false, accountPa
       {/* Header - Stitch parity: eyebrow + headline */}
       <div className="mb-8">
         <p className="font-mono text-[0.875rem] uppercase tracking-[0.05em] text-on-surface-variant">{t('emailPreferences')}</p>
-        <h2 className="mt-2 font-display text-[2rem] font-medium leading-[1.2] text-on-surface md:text-[2rem]">How we reach you.</h2>
+        <h2 className="mt-2 font-display text-[2rem] font-medium leading-[1.2] text-on-surface md:text-[2rem]">{t('howWeReachYou')}</h2>
       </div>
 
       {/* Master toggle card */}
       <div className="mb-8 flex items-start justify-between rounded-xl border border-outline-variant/30 bg-surface-container-low p-6">
-        <div className="pr-6">
-          <h3 className="font-display text-[1.25rem] font-medium leading-tight text-on-surface">Engagement emails</h3>
+        <div className="pe-6">
+          <h3 className="font-display text-[1.25rem] font-medium leading-tight text-on-surface">{t('engagementEmails')}</h3>
           <p className="mt-2 text-sm leading-relaxed text-on-surface-variant">{t('engagementEmailDescription')}</p>
         </div>
         <Toggle
@@ -142,65 +142,65 @@ export function EmailPreferences({ initialEnabled, loadFailed = false, accountPa
       <div className="border-t border-outline-variant/30">
         {/* Order updates locked */}
         <div className="flex items-start justify-between border-b border-outline-variant/30 py-5 opacity-70">
-          <div className="pr-6">
+          <div className="pe-6">
             <h4 className="flex items-center gap-2 text-[1.05rem] font-medium leading-none text-on-surface">
-              Order updates
+              {t('orderUpdates')}
               <Lock className="h-4 w-4 text-sage" aria-hidden />
             </h4>
-            <p className="mt-1 text-sm text-on-surface-variant">Essential info about your active orders.</p>
+            <p className="mt-1 text-sm text-on-surface-variant">{t('essentialOrderUpdates')}</p>
           </div>
-          <Toggle checked disabled ariaLabel="Order updates" onChange={() => {}} />
+          <Toggle checked disabled ariaLabel={t('orderUpdates')} onChange={() => {}} />
         </div>
 
         {/* Abandoned bag */}
         <div className="flex items-start justify-between border-b border-outline-variant/30 py-5">
-          <div className="pr-6">
-            <h4 className="text-[1.05rem] font-medium leading-none text-on-surface">Abandoned bag reminder</h4>
-            <p className="mt-1 text-sm text-on-surface-variant">A gentle nudge when you leave stems in your bag.</p>
+          <div className="pe-6">
+            <h4 className="text-[1.05rem] font-medium leading-none text-on-surface">{t('abandonedBagReminder')}</h4>
+            <p className="mt-1 text-sm text-on-surface-variant">{t('abandonedBagHint')}</p>
           </div>
           <Toggle
             checked={bag}
             disabled={saving || loadFailed || !enabled}
-            ariaLabel="Abandoned bag reminder"
+            ariaLabel={t('abandonedBagReminder')}
             onChange={(next) => setBag(next)}
           />
         </div>
 
         {/* Wishlist price drops */}
         <div className="flex items-start justify-between border-b border-outline-variant/30 py-5">
-          <div className="pr-6">
-            <h4 className="text-[1.05rem] font-medium leading-none text-on-surface">Wishlist price drops</h4>
-            <p className="mt-1 text-sm text-on-surface-variant">Be the first to know when your favorites are curated for less.</p>
+          <div className="pe-6">
+            <h4 className="text-[1.05rem] font-medium leading-none text-on-surface">{t('wishlistPriceDrops')}</h4>
+            <p className="mt-1 text-sm text-on-surface-variant">{t('wishlistPriceDropsHint')}</p>
           </div>
           <Toggle
             checked={wishlistDrop}
             disabled={saving || loadFailed || !enabled}
-            ariaLabel="Wishlist price drops"
+            ariaLabel={t('wishlistPriceDrops')}
             onChange={(next) => setWishlistDrop(next)}
           />
         </div>
 
         {/* Back-in-stock */}
         <div className="flex items-start justify-between border-b border-outline-variant/30 py-5">
-          <div className="pr-6">
-            <h4 className="text-[1.05rem] font-medium leading-none text-on-surface">Back-in-stock alerts</h4>
-            <p className="mt-1 text-sm text-on-surface-variant">Alerts for when seasonal blooms return to the studio.</p>
+          <div className="pe-6">
+            <h4 className="text-[1.05rem] font-medium leading-none text-on-surface">{t('backInStockAlerts')}</h4>
+            <p className="mt-1 text-sm text-on-surface-variant">{t('backInStockAlertsHint')}</p>
           </div>
           <Toggle
             checked={backInStock}
             disabled={saving || loadFailed || !enabled}
-            ariaLabel="Back-in-stock alerts"
+            ariaLabel={t('backInStockAlerts')}
             onChange={(next) => setBackInStock(next)}
           />
         </div>
 
         {/* Seasonal */}
         <div className="flex items-start justify-between border-b border-outline-variant/30 py-5">
-          <div className="pr-6">
-            <h4 className="text-[1.05rem] font-medium leading-none text-on-surface">Seasonal collection notes</h4>
-            <p className="mt-1 text-sm text-on-surface-variant">Editorial stories and early access to new gestures.</p>
+          <div className="pe-6">
+            <h4 className="text-[1.05rem] font-medium leading-none text-on-surface">{t('seasonalNotes')}</h4>
+            <p className="mt-1 text-sm text-on-surface-variant">{t('seasonalNotesHint')}</p>
           </div>
-          <Toggle checked={seasonal} disabled={saving || loadFailed || !enabled} ariaLabel="Seasonal collection notes" onChange={(next) => setSeasonal(next)} />
+          <Toggle checked={seasonal} disabled={saving || loadFailed || !enabled} ariaLabel={t('seasonalNotes')} onChange={(next) => setSeasonal(next)} />
         </div>
       </div>
 
@@ -217,7 +217,7 @@ export function EmailPreferences({ initialEnabled, loadFailed = false, accountPa
 
       {/* Language preference */}
       <div className="mt-10 border-t border-outline-variant/30 pt-8">
-        <h3 className="font-display text-[1.5rem] font-medium leading-tight text-on-surface">Correspondence language</h3>
+        <h3 className="font-display text-[1.5rem] font-medium leading-tight text-on-surface">{t('correspondenceLanguage')}</h3>
         <div className="mt-4 flex flex-wrap gap-3">
           <label className="cursor-pointer">
             <input
@@ -229,7 +229,7 @@ export function EmailPreferences({ initialEnabled, loadFailed = false, accountPa
               onChange={() => handleLanguageChange('en')}
             />
             <span className="inline-block rounded-full border border-outline-variant/50 px-6 py-2 text-sm text-on-surface-variant transition-colors peer-checked:border-primary-container peer-checked:bg-primary-container peer-checked:text-on-primary-container">
-              English
+              {t('languageEn')}
             </span>
           </label>
           <label className="cursor-pointer">
@@ -242,13 +242,13 @@ export function EmailPreferences({ initialEnabled, loadFailed = false, accountPa
               onChange={() => handleLanguageChange('ar')}
             />
             <span className="inline-block rounded-full border border-outline-variant/50 px-6 py-2 text-sm text-on-surface-variant transition-colors peer-checked:border-primary-container peer-checked:bg-primary-container peer-checked:text-on-primary-container">
-              العربية
+              {t('languageAr')}
             </span>
           </label>
           <label className="cursor-pointer">
             <input className="peer sr-only" name="language" type="radio" value="fr" checked={lang === 'fr'} onChange={() => handleLanguageChange('fr')} />
             <span className="inline-block rounded-full border border-outline-variant/50 px-6 py-2 text-sm text-on-surface-variant transition-colors peer-checked:border-primary-container peer-checked:bg-primary-container peer-checked:text-on-primary-container">
-              Français
+              {t('languageFr')}
             </span>
           </label>
         </div>
@@ -262,7 +262,7 @@ export function EmailPreferences({ initialEnabled, loadFailed = false, accountPa
           disabled={saving || loadFailed}
           className="inline-flex h-11 items-center justify-center rounded bg-primary px-8 text-sm font-medium text-on-primary shadow-sm transition-colors hover:bg-surface-tint active:scale-[0.98] disabled:opacity-50"
         >
-          {saving ? t('processing') : 'Save changes'}
+          {saving ? t('processing') : t('saveChanges')}
         </button>
       </div>
     </section>

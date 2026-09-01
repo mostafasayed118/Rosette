@@ -1,5 +1,4 @@
-import { isStuckRow, MAX_ATTEMPTS, NOTIFICATION_TYPES, STALE_PENDING_MS } from '@/features/notifications/notification-retry';
-import type { RetryLimits } from '@/features/notifications/notification-retry';
+import { NOTIFICATION_TYPES, resolveRetryLimits } from '@/features/notifications/notification-retry';
 import type { NotificationType } from '@/features/notifications/email-types';
 
 type AdminClient = { from: (table: string) => any };
@@ -26,27 +25,50 @@ export type StuckDeliveryQuery = {
   pageSize?: number;
 };
 
-type DeliveryRow = { id: string; order_id: string; type: string; recipient: string; locale: string; status: string; attempts: number; last_error: string | null; created_at: string };
-type OrderRow = { id: string; display_number: string };
+type RpcRow = {
+  id: string;
+  type: string;
+  recipient: string;
+  locale: string;
+  status: string;
+  attempts: number;
+  last_error: string | null;
+  created_at: string;
+  order_number: string | null;
+};
+
+type RpcClient = {
+  rpc: (name: string, params: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+};
 
 export async function listStuckDeliveries(client: AdminClient, deps: { now?: () => Date; maxAttempts?: number; stalePendingMs?: number } & StuckDeliveryQuery = {}): Promise<StuckDeliveryPage> {
   const now = deps.now ?? (() => new Date());
-  const limits: RetryLimits = { maxAttempts: deps.maxAttempts ?? MAX_ATTEMPTS, stalePendingMs: deps.stalePendingMs ?? STALE_PENDING_MS };
-  const q = deps.q?.trim().toLowerCase();
-  const status = deps.status === 'failed' || deps.status === 'pending' ? deps.status : undefined;
-  const type = deps.type && NOTIFICATION_TYPES.has(deps.type as NotificationType) ? deps.type : undefined;
+  const limits = resolveRetryLimits();
+  const maxAttempts = deps.maxAttempts ?? limits.maxAttempts;
+  const stalePendingMs = deps.stalePendingMs ?? limits.stalePendingMs;
+  const q = deps.q?.trim() || null;
+  const status = deps.status === 'failed' || deps.status === 'pending' ? deps.status : null;
+  const type = deps.type && NOTIFICATION_TYPES.has(deps.type as NotificationType) ? deps.type : null;
   const page = Math.max(1, Math.floor(deps.page ?? 1));
   const pageSize = deps.pageSize ?? 10;
+  const nowIso = now().toISOString();
 
-  const { data } = await client.from('notification_deliveries').select('id,order_id,type,recipient,locale,status,attempts,last_error,created_at').in('status', ['failed', 'pending']);
-  const rows = (data ?? []) as DeliveryRow[];
-  const stuck = rows.filter((r) => isStuckRow({ status: r.status, attempts: r.attempts, created_at: r.created_at }, now(), limits));
+  const rpcClient = client as unknown as RpcClient;
+  const filterParams = {
+    p_q: q,
+    p_status: status,
+    p_type: type,
+    p_now: nowIso,
+    p_max_attempts: maxAttempts,
+    p_stale_pending_ms: stalePendingMs,
+  };
 
-  const orderIds = [...new Set(stuck.map((r) => r.order_id))];
-  const { data: orders } = orderIds.length ? await client.from('orders').select('id,display_number').in('id', orderIds) : { data: [] };
-  const orderMap = new Map<string, string>(((orders ?? []) as OrderRow[]).map((o) => [o.id, o.display_number]));
+  const [{ data }, { data: countData }] = await Promise.all([
+    rpcClient.rpc('admin_notification_deliveries', { ...filterParams, p_page_size: pageSize, p_page_offset: (page - 1) * pageSize }),
+    rpcClient.rpc('admin_notification_deliveries_count', filterParams),
+  ]);
 
-  let list: StuckDelivery[] = stuck.map((r) => ({
+  const rows = ((data ?? []) as RpcRow[]).map((r) => ({
     id: r.id,
     type: r.type,
     recipient: r.recipient,
@@ -55,18 +77,9 @@ export async function listStuckDeliveries(client: AdminClient, deps: { now?: () 
     attempts: r.attempts,
     lastError: r.last_error,
     createdAt: r.created_at,
-    orderNumber: orderMap.get(r.order_id) ?? null,
+    orderNumber: r.order_number,
   }));
 
-  if (q) {
-    list = list.filter((d) => (d.orderNumber ?? '').toLowerCase().includes(q) || d.recipient.toLowerCase().includes(q));
-  }
-  if (status) list = list.filter((d) => d.status === status);
-  if (type) list = list.filter((d) => d.type === type);
-
-  list.sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
-
-  const total = list.length;
-  const start = (page - 1) * pageSize;
-  return { rows: list.slice(start, start + pageSize), total };
+  const total = typeof countData === 'number' ? countData : rows.length;
+  return { rows, total };
 }

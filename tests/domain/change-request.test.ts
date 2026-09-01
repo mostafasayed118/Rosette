@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canRequestChange, parseChangeRequestDiff, requiresReview } from '@/features/orders/change-request';
+import { canRequestChange, parseChangeRequestDiff, requiresReview } from '@/features/order-mutations/change-request';
 
 describe('canRequestChange', () => {
   it('returns not_found when the order is missing', () => {

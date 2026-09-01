@@ -5,8 +5,8 @@
  * Docs: https://developers.cloudflare.com/analytics/web-analytics/
  */
 
-export function CloudflareWebAnalytics({ token }: { token?: string }) {
-  if (!token) return null;
+export function CloudflareWebAnalytics({ token, enabled = true }: { token?: string; enabled?: boolean }) {
+  if (!token || !enabled) return null;
   return (
     <script
       defer

@@ -1,6 +1,6 @@
 import type { AdminIdentity } from './authorization';
 
-export type PromoInput = { code: string; type: 'percent' | 'fixed'; percentOff: number | null; valueMinor: number | null; minimumOrderMinor: number; startsAt: string | null; expiresAt: string | null; maxUses: number; active: boolean };
+export type PromoInput = { code: string; type: 'percent' | 'fixed' | 'free_shipping'; percentOff: number | null; valueMinor: number | null; minimumOrderMinor: number; startsAt: string | null; expiresAt: string | null; maxUses: number; perUserLimit: number; active: boolean };
 
 export type PromoSaveResult = 'saved' | 'forbidden' | 'validation' | 'failure';
 export type PromoCreateResult = 'created' | 'forbidden' | 'validation' | 'code_taken' | 'failure';
@@ -19,14 +19,17 @@ function normalize(input: PromoInput): PromoInput {
 
 export function validatePromoInput(input: PromoInput): string | null {
   if (!CODE_PATTERN.test(input.code.trim().toUpperCase())) return 'invalid_code';
-  if (input.type !== 'percent' && input.type !== 'fixed') return 'invalid_type';
-  if (input.type === 'percent') {
+  if (input.type !== 'percent' && input.type !== 'fixed' && input.type !== 'free_shipping') return 'invalid_type';
+  if (input.type === 'free_shipping') {
+    if (input.percentOff !== null || input.valueMinor !== null) return 'invalid_value';
+  } else if (input.type === 'percent') {
     if (input.valueMinor !== null || input.percentOff === null || !Number.isInteger(input.percentOff) || input.percentOff < 0 || input.percentOff > 100) return 'invalid_percent';
   } else {
     if (input.percentOff !== null || input.valueMinor === null || !Number.isInteger(input.valueMinor) || input.valueMinor < 0) return 'invalid_value';
   }
   if (!Number.isInteger(input.minimumOrderMinor) || input.minimumOrderMinor < 0) return 'invalid_minimum';
   if (!Number.isInteger(input.maxUses) || input.maxUses < 0) return 'invalid_max_uses';
+  if (!Number.isInteger(input.perUserLimit) || input.perUserLimit < 0) return 'invalid_per_user_limit';
   if (input.startsAt && input.expiresAt && input.startsAt >= input.expiresAt) return 'invalid_dates';
   return null;
 }
@@ -41,6 +44,7 @@ function toRow(input: PromoInput) {
     starts_at: input.startsAt ?? null,
     expires_at: input.expiresAt ?? null,
     max_uses: input.maxUses,
+    per_user_limit: input.perUserLimit,
     active: input.active,
   };
 }

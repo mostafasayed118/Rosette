@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupRefundForCancellation } from '@/features/orders/cancel-actions';
+import { groupRefundForCancellation } from '@/features/order-mutations/cancel-actions';
 
 describe('cancel-group refund cap', () => {
   it('caps a group refund so cumulative refunds do not exceed cash paid', () => {

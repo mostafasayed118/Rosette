@@ -67,12 +67,8 @@ describe('getClientIp', () => {
     expect(getClientIp(request({ 'CF-Connecting-IP': '9.9.9.9', 'X-Forwarded-For': '8.8.8.8', 'X-Real-IP': '7.7.7.7' }))).toBe('9.9.9.9');
   });
 
-  it('falls back to the first X-Forwarded-For entry', () => {
-    expect(getClientIp(request({ 'X-Forwarded-For': '8.8.8.8, 10.0.0.1', 'X-Real-IP': '7.7.7.7' }))).toBe('8.8.8.8');
-  });
-
-  it('falls back to X-Real-IP', () => {
-    expect(getClientIp(request({ 'X-Real-IP': '7.7.7.7' }))).toBe('7.7.7.7');
+  it('does not trust client-supplied forwarded headers', () => {
+    expect(getClientIp(request({ 'X-Forwarded-For': '8.8.8.8, 10.0.0.1', 'X-Real-IP': '7.7.7.7' }))).toBe('unknown');
   });
 
   it('returns unknown when no forwarding headers are present', () => {

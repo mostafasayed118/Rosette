@@ -24,7 +24,7 @@ export default async function SubscriptionCheckoutPage({ params }: PageParams) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
-      <main className="flex-grow w-full max-w-[720px] mx-auto px-5 md:px-16 py-10 md:py-16">
+      <main id="main-content" className="flex-grow w-full max-w-[720px] mx-auto px-5 md:px-16 py-10 md:py-16">
         <header className="grid gap-3 border-b border-outline-variant/25 pb-8">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-sage">{t('subscriptionsTitle')}</p>
           <h1 className="font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-primary">

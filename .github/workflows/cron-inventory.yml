@@ -1,0 +1,27 @@
+name: Inventory reservation sweep
+
+on:
+  schedule:
+    # Every 15 minutes. Reservations are written with a 30-minute TTL
+    # (001_commerce.sql:208), so a 15-minute sweep keeps `reserved_quantity`
+    # from drifting far past the hold window without hammering the endpoint.
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger inventory cron
+        env:
+          CRON_ENDPOINT: ${{ secrets.CRON_ENDPOINT_INVENTORY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET_INVENTORY }}
+        run: |
+          curl --fail --silent --show-error --max-time 120 \
+            --request POST \
+            --header "Authorization: Bearer ${CRON_SECRET}" \
+            "${CRON_ENDPOINT}"

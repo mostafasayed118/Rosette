@@ -17,7 +17,7 @@ export default async function SubscriptionsLandingPage({ params }: PageParams) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
-      <main className="flex-grow w-full max-w-[1280px] mx-auto px-5 md:px-16 py-10 md:py-16">
+      <main id="main-content" className="flex-grow w-full max-w-[1280px] mx-auto px-5 md:px-16 py-10 md:py-16">
         <section className="grid gap-4 border-b border-outline-variant/25 pb-10 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-sage">{t('subscriptionsLede')}</p>
           <h1 className="font-display text-[clamp(2.25rem,5vw,3.75rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-primary">

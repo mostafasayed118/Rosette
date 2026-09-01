@@ -1,6 +1,6 @@
 import { escapeHtml } from '@/features/notifications/email-templates';
-import { createMailTransport, type MailTransport } from '@/features/notifications/gmail-mailer';
-import { getOptionalServerEnv, getRequiredServerEnv } from '@/lib/server-env';
+import { sendEmailResend, type MailTransport } from '@/features/notifications/resend-mailer';
+import { getOptionalServerEnv } from '@/lib/server-env';
 import { isEmailDeliveryDisabled } from '@/lib/runtime-config';
 
 type Locale = 'en' | 'ar' | 'fr';
@@ -37,8 +37,12 @@ export function renderSubscriptionEmail(type: SubscriptionEmailType, input: Subs
 
 export async function sendSubscriptionEmail(input: SubscriptionEmailInput & { type: SubscriptionEmailType; to: string }, injectedTransport?: MailTransport): Promise<void> {
   if (!injectedTransport && isEmailDeliveryDisabled()) throw new Error('Email delivery disabled');
-  const transport = injectedTransport ?? createMailTransport();
-  const from = injectedTransport ? (getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@example.invalid>') : getRequiredServerEnv('GMAIL_FROM');
   const { subject, text, html } = renderSubscriptionEmail(input.type, input);
-  await transport.sendMail({ from, to: input.to, subject, text, html });
+  if (injectedTransport) {
+    const from = getOptionalServerEnv('GMAIL_FROM') ?? 'Rosette <no-reply@example.invalid>';
+    const message: Parameters<MailTransport['sendMail']>[0] = { from, to: input.to, subject, text, html };
+    await injectedTransport.sendMail(message);
+    return;
+  }
+  await sendEmailResend({ to: input.to, subject, html, text, locale: input.locale });
 }

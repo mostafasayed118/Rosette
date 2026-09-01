@@ -5,12 +5,12 @@ import { AuthorForm } from '@/components/admin/AuthorForm';
 import type { AuthorInput } from '@/features/blog/types';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 
 export default async function AdminAuthorEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const admin = await getCurrentAdmin();
   if (!admin) redirect('/login');
-  const { t } = await getServerT();
+  const { t } = await getAdminServerT();
   const { id } = await params;
   if (id === 'new') {
     const blank: AuthorInput = { slug: '', nameEn: '' };

@@ -3,16 +3,24 @@ import { addInterval, datesFrom } from './schedule';
 
 type Client = { from: (table: string) => any; rpc?: (name: string, args: Record<string, unknown>) => any };
 
+type SubListRow = {
+  id: string; status: string; frequency: string; bundle_size: number; price_minor: number;
+  first_delivery_date: string; subscription_plans?: { name_en?: string } | null;
+};
+type DeliveryStatusRow = { status: string };
+type DeliveryDetailRow = { id: string; position: number; scheduled_date: string; status: string; order_id: string | null };
+type RemainingRow = { id: string };
+
 export type DeliveryRow = { id: string; position: number; scheduledDate: string; status: 'scheduled' | 'ordered' | 'cancelled'; orderId: string | null };
 
 export async function listCustomerSubscriptions(client: Client, customerId: string) {
   const { data } = await client.from('subscriptions')
     .select('id,status,frequency,bundle_size,price_minor,first_delivery_date,subscription_plans(name_en)')
     .eq('customer_id', customerId).order('created_at', { ascending: false });
-  const rows = (data ?? []) as any[];
+  const rows = (data ?? []) as SubListRow[];
   const counts = await Promise.all(rows.map(async (row) => {
     const { data: d } = await client.from('subscription_deliveries').select('status').eq('subscription_id', row.id);
-    return ((d ?? []) as any[]).filter((x) => x.status === 'ordered').length;
+    return ((d ?? []) as DeliveryStatusRow[]).filter((x) => x.status === 'ordered').length;
   }));
   return rows.map((row, i) => ({ id: String(row.id), planNameEn: String(row.subscription_plans?.name_en ?? ''), status: row.status, frequency: row.frequency, bundleSize: Number(row.bundle_size), priceMinor: Number(row.price_minor), firstDeliveryDate: String(row.first_delivery_date), orderedCount: counts[i] ?? 0 }));
 }
@@ -34,7 +42,7 @@ export async function getSubscriptionDetail(client: Client, subscriptionId: stri
     renewalNudgeSentAt: data.renewal_nudge_sent_at ?? null, renewalPromoCode: data.renewal_promo_code ?? null,
     cancelledAt: data.cancelled_at ?? null, completedAt: data.completed_at ?? null, createdAt: String(data.created_at),
     planNameEn: String(data.subscription_plans?.name_en ?? ''), planNameAr: String(data.subscription_plans?.name_ar ?? ''), planNameFr: String(data.subscription_plans?.name_fr ?? ''),
-    deliveries: ((deliveries ?? []) as any[]).map((d) => ({ id: String(d.id), position: Number(d.position), scheduledDate: String(d.scheduled_date), status: d.status, orderId: d.order_id ? String(d.order_id) : null })),
+    deliveries: ((deliveries ?? []) as DeliveryDetailRow[]).map((d) => ({ id: String(d.id), position: Number(d.position), scheduledDate: String(d.scheduled_date), status: d.status, orderId: d.order_id ? String(d.order_id) : null })),
   };
 }
 
@@ -49,7 +57,7 @@ export async function resumeSubscription(client: Client, subscriptionId: string,
   const { data: owned } = await client.from('subscriptions').select('id,frequency').eq('id', subscriptionId).eq('customer_id', customerId).maybeSingle();
   if (!owned) return false;
   const { data: remaining } = await client.from('subscription_deliveries').select('id').eq('subscription_id', subscriptionId).eq('status', 'scheduled');
-  const dates = datesFrom(nextDeliveryDate, owned.frequency as Frequency, Math.max(((remaining ?? []) as any[]).length, 1));
+  const dates = datesFrom(nextDeliveryDate, owned.frequency as Frequency, Math.max(((remaining ?? []) as RemainingRow[]).length, 1));
   const { data: ok, error } = await client.rpc?.('resume_subscription', { p_subscription_id: subscriptionId, p_dates: dates }) ?? { data: false, error: true };
   return !error && ok === true;
 }

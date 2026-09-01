@@ -3,6 +3,10 @@ export type ReservationResult =
   | { ok: true; next: InventoryState }
   | { ok: false; reason: 'insufficient_stock' };
 
+export function canReserveInventory(state: InventoryState, requested: number = 1): boolean {
+  return reserveInventory(state, requested).ok;
+}
+
 export function reserveInventory(state: InventoryState, requested: number): ReservationResult {
   if (!Number.isInteger(requested) || requested <= 0) return { ok: false, reason: 'insufficient_stock' };
   const available = Math.max(0, state.quantity - state.reserved);

@@ -7,16 +7,17 @@ import { ImagePreview } from '@/components/admin/ImagePreview';
 import { listAuthors } from '@/features/admin/blog-admin';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-import { getServerT } from '@/features/i18n/server';
+import { getAdminServerT } from '@/features/i18n/admin-server';
 
 export default async function AdminAuthorsPage() {
-  const admin = await getCurrentAdmin();
+  const [admin, tData] = await Promise.all([getCurrentAdmin(), getAdminServerT()]);
   if (!admin) redirect('/login');
-  const { t } = await getServerT();
+  const { t } = tData;
   const rows = await listAuthors(getAdminSupabase());
-  return <>
-    <PageHeader eyebrow={t('authorOperations')} title={t('authors')} actions={<Link className="text-sm text-primary underline underline-offset-4" href="/admin/authors/new">{t('newAuthor')}</Link>} />
-    <div className="mt-6 grid gap-4">
+  return (
+    <div className="flex flex-col gap-4">
+      <PageHeader eyebrow={t('authorOperations')} title={t('authors')} actions={<Link className="text-sm text-primary underline underline-offset-4" href="/admin/authors/new">{t('newAuthor')}</Link>} />
+      <div className="grid gap-4">
       {rows.map((row) => (
         <Card key={row.id}>
           <CardHeader><CardTitle>{row.nameEn}</CardTitle></CardHeader>
@@ -36,6 +37,11 @@ export default async function AdminAuthorsPage() {
         </Card>
       ))}
     </div>
-    <p className="mt-6"><Link className="text-sm text-primary underline underline-offset-4" href="/admin/blog">{t('backToBlog')}</Link></p>
-  </>;
+      <p>
+        <Link className="text-sm font-medium text-primary underline underline-offset-4" href="/admin/blog">
+          {t('backToBlog')}
+        </Link>
+      </p>
+    </div>
+  );
 }

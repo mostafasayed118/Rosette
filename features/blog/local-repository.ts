@@ -17,6 +17,7 @@ function toSummary(post: BlogPost): BlogPostSummary {
     category: post.category,
     publishedAt: post.publishedAt,
     updatedAt: post.updatedAt,
+    coverUrl: post.coverUrl,
   };
 }
 

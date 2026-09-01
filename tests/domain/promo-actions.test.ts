@@ -21,7 +21,7 @@ const admin = { userId: 'admin-1', role: 'admin' as const };
 const operator = { userId: 'op-1', role: 'operator' as const };
 const customer = { userId: 'c1', role: 'customer' as AdminRole };
 
-const input: PromoInput = { code: 'ROSE10', type: 'percent', percentOff: 10, valueMinor: null, minimumOrderMinor: 0, startsAt: null, expiresAt: null, maxUses: 0, active: true };
+const input: PromoInput = { code: 'ROSE10', type: 'percent', percentOff: 10, valueMinor: null, minimumOrderMinor: 0, startsAt: null, expiresAt: null, maxUses: 0, perUserLimit: 0, active: true };
 
 function row(payload: Partial<Record<string, unknown>>) {
   return { ...input, ...payload } as PromoInput;

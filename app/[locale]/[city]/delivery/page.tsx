@@ -8,6 +8,7 @@ import { getServerT } from '@/features/i18n/server';
 import { pickLocalized } from '@/features/i18n/pick';
 import { buildLocalizedPageMetadata } from '@/features/seo/page-metadata';
 import { getOptionalServerEnv } from '@/lib/server-env';
+import { sanitizeHtml } from '@/lib/sanitize-html';
 import { LOCALES } from '@/lib/locale-routing';
 import type { Locale } from '@/features/i18n/types';
 
@@ -34,5 +35,6 @@ export default async function DeliveryPage({ params }: DeliveryPageParams) {
   const heading = full ? pickLocalized(locale, { en: full.titleEn, ar: full.titleAr ?? full.titleEn, fr: full.titleFr ?? full.titleEn }) : t('blogDeliveryTitle', { city: cityName });
   const lede = full ? (pickLocalized(locale, { en: full.excerptEn ?? '', ar: full.excerptAr ?? full.excerptEn ?? '', fr: full.excerptFr ?? full.excerptEn ?? '' }) || t('blogDeliveryLede')) : t('blogDeliveryLede');
   const body = full ? pickLocalized(locale, { en: full.contentEn, ar: full.contentAr ?? full.contentEn, fr: full.contentFr ?? full.contentEn }) : `<p>${cityRow?.sameDay ? t('deliveryDefaultSameDay', { city: cityName }) : t('deliveryDefaultNextDay', { city: cityName })}</p>`;
-  return <div className="flex min-h-screen flex-col"><SiteHeader /><main className="mx-auto w-[min(calc(100%-3rem),50rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),50rem)] max-md:pt-4"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('blogDeliveryCity')}</p><h1 className="mt-2 font-display text-[clamp(2.25rem,5vw,3.5rem)] leading-[.98] tracking-[-.04em] text-primary">{heading}</h1><p className="mt-4 text-lg text-muted-foreground">{lede}</p><div className="mt-8 space-y-4 text-[1.05rem] leading-relaxed text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1" dangerouslySetInnerHTML={{ __html: body }} /><Link className="mt-10 inline-block text-sm text-primary underline underline-offset-4" href={`/${locale}/${citySlug}/shop`}>{t('browseCollection')} ↗</Link></main><SiteFooter locale={locale} city={citySlug} /></div>;
+  const safeBody = sanitizeHtml(body);
+  return <div className="flex min-h-screen flex-col"><SiteHeader /><main id="main-content" className="mx-auto w-[min(calc(100%-3rem),50rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),50rem)] max-md:pt-4"><p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('blogDeliveryCity')}</p><h1 className="mt-2 font-display text-[clamp(2.25rem,5vw,3.5rem)] leading-[.98] tracking-[-.04em] text-primary">{heading}</h1><p className="mt-4 text-lg text-muted-foreground">{lede}</p><div className="mt-8 space-y-4 text-[1.05rem] leading-relaxed text-foreground [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1" dangerouslySetInnerHTML={{ __html: safeBody }} /><Link className="mt-10 inline-block text-sm text-primary underline underline-offset-4" href={`/${locale}/${citySlug}/shop`}>{t('browseCollection')} ↗</Link></main><SiteFooter locale={locale} city={citySlug} /></div>;
 }

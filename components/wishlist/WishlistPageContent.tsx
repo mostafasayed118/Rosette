@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/features/catalog/ProductCard';
 import type { Product } from '@/features/catalog/types';
 import { useI18n } from '@/features/i18n/I18nProvider';
+import type { Locale } from '@/features/i18n/types';
 import { useStorePath } from '@/features/i18n/use-store-path';
 import { useWishlist } from '@/features/wishlist/WishlistProvider';
 import { deferToTask } from '@/hooks/use-deferred-task';
@@ -34,7 +35,7 @@ function WishlistMoveToBag({ product, disabled }: { product: Product; disabled?:
 }
 
 export function WishlistPageContent() {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const { href } = useStorePath();
   const { ready, saved } = useWishlist();
   const [products, setProducts] = useState<Product[]>([]);
@@ -45,17 +46,29 @@ export function WishlistPageContent() {
     if (!ready) return;
     if (saved.length === 0) {
       // Deferred clear keeps this out of the commit phase.
-      deferToTask(() => setProducts([]));
-      return;
+      deferToTask(() => {
+        if (active) {
+          setProducts([]);
+          setError(false);
+        }
+      });
+      return () => {
+        active = false;
+      };
     }
+    setError(false);
     (async () => {
-      const response = await fetch(`/api/wishlist/products?slugs=${encodeURIComponent(saved.join(','))}`);
-      if (!response.ok) {
+      try {
+        const response = await fetch(`/api/wishlist/products?slugs=${encodeURIComponent(saved.join(','))}`);
+        if (!response.ok) {
+          if (active) setError(true);
+          return;
+        }
+        const body = (await response.json()) as { products?: Product[] };
+        if (active) setProducts(body.products ?? []);
+      } catch {
         if (active) setError(true);
-        return;
       }
-      const body = (await response.json()) as { products?: Product[] };
-      if (active) setProducts(body.products ?? []);
     })();
     return () => {
       active = false;
@@ -115,16 +128,18 @@ export function WishlistPageContent() {
   // masonry like CatalogGrid: split into two columns for staggered editorial rhythm
   const col1 = products.filter((_, index) => index % 2 === 0);
   const col2 = products.filter((_, index) => index % 2 === 1);
+  // Pre-compute slug → original index for O(1) aspect lookup (was O(n²) via findIndex).
+  const slugIndex = new Map(products.map((product, index) => [product.slug, index] as const));
 
   const renderColumn = (colProducts: Product[]) =>
     colProducts.map((product) => {
-      const originalIndex = products.findIndex((p) => p.slug === product.slug);
+      const originalIndex = slugIndex.get(product.slug) ?? 0;
       const aspect = WISHLIST_ASPECTS[originalIndex % WISHLIST_ASPECTS.length];
       const statusPill = getStatusPill(product);
       const isOutOfStock = product.inventory === 0;
       return (
         <div key={product.slug} className="flex flex-col gap-3">
-          <ProductCard product={product} aspectClass={aspect} statusPill={statusPill} />
+          <ProductCard product={product} locale={locale as Locale} href={href} aspectClass={aspect} statusPill={statusPill} sizes="(min-width: 768px) 45vw, 100vw" />
           <div className="px-1">
             <WishlistMoveToBag product={product} disabled={isOutOfStock} />
           </div>

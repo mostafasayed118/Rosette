@@ -30,12 +30,26 @@ export default function LoginPage() {
       setSubmitting(false);
       return;
     }
+    // Verify the profile is an admin/operator before bouncing to /admin.
+    // Without this, a valid customer login would redirect to /admin and
+    // immediately bounce back to /login (appearing as "not login").
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+      const role = (profile as { role?: string } | null)?.role;
+      if (role !== 'admin' && role !== 'operator') {
+        await supabase.auth.signOut();
+        setError(t('signInFailed') + ' — ' + t('notAdmin'));
+        setSubmitting(false);
+        return;
+      }
+    }
     router.push('/admin');
     router.refresh();
   }
 
   return (
-    <main className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4">
+    <main id="main-content" className="mx-auto w-[min(calc(100%-3rem),80rem)] py-12 pb-24 max-md:w-[min(calc(100%-2rem),80rem)] max-md:pt-4">
       <section className="mx-auto grid max-w-[34rem] gap-5 rounded-2xl border bg-card p-8 shadow-sm">
         <p className="text-xs font-bold uppercase tracking-[.16em] text-sage">{t('adminEyebrow')}</p>
         <h1 className="font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[.95] tracking-[-.02em]">{t('signIn')}</h1>

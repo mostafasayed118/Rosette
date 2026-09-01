@@ -1,8 +1,10 @@
 import { ratingBySlug } from '@/features/reviews/aggregate';
 import { demoReviews } from '@/features/reviews/demo-data';
 import { getCity } from '@/features/destination/data';
+import { resolveDeliveryFee, DEFAULT_DELIVERY_FEE_MINOR } from '@/features/order/delivery-rules';
 import { filterProducts, paginateProducts, sortProducts } from './catalog-utils';
 import { products } from './data';
+import { checkDeliveryDate } from '@/features/delivery/eligibility';
 import type { CatalogRepository, CatalogQuery, DeliveryEligibilityInput } from './types';
 
 const ratings = ratingBySlug(demoReviews);
@@ -24,9 +26,18 @@ export const localCatalogRepository: CatalogRepository = {
   async isDeliverable({ destination, date }: DeliveryEligibilityInput) {
     const city = getCity(destination.cityCode);
     if (!city) return { eligible: false, reason: 'That delivery city is not supported.', fee: 0 };
-    const selectedDate = new Date(`${date}T12:00:00`);
-    if (Number.isNaN(selectedDate.getTime())) return { eligible: false, reason: 'Choose a valid delivery date.', fee: 0 };
-    if (selectedDate.getDay() === 5) return { eligible: false, reason: 'Our studio rests on Fridays. Choose another day.', fee: 0 };
-    return { eligible: true, reason: city.sameDay ? 'Same-day delivery may be available before 2pm.' : 'Next-day delivery in this city.', fee: city.sameDay ? 1500 : 2500 };
+    // The weekday/validity rule lives in one shared pure function so the PDP,
+    // checkout, and this repository cannot disagree about which dates are legal.
+    const check = checkDeliveryDate(date);
+    if (!check.eligible) {
+      return {
+        eligible: false,
+        reason: check.reason === 'closed_weekday'
+          ? 'Our studio rests on Fridays. Choose another day.'
+          : 'Choose a valid delivery date.',
+        fee: 0,
+      };
+    }
+    return { eligible: true, reason: city.sameDay ? 'Same-day delivery may be available before 2pm.' : 'Next-day delivery in this city.', fee: resolveDeliveryFee(city.code, 0) ?? DEFAULT_DELIVERY_FEE_MINOR };
   },
 };

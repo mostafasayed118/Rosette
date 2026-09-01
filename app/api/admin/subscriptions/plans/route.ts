@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentAdmin } from '@/features/auth/server';
 import { getAdminSupabase } from '@/lib/supabase/admin';
-
-const FREQUENCIES = ['weekly', 'biweekly', 'monthly'];
-const SLUG_RE = /^[a-z0-9-]+$/;
+import { planPayloadSchema } from '@/features/admin/catalog-validation';
 
 type PlanRow = {
   id: unknown;
@@ -51,18 +49,14 @@ export async function POST(request: Request) {
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: 'Malformed request' }, { status: 400 });
-  const slug = String(body.slug ?? '').trim();
-  if (!SLUG_RE.test(slug)) return NextResponse.json({ error: 'Invalid slug' }, { status: 400 });
-  const frequencies = Array.isArray(body.frequencies) ? body.frequencies.filter((f: unknown) => FREQUENCIES.includes(f as string)) : [];
-  if (frequencies.length === 0) return NextResponse.json({ error: 'At least one frequency required' }, { status: 400 });
-  const bundlePrices = Array.isArray(body.bundlePrices) ? body.bundlePrices : null;
-  if (!bundlePrices || bundlePrices.length === 0) return NextResponse.json({ error: 'At least one bundle price required' }, { status: 400 });
+  const parsed = planPayloadSchema.safeParse(body);
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid plan data' }, { status: 400 });
   const { data, error } = await getAdminSupabase().from('subscription_plans').insert({
-    slug,
-    name_en: String(body.nameEn ?? ''), name_ar: String(body.nameAr ?? ''), name_fr: String(body.nameFr ?? ''),
-    description_en: String(body.descriptionEn ?? ''), description_ar: String(body.descriptionAr ?? ''), description_fr: String(body.descriptionFr ?? ''),
-    product_id: body.productId || null, frequencies, bundle_prices: bundlePrices,
-    active: body.active !== false, sort_order: Number(body.sortOrder ?? 0),
+    slug: parsed.data.slug,
+    name_en: parsed.data.nameEn, name_ar: parsed.data.nameAr, name_fr: parsed.data.nameFr,
+    description_en: parsed.data.descriptionEn, description_ar: parsed.data.descriptionAr, description_fr: parsed.data.descriptionFr,
+    product_id: parsed.data.productId ?? null, frequencies: parsed.data.frequencies, bundle_prices: parsed.data.bundlePrices,
+    active: parsed.data.active, sort_order: parsed.data.sortOrder,
   }).select('id').single();
   if (error) return NextResponse.json({ error: 'Could not create plan' }, { status: 503 });
   return NextResponse.json({ ok: true, id: String(data.id) });

@@ -24,7 +24,7 @@ export default async function GiftFinderPage({ params }: PageParams) {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <main className="flex-grow"><GiftFinderQuiz /></main>
+      <main id="main-content" className="flex-grow"><GiftFinderQuiz /></main>
       <SiteFooter locale={resolvedLocale} city={city} />
     </div>
   );

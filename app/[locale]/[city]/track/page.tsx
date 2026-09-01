@@ -29,8 +29,8 @@ const PAYMENT_KEYS: Record<string, string> = {
   refunded: 'statusRefunded',
 };
 
-const stitchCard = 'rounded border border-outline-variant/30 bg-surface-container-lowest p-4 md:p-6 shadow-[0_8px_32px_-4px_rgba(119,113,104,0.06)]';
-const metaCard = 'rounded border border-outline-variant/30 bg-surface-container-lowest p-4 shadow-[0_8px_32px_-4px_rgba(119,113,104,0.06)]';
+const stitchCard = 'rounded-[var(--radius-card)] border border-outline-variant/30 bg-surface-container-lowest p-4 md:p-6 shadow-[var(--shadow-surface)]';
+const metaCard = 'rounded-[var(--radius-control)] border border-outline-variant/30 bg-surface-container-lowest p-4 shadow-[var(--shadow-surface)]';
 
 export default async function TrackPage({
   params: routeParams,
@@ -54,16 +54,16 @@ export default async function TrackPage({
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
-      <main className="mx-auto max-w-[1280px] flex-grow px-5 md:px-[64px] py-[64px]">
+      <main id="main-content" className="mx-auto max-w-[1280px] flex-grow px-5 md:px-[64px] py-[64px]">
       {/* Header — Stitch: title + mono order number + sage delivery — max-w-[1280px] mx-auto px-5 md:px-[64px] */}
       <div className="mb-8 md:mb-[64px] md:w-2/3">
-        <p className="font-meta-mono text-meta-mono uppercase tracking-[.16em] text-sage">{t('trackOrder')}</p>
+        <p className="font-meta-mono text-meta-mono uppercase tracking-[.16em] text-sage-ink">{t('trackOrder')}</p>
         <h1 className="mt-2 font-headline-lg text-headline-lg md:text-display-xl text-on-surface">{t('trackTitle')}</h1>
         <p className="mt-3 max-w-[42rem] font-body-lg text-body-lg text-on-surface-variant">{t('trackLede')}</p>
         {searched && order ? (
           <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-baseline">
-            <span className="font-meta-mono text-meta-mono text-tertiary">#{order.number}</span>
-            <span className="font-body-md text-body-md text-sage">
+            <span className="font-meta-mono text-meta-mono text-on-surface-variant">#{order.number}</span>
+            <span className="font-body-md text-body-md text-sage-ink">
               {t('deliveryDetails')}: {order.deliveryCityCode} · {order.deliveryDate} · {order.deliveryWindow}
             </span>
           </div>
@@ -118,15 +118,15 @@ export default async function TrackPage({
             {/* Meta row — payment / recipient / delivery */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-8">
               <div className={metaCard}>
-                <span className="font-meta-mono text-meta-mono text-tertiary block">{t('payment')}</span>
+                <span className="font-meta-mono text-meta-mono text-on-surface-variant block">{t('payment')}</span>
                 <strong className="font-headline-sm text-headline-sm text-on-surface mt-1 block">{t(PAYMENT_KEYS[order.paymentStatus] ?? 'statusPending')}</strong>
               </div>
               <div className={metaCard}>
-                <span className="font-meta-mono text-meta-mono text-tertiary block">{t('recipient')}</span>
+                <span className="font-meta-mono text-meta-mono text-on-surface-variant block">{t('recipient')}</span>
                 <strong className="font-headline-sm text-headline-sm text-on-surface mt-1 block truncate">{order.recipientName}</strong>
               </div>
               <div className={metaCard}>
-                <span className="font-meta-mono text-meta-mono text-tertiary block">{t('deliveryDetails')}</span>
+                <span className="font-meta-mono text-meta-mono text-on-surface-variant block">{t('deliveryDetails')}</span>
                 <strong className="font-body-md text-body-md text-on-surface mt-1 block">
                   {order.deliveryCityCode} · {order.deliveryDate}
                   <span className="block font-meta-mono text-meta-mono text-on-surface-variant">{order.deliveryWindow}</span>
@@ -164,7 +164,7 @@ export default async function TrackPage({
               {order.timeline.map((entry, index) => (
                 <div key={index} className={metaCard}>
                   <strong className="font-headline-sm text-headline-sm text-on-surface block">{t(FULFILLMENT_KEYS[entry.status] ?? entry.status)}</strong>
-                  <span className="font-meta-mono text-meta-mono text-tertiary mt-1 block">
+                  <span className="font-meta-mono text-meta-mono text-on-surface-variant mt-1 block">
                     {new Date(entry.at).toLocaleString(localeForDate)}
                   </span>
                 </div>
@@ -181,13 +181,13 @@ export default async function TrackPage({
                 {order.items.map((item, index) => (
                   <div key={index} className="flex gap-4 items-start border-b border-outline-variant/20 pb-4 last:border-0 last:pb-0">
                     <div className="h-20 w-20 shrink-0 overflow-hidden rounded border border-outline-variant/20 bg-surface-container flex items-center justify-center">
-                      <span className="font-meta-mono text-meta-mono text-tertiary">✿</span>
+                      <span className="font-meta-mono text-meta-mono text-on-surface-variant">✿</span>
                     </div>
                     <div className="grid gap-1">
                       <strong className="font-headline-sm text-headline-sm text-on-surface leading-tight">
                         {pickLocalized(locale, { en: item.nameEn, ar: item.nameAr })}
                       </strong>
-                      <span className="font-meta-mono text-meta-mono text-tertiary">
+                      <span className="font-meta-mono text-meta-mono text-on-surface-variant">
                         {t('quantity')} {item.quantity} · <span className="font-meta-mono text-meta-mono">{formatMoney(item.unitPriceMinor, locale)}</span>
                       </span>
                       {item.addOns.map((addOn) => (

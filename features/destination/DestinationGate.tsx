@@ -111,10 +111,11 @@ export function DestinationGate({ locale }: DestinationGateProps) {
               {/* Primary CTA — pill */}
               <Button
                 type="submit"
-                className="w-full bg-primary text-on-primary rounded-full py-4 px-8 mt-2 h-auto min-h-[56px] font-body-lg text-body-lg text-center hover:bg-surface-tint shadow-sm hover:shadow-md flex items-center justify-center gap-2 transition-[transform,box-shadow,background-color] duration-200 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full bg-primary text-on-primary rounded-full py-4 px-8 mt-2 h-auto min-h-[56px] font-body-lg text-body-lg text-center hover:bg-surface-tint shadow-sm hover:shadow-md flex items-center justify-center gap-2 transition-[transform,box-shadow,background-color] duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:pointer-events-none disabled:bg-surface-container-high disabled:text-on-surface-variant disabled:opacity-100 disabled:shadow-none disabled:hover:bg-surface-container-high"
+                disabled={!cityCode}
               >
                 {t('continue')}
-                <ArrowRight className="h-[1.2em] w-[1.2em] shrink-0" aria-hidden="true" />
+                <ArrowRight className="h-[1.2em] w-[1.2em] shrink-0 rtl:rotate-180" aria-hidden="true" />
               </Button>
             </form>
 
@@ -131,10 +132,10 @@ export function DestinationGate({ locale }: DestinationGateProps) {
           </div>
 
           {/* Right Image Block: spans 6 columns, subtle paper-on-paper frame */}
-          <div className="md:col-span-5 md:col-start-8 h-[614px] md:h-[768px] w-full relative rounded-lg overflow-hidden order-1 md:order-2 bg-surface-container-low">
+          <div className="md:col-span-5 md:col-start-8 aspect-[4/5] md:aspect-auto md:h-[768px] w-full relative rounded-lg overflow-hidden order-1 md:order-2 bg-surface-container-low">
             <Image
               alt="A high-end, soft botanical photograph of a vintage courier bicycle basket overflowing with fresh, artisanal florist blooms like ranunculus and lilies. The scene is bathed in warm, airy, editorial natural light."
-              className="object-cover rounded-lg mix-blend-multiply opacity-90 transition-transform duration-1000 hover:scale-105"
+              className="object-cover rounded-lg mix-blend-multiply opacity-90 dark:mix-blend-normal dark:opacity-100 transition-transform duration-1000 hover:scale-105"
               src={GATE_IMAGE}
               fill
               sizes="(max-width: 768px) 100vw, 42vw"

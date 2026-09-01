@@ -21,6 +21,9 @@ export const RATE_LIMITS = {
   reviewVote: { bucket: 'review-vote', limit: 30, windowMs: 10 * 60_000, error: 'Too many votes. Please wait a moment.' },
   giftCardPurchase: { bucket: 'gift-card-purchase', limit: 10, windowMs: 10 * 60_000, error: 'Too many gift-card attempts. Please wait a moment.' },
   promoValidate: { bucket: 'promo-validate', limit: 20, windowMs: 5 * 60_000, error: 'Too many promo attempts. Please wait a moment.' },
+  analytics: { bucket: 'analytics', limit: 120, windowMs: 5 * 60_000, error: 'Too many analytics events. Please try again later.' },
   reviewSubmit: { bucket: 'review-submit', limit: 5, windowMs: 10 * 60_000, error: 'Too many review submissions. Please wait a moment.' },
   turnstileVerify: { bucket: 'turnstile-verify', limit: 20, windowMs: 5 * 60_000, error: 'Too many verification attempts. Please wait a moment.' },
+  orderLookup: { bucket: 'order-lookup', limit: 30, windowMs: 60_000, error: 'Too many order lookups. Please wait a moment.' },
+  reviewVoteGet: { bucket: 'review-vote-get', limit: 60, windowMs: 60_000, error: 'Too many vote lookups. Please wait a moment.' },
 } as const satisfies Record<string, RateLimitRule>;

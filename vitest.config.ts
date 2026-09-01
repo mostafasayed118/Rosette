@@ -11,6 +11,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     globals: true,
+    // Keep the default command deterministic and allow Vitest to tear down
+    // the shared jsdom/react environment cleanly after all files finish.
+    pool: 'threads',
+    poolOptions: { threads: { singleThread: true } },
+    fileParallelism: false,
     exclude: ['node_modules/**', '.worktrees/**', 'worktrees/**', 'dist/**', 'cypress/**', 'tests/e2e/**'],
     coverage: {
       provider: 'v8',

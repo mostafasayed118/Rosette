@@ -5,12 +5,15 @@ import { ProductCard } from '@/features/catalog/ProductCard';
 import { useCart } from '@/features/cart/CartProvider';
 import { useI18n } from '@/features/i18n/I18nProvider';
 import { useStorePath } from '@/features/i18n/use-store-path';
+import { LOCALES } from '@/lib/locale-routing';
+import type { Locale } from '@/features/i18n/types';
 import { Button } from '@/components/ui/button';
 import { giftFinderReasonKey } from './labels';
 import type { GiftFinderOutcome } from './types';
 
 export function GiftFinderResults({ outcome, onRetake }: { outcome: GiftFinderOutcome; onRetake: () => void }) {
-  const { t } = useI18n();
+  const { locale: rawLocale, t } = useI18n();
+  const locale: Locale = (LOCALES as string[]).includes(rawLocale) ? (rawLocale as Locale) : 'en';
   const { href } = useStorePath();
   const { addItem } = useCart();
 
@@ -39,7 +42,7 @@ export function GiftFinderResults({ outcome, onRetake }: { outcome: GiftFinderOu
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {results.map(({ product, reasons }) => (
           <div key={product.slug} className="flex flex-col gap-3">
-            <ProductCard product={product} />
+            <ProductCard product={product} locale={locale} href={href} />
             <ul className="flex flex-wrap gap-2">
               {reasons.map((reason) => <li key={reason} className="rounded-full border border-outline-variant/40 px-3 py-1 text-xs text-on-surface-variant">{t(giftFinderReasonKey(reason))}</li>)}
             </ul>

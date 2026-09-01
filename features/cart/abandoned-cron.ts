@@ -7,6 +7,7 @@ type CronClient = { from: (table: string) => any };
 type PreferenceLookup = (email: string) => Promise<EngagementPreference>;
 
 export type AbandonedCartSummary = { checked: number; sent: number; failed: number; suppressed: number };
+export const ABANDONED_CART_BATCH_SIZE = 500;
 
 export async function runAbandonedCartCron(
   client: CronClient,
@@ -17,12 +18,17 @@ export async function runAbandonedCartCron(
   const secret = deps.secret ?? getRequiredServerEnv('EMAIL_PREFERENCES_SECRET');
   const getPreference = deps.getPreference ?? ((email: string) => getEngagementPreference(client, email));
   const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-  const { data } = await client.from('carts')
+  const baseQuery = client.from('carts')
     .select('id,email,locale,city,lines,restore_token')
     .is('converted_at', null)
     .is('last_emailed_at', null)
     .is('engagement_suppressed_at', null)
     .lt('updated_at', cutoff);
+  // The production client always supports both methods. The optional guards keep
+  // the domain function compatible with its intentionally tiny test doubles.
+  const orderedQuery = typeof baseQuery.order === 'function' ? baseQuery.order('updated_at', { ascending: true }) : baseQuery;
+  const boundedQuery = typeof orderedQuery.limit === 'function' ? orderedQuery.limit(ABANDONED_CART_BATCH_SIZE) : orderedQuery;
+  const { data } = await boundedQuery;
   const rows = (data ?? []) as Array<Record<string, any>>;
   const summary: AbandonedCartSummary = { checked: 0, sent: 0, failed: 0, suppressed: 0 };
   for (const row of rows) {

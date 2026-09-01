@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { requestCancellation, reviewCancellationRequest } from '@/features/orders/cancel-actions';
+import { requestCancellation, reviewCancellationRequest } from '@/features/order-mutations/cancel-actions';
 
 type Call = { table: string; op: string; payload?: unknown; eq?: Array<[string, unknown]> };
 

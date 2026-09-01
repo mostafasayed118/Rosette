@@ -25,8 +25,10 @@ export type DeliverNotificationInput = {
  * row, send through the mail transport, then mark the row sent/failed. Never throws —
  * a failed email must not break the order/status mutation it accompanies.
  *
- * Auto-routes to Resend (free 3k/mo, better deliverability) if RESEND_API_KEY is set,
- * otherwise falls back to Gmail SMTP.
+ * The only supported transport on Cloudflare Workers is Resend (HTTP/fetch — no
+ * SMTP). When RESEND_API_KEY is set the order email is sent via `sendOrderEmailResend`
+ * (which delegates to the generic `sendEmailResend`); otherwise the injected/default
+ * `sendNotification` (also Resend-backed) is used. Both paths resolve to `sendEmailResend`.
  */
 export async function deliverOrderNotification(
   client: DeliveryClient,
